@@ -1,15 +1,22 @@
-import { PageProps } from '@/types';
-import { Head, Link } from '@inertiajs/react';
+import Guest from '@/Layouts/UserLayout';
+import Navbar from '@/Components/navbar/Navbar'
+import SDGs from '@/Components/home/SDGS';
+import Persuate from '@/Components/home/Persuate';
+import Gallery from '@/Components/home/Gallery';
+import STEM from '@/Components/home/STEM';
+import Hero from '@/Components/home/Hero';
+import FeatureSection from '@/Components/home/Feature';
 
-export default function Welcome({
-}: PageProps<{ laravelVersion: string; phpVersion: string }>) {
-   
-    return (
-        <>
-            <Head title="Welcome" />
-           <div className='text-3xl justify-center items-center flex h-screen'>
-               Selamat datang di home!
-           </div>
-        </>
-    );
+export default function Welcome() {
+  return (
+    <Guest>
+        <Navbar/>
+        <Hero/>
+        <FeatureSection/>
+        <STEM/>
+        <SDGs/>
+        <Persuate/>
+        <Gallery/>
+    </Guest>
+  );
 }
