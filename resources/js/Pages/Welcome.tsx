@@ -6,6 +6,7 @@ import Gallery from '@/Components/home/Gallery';
 import STEM from '@/Components/home/STEM';
 import Hero from '@/Components/home/Hero';
 import FeatureSection from '@/Components/home/Feature';
+import Footer from '@/Components/footer/Footer';
 
 export default function Welcome() {
   return (
@@ -17,6 +18,7 @@ export default function Welcome() {
         <SDGs/>
         <Persuate/>
         <Gallery/>
+        <Footer/>
     </Guest>
   );
 }
