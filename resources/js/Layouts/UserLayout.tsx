@@ -1,6 +1,8 @@
 import React, { ReactNode } from 'react';
 import { usePage } from '@inertiajs/react';
 import Navbar from '@/Components/navbar/Navbar';
+import Footer from '@/Components/footer/Footer';
+
 import { User as Profile } from '@/types';
 
 interface UserLayoutProps {
@@ -17,6 +19,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
             <main className="pt-[88px]">
                 {children}
             </main>
+            <Footer/>
         </div>
     );
 }
