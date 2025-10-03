@@ -1,13 +1,22 @@
+import React, { ReactNode } from 'react';
+import { usePage } from '@inertiajs/react';
 import Navbar from '@/Components/navbar/Navbar';
-import { PropsWithChildren } from 'react';
+import { User as Profile } from '@/types';
 
-export default function Guest({ children }: PropsWithChildren) {
-  return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-background pt-[72px]">
-        {children}
-      </main>
-    </>
-  );
+interface UserLayoutProps {
+    children: ReactNode;
+}
+
+export default function UserLayout({ children }: UserLayoutProps) {
+    const { auth } = usePage().props as { auth: { user: Profile | null } };
+
+    return (
+        <div className="bg-background min-h-screen text-secondary">
+            <Navbar user={auth.user} />
+
+            <main className="pt-[88px]">
+                {children}
+            </main>
+        </div>
+    );
 }
