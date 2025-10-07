@@ -16,7 +16,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
         <div className="bg-background min-h-screen text-secondary">
             <Navbar user={auth.user} />
 
-            <main className="pt-[88px]">
+            <main className="pt-[72px]">
                 {children}
             </main>
             <Footer/>
