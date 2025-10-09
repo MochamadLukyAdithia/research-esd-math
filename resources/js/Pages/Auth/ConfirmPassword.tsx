@@ -1,56 +1,43 @@
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import React from 'react';
+import { Head } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 
-export default function ConfirmPassword() {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        password: '',
-    });
+import AuthLayout from '@/Layouts/AuthLayout';
+import ConfirmPasswordForm from '@/Components/auth/ConfirmPasswordForm';
 
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
+interface ConfirmPasswordProps {
+    stats?: any; 
+}
 
-        post(route('password.confirm'), {
-            onFinish: () => reset('password'),
-        });
-    };
-
+export default function ConfirmPassword({ stats }: ConfirmPasswordProps) {
     return (
-        <GuestLayout>
-            <Head title="Confirm Password" />
+        <>
+            <Head title="Konfirmasi Kata Sandi" />
 
-            <div className="mb-4 text-sm text-gray-600">
-                This is a secure area of the application. Please confirm your
-                password before continuing.
-            </div>
-
-            <form onSubmit={submit}>
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        isFocused={true}
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
+            <motion.div
+                className="w-full max-w-md space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <div className="space-y-3 text-center">
+                    <h1 className="text-3xl font-bold text-secondary">
+                        Konfirmasi Kata Sandi
+                    </h1>
+                    <p className="text-secondary-light">
+                        Ini adalah area aman. Mohon konfirmasi kata sandi Anda sebelum melanjutkan.
+                    </p>
                 </div>
 
-                <div className="mt-4 flex items-center justify-end">
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Confirm
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+                <ConfirmPasswordForm />
+
+            </motion.div>
+        </>
     );
 }
+
+ConfirmPassword.layout = (page: React.ReactElement<ConfirmPasswordProps>) => (
+    <AuthLayout stats={page.props.stats}>
+        {page}
+    </AuthLayout>
+);
