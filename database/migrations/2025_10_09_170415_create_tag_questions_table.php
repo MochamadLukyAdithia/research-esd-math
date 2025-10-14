@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('tag_questions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_question')
+                ->constrained('questions')
+                ->onDelete('cascade');
+            $table->foreignId('id_tag')
+                ->constrained('tags')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }
