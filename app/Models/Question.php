@@ -21,6 +21,8 @@ class Question extends Model
         'correct_answer',
         'id_district',
         'id_user',
+        'created_at',
+        'updated_at',
     ];
 
     protected $casts = [
@@ -45,8 +47,7 @@ class Question extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag')
-                    ->withPivot('id_tag_questions')
-                    ->withTimestamps();
+                    ->withPivot('id_tag_questions');
     }
 
     public function hints()
@@ -62,8 +63,7 @@ class Question extends Model
     public function favoritedBy()
     {
         return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user')
-                    ->withPivot('id_favorite')
-                    ->withTimestamps();
+                    ->withPivot('id_favorite');
     }
 
     // Helper Methods

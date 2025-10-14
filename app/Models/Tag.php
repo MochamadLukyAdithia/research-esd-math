@@ -17,11 +17,9 @@ class Tag extends Model
         'tag_name',
     ];
 
-    // Relationships
     public function questions()
     {
         return $this->belongsToMany(Question::class, 'tag_questions', 'id_tag', 'id_question')
-                    ->withPivot('id_tag_questions')
-                    ->withTimestamps();
+                    ->withPivot('id_tag_questions');
     }
 }
