@@ -46,8 +46,7 @@ class Question extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag')
-                    ->withPivot('id_tag_questions');
+        return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag');
     }
 
     public function hints()
@@ -62,8 +61,7 @@ class Question extends Model
 
     public function favoritedBy()
     {
-        return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user')
-                    ->withPivot('id_favorite');
+        return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user');
     }
 
     // Helper Methods
