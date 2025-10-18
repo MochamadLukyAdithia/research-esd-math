@@ -11,10 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('hints', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_hint');
+            $table->foreignId('id_question')->constrained(table: 'questions', column: 'id_question');
+            $table->text('image');
+            $table->text('hint_description');
             $table->timestamps();
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
