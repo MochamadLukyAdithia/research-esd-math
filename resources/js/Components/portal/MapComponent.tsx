@@ -46,7 +46,7 @@ export default function MapComponent({ tasks, userLocation, viewState, onViewSta
               onClick={(e) => { e.stopPropagation(); onTaskSelect(task); }}
               className="transform transition-transform hover:scale-125 relative"
             >
-              <MapPin className="w-8 h-8 text-blue-800 fill-blue-600 drop-shadow-lg" strokeWidth={1.5} />
+              <MapPin className="w-8 h-8 text-blue-800 fill-blue-200 drop-shadow-lg" strokeWidth={1.5} />
               {task.is_favorite && (
                 <Star size={12} className="absolute -top-1 -right-1 fill-primary text-primary" />
               )}

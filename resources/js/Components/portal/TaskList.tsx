@@ -31,7 +31,7 @@ export default function TaskList({ tasks, selectedTask, onTaskSelect, onToggleFa
                     const target = e.target as HTMLImageElement;
                     target.src = 'https://via.placeholder.com/80x80/F5C400/001840?text=No+Image';
                   }}
-                  className="w-16 h-16 object-cover rounded-lg flex-shrink-0 bg-gray-100"
+                  className="w-16 h-16 object-cover flex-shrink-0 bg-gray-100"
                 />
 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -64,13 +64,13 @@ export default function TaskList({ tasks, selectedTask, onTaskSelect, onToggleFa
                 >
                   <Star
                     size={16}
-                    className={task.is_favorite ? 'fill-primary text-primary' : 'text-gray-400'}
+                    className={task.is_favorite ? 'fill-primary text-primary' : 'text-secondary'}
                   />
                 </button>
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs text-gray-600">
+                <div className="flex items-center gap-4 text-xs text-secondary">
                   <div className="flex items-center gap-1">
                     <Globe size={16} />
                   </div>
@@ -91,7 +91,7 @@ export default function TaskList({ tasks, selectedTask, onTaskSelect, onToggleFa
                     e.preventDefault();
                     onTaskSelect(task);
                   }}
-                  className="text-xs text-secondary underline font-medium cursor-pointer hover:text-primary transition-colors whitespace-nowrap ml-2"
+                  className="text-xs text-secondary underline font-medium cursor-pointer hover:text-blue-700 transition-colors whitespace-nowrap ml-2"
                 >
                   Lihat di Peta
                 </a>

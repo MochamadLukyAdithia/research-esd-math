@@ -5,9 +5,15 @@ interface ModalProps {
     task: Task | null;
     onClose: () => void;
     onToggleFavorite: (taskId: number) => void;
+    onShowQuestion: (task: Task) => void;
 }
 
-export default function TaskDetailModal({ task, onClose, onToggleFavorite }: ModalProps) {
+export default function TaskDetailModal({
+    task,
+    onClose,
+    onToggleFavorite,
+    onShowQuestion
+}: ModalProps) {
     if (!task) {
         return null;
     }
@@ -32,7 +38,10 @@ export default function TaskDetailModal({ task, onClose, onToggleFavorite }: Mod
             </div>
 
             <div className="mt-3 flex gap-2">
-                <button className="w-full bg-secondary text-background text-sm py-2 px-2 rounded-md border border-secondary hover:text-secondary hover:bg-background font-semibold">
+                <button
+                    onClick={() => onShowQuestion(task)}
+                    className="w-full bg-secondary text-background text-sm py-2 px-2 rounded-md border border-secondary hover:text-secondary hover:bg-background font-semibold"
+                >
                     Tampilkan Soal
                 </button>
                 <button
