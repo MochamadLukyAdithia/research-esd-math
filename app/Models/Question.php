@@ -19,6 +19,7 @@ class Question extends Model
         'latitude',
         'question_image',
         'correct_answer',
+        'grade',
         'id_district',
         'id_user',
         'created_at',
@@ -28,12 +29,11 @@ class Question extends Model
     protected $casts = [
         'longitude' => 'float',
         'latitude' => 'float',
-        'correct_answer' => 'float',
+        'grade' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
@@ -46,8 +46,7 @@ class Question extends Model
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag')
-                    ->withPivot('id_tag_questions');
+        return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag');
     }
 
     public function hints()
@@ -62,14 +61,7 @@ class Question extends Model
 
     public function favoritedBy()
     {
-        return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user')
-                    ->withPivot('id_favorite');
-    }
-
-    // Helper Methods
-    public function checkAnswer($userAnswer): bool
-    {
-        return floatval($userAnswer) === floatval($this->correct_answer);
+        return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user');
     }
 
     public function getTotalAnswers(): int
@@ -80,5 +72,14 @@ class Question extends Model
     public function getCorrectAnswersCount(): int
     {
         return $this->userAnswers()->where('is_correct', true)->count();
+    }
+
+    public function getAccuracyRate(): float
+    {
+        $total = $this->getTotalAnswers();
+        if ($total === 0) {
+            return 0;
+        }
+        return ($this->getCorrectAnswersCount() / $total) * 100;
     }
 }

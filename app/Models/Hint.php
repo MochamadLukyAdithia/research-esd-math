@@ -10,8 +10,6 @@ class Hint extends Model
     use HasFactory;
 
     protected $primaryKey = 'id_hint';
-    
-    public $timestamps = false;
 
     protected $fillable = [
         'id_question',
@@ -19,7 +17,6 @@ class Hint extends Model
         'hint_description',
     ];
 
-    // Relationships
     public function question()
     {
         return $this->belongsTo(Question::class, 'id_question', 'id_question');
