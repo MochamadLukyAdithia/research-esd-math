@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('question_image');
             $table->foreignId('id_district')->constrained(table: 'districts', column: 'id_district');
             $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
-            $table->float('correct_answer');
+            $table->text('correct_answer');
             $table->timestamps();
         });
 
