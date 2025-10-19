@@ -5,9 +5,11 @@ import TaskFilter, { Filters } from '@/Components/portal/TaskFilter';
 import TaskList from '@/Components/portal/TaskList';
 import MapComponent from '@/Components/portal/MapComponent';
 import TaskDetailModal from '@/Components/portal/TaskModal';
+import QuestionDetailSidebar from '@/Components/portal/detail/QuestionDetailSidebar';
 import Navbar from '@/Components/navbar/Navbar';
 import { User as Profile } from '@/types';
 import { usePage } from '@inertiajs/react';
+import axios from 'axios';
 
 export interface Tag {
   id_tag: number;
@@ -33,6 +35,36 @@ interface PageProps {
   tags: Tag[];
 }
 
+interface QuestionDetail {
+  id_question: number;
+  title: string;
+  question: string;
+  location_name: string;
+  latitude: number;
+  longitude: number;
+  question_image: string;
+  tags: Tag[];
+  grade: number;
+  is_favorite: boolean;
+  created_at: string;
+  creator: {
+    name: string;
+    email: string;
+    avatar?: string | null;
+  };
+  hints: Array<{
+    id_hint: number;
+    image: string;
+    hint_description: string;
+  }>;
+  distance?: number;
+  user_answer?: {
+    answer: string;
+    is_correct: boolean;
+    answered_at: string;
+  } | null;
+}
+
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -51,6 +83,10 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
   const [displayLimit, setDisplayLimit] = useState(10);
   const [showMap, setShowMap] = useState(false);
 
+  const [showDetailView, setShowDetailView] = useState(false);
+  const [questionDetail, setQuestionDetail] = useState<QuestionDetail | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
   const [filters, setFilters] = useState<Filters>({
     searchQuery: '',
     selectedTag: 0,
@@ -59,28 +95,42 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
     sortDirection: 'asc',
   });
 
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
-  const [viewState, setViewState] = useState({
-    longitude: 112.7521,
-    latitude: -7.2575,
-    zoom: 12,
-  });
+const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setUserLocation(loc);
-        setViewState(prev => ({ ...prev, longitude: loc.lng, latitude: loc.lat, zoom: 13 }));
-        setIsLoadingLocation(false);
-      },
-      () => {
-        console.error("Gagal mendapatkan lokasi.");
-        setIsLoadingLocation(false);
-      }
-    );
-  }, []);
+// Tidak pakai default Surabaya — inisialisasi kosong dulu
+const [viewState, setViewState] = useState({
+  longitude: 0,
+  latitude: 0,
+  zoom: 12,
+});
+
+useEffect(() => {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+      setUserLocation(loc);
+      setViewState({
+        longitude: loc.lng,
+        latitude: loc.lat,
+        zoom: 13,
+      });
+      setIsLoadingLocation(false);
+    },
+    () => {
+      console.warn("User menolak izin lokasi. Menggunakan lokasi default Jember.");
+      const jemberLoc = { lat: -8.1723, lng: 113.6995 };
+      setUserLocation(jemberLoc);
+      setViewState({
+        longitude: jemberLoc.lng,
+        latitude: jemberLoc.lat,
+        zoom: 12,
+      });
+      setIsLoadingLocation(false);
+    }
+  );
+}, []);
+
 
   useEffect(() => {
     setDisplayLimit(10);
@@ -133,6 +183,41 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
     setDisplayLimit((prev: number) => prev + 10);
   };
 
+  const loadQuestionDetail = async (taskId: number) => {
+    setIsLoadingDetail(true);
+    try {
+      const response = await axios.get(`/portal/questions/${taskId}/detail`);
+      const detail = response.data;
+
+      if (userLocation) {
+        detail.distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          detail.latitude,
+          detail.longitude
+        );
+      }
+
+      setQuestionDetail(detail);
+      setShowDetailView(true);
+    } catch (error) {
+      console.error('Error loading question detail:', error);
+      alert('Gagal memuat detail soal');
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  };
+
+  const handleBackToList = () => {
+    setShowDetailView(false);
+    setQuestionDetail(null);
+  };
+
+  const handleShowQuestion = (task: Task) => {
+    loadQuestionDetail(task.id_question);
+    setSelectedTask(null);
+  };
+
   const toggleFavorite = useCallback((taskId: number) => {
     router.post(`/portal/questions/${taskId}/toggle-favorite`, {}, {
       preserveScroll: true,
@@ -143,6 +228,9 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
         if (selectedTask?.id_question === taskId) {
           setSelectedTask(prev => prev ? { ...prev, is_favorite: !prev.is_favorite } : null);
         }
+        if (questionDetail?.id_question === taskId) {
+          setQuestionDetail(prev => prev ? { ...prev, is_favorite: !prev.is_favorite } : null);
+        }
       },
       onError: (errors) => {
         console.error('Error toggling favorite:', errors);
@@ -150,47 +238,57 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
         alert(`Gagal: ${firstError || 'Terjadi kesalahan.'}`);
       }
     });
-  }, [selectedTask]);
+  }, [selectedTask, questionDetail]);
 
-    const { auth } = usePage().props as { auth: { user: Profile | null } };
+  const { auth } = usePage().props as { auth: { user: Profile | null } };
+
   return (
     <>
       <Head title="Portal Tugas" />
-    <Navbar user={auth.user} />
+      <Navbar user={auth.user} />
       <div className="flex flex-col h-screen bg-background pt-[72px]">
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           <div className={`w-full md:w-96 border-r border-gray-200 bg-background overflow-y-auto ${showMap ? 'hidden md:block' : 'block'}`}>
-            <div className="h-full overflow-y-auto">
-              <TaskFilter tags={tags} filters={filters} onFilterChange={setFilters} />
-              <TaskList
-                tasks={displayedTasks}
-                selectedTask={selectedTask}
-                onTaskSelect={(task) => {
-                  setSelectedTask(task);
-                  setShowMap(true);
-                  if (task.latitude && task.longitude) {
-                    setViewState(prev => ({
-                      ...prev,
-                      longitude: task.longitude,
-                      latitude: task.latitude,
-                      zoom: 15
-                    }));
-                  }
-                }}
+            {showDetailView ? (
+                <QuestionDetailSidebar
+                question={questionDetail}
+                isLoading={isLoadingDetail}
+                onBack={handleBackToList}
                 onToggleFavorite={toggleFavorite}
-                isLoadingLocation={isLoadingLocation}
-              />
-              {hasMoreTasks && (
-                <div className="px-6 pb-4">
-                  <button
-                    onClick={loadMoreTasks}
-                    className="w-full py-2 bg-secondary border border-secondary text-background text-md rounded-lg border-secondary hover:bg-transparent hover:text-secondary transition-all"
-                  >
-                    Lihat Lebih Banyak ({filteredTasks.length - displayLimit} tugas lainnya)
-                  </button>
-                </div>
-              )}
-            </div>
+                />
+            ) : (
+              <div className="h-full overflow-y-auto">
+                <TaskFilter tags={tags} filters={filters} onFilterChange={setFilters} />
+                <TaskList
+                  tasks={displayedTasks}
+                  selectedTask={selectedTask}
+                  onTaskSelect={(task) => {
+                    setSelectedTask(task);
+                    setShowMap(true);
+                    if (task.latitude && task.longitude) {
+                      setViewState(prev => ({
+                        ...prev,
+                        longitude: task.longitude,
+                        latitude: task.latitude,
+                        zoom: 15
+                      }));
+                    }
+                  }}
+                  onToggleFavorite={toggleFavorite}
+                  isLoadingLocation={isLoadingLocation}
+                />
+                {hasMoreTasks && (
+                  <div className="px-6 pb-4">
+                    <button
+                      onClick={loadMoreTasks}
+                      className="w-full py-2 bg-secondary border border-secondary text-background text-md rounded-lg border-secondary hover:bg-transparent hover:text-secondary transition-all"
+                    >
+                      Lihat Lebih Banyak ({filteredTasks.length - displayLimit} tugas lainnya)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className={`flex-1 relative ${showMap ? 'block' : 'hidden md:block'}`}>
@@ -202,9 +300,10 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
               onTaskSelect={setSelectedTask}
             />
             <TaskDetailModal
-            task={selectedTask}
-            onClose={() => setSelectedTask(null)}
-            onToggleFavorite={toggleFavorite}
+              task={selectedTask}
+              onClose={() => setSelectedTask(null)}
+              onToggleFavorite={toggleFavorite}
+              onShowQuestion={handleShowQuestion}
             />
             <button
               onClick={() => setShowMap(false)}

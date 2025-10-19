@@ -13,7 +13,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-    ]);
+    ])->name('home');
 });
 
 Route::middleware('auth', 'verified', 'role:user')->group(function () {
@@ -43,8 +43,10 @@ Route::middleware('auth')->group(function () {
         ->name('portal.index');
     Route::post('/portal/questions/{questionId}/toggle-favorite', [PortalForUserController::class, 'toggleFavorite'])
         ->name('portal.questions.toggleFavorite');
-    Route::get('/portal/questions/{question}', [PortalForUserController::class, 'show'])
-        ->name('portal.questions.show');
+    Route::get('/portal/questions/{id}/detail', [PortalForUserController::class, 'getQuestionDetail'])
+        ->name('portal.questions.detail');
+    Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
+        ->name('portal.questions.checkAnswer');
 });
 
 require __DIR__ . '/auth.php';
