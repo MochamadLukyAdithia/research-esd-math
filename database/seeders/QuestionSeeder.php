@@ -7,7 +7,12 @@ use Illuminate\Support\Facades\DB;
 
 class QuestionSeeder extends Seeder
 {
-    public function run(): void
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
     {
         DB::table('questions')->insert([
             [
@@ -19,7 +24,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 3,
                 'id_user' => 1,
                 'grade' => 5,
-                'correct_answer' => 440,
+                'correct_answer' => '/^440(\s?meter)?$/i', 
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -31,7 +36,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 2,
                 'id_user' => 1,
                 'grade' => 7,
-                'correct_answer' => 20,
+                'correct_answer' => '/^20(\s?menit)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -42,8 +47,8 @@ class QuestionSeeder extends Seeder
                 'question_image' => 'https://picsum.photos/seed/unej/400/200',
                 'id_district' => 1,
                 'id_user' => 2,
-                'grade' => 2,
-                'correct_answer' => 1200,
+                'grade' => 4,
+                'correct_answer' => '/^1200(\s?(m2|meter\s?persegi))?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -55,10 +60,10 @@ class QuestionSeeder extends Seeder
                 'id_district' => 1,
                 'id_user' => 2,
                 'grade' => 3,
-                'correct_answer' => 180,
+                'correct_answer' => '/^180(\s?(orang|penonton|kursi))?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
-        [
+            [
                 'title' => 'Pembagian Nasi Kotak',
                 'question' => 'Masjid Jami\' Al Baitul Amien menerima 500 kotak nasi untuk buka puasa. Jika nasi tersebut akan dibagikan ke 25 baris (shaf) jamaah, berapa kotak nasi yang didapat setiap baris?',
                 'location_name' => 'Masjid Jami\' Al Baitul Amien',
@@ -67,7 +72,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 3,
                 'id_user' => 1,
                 'grade' => 4,
-                'correct_answer' => 20,
+                'correct_answer' => '/^20(\s?kotak)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -79,7 +84,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 1,
                 'id_user' => 2,
                 'grade' => 6,
-                'correct_answer' => 120000,
+                'correct_answer' => '/^(Rp\.?\s?)?120\.?000(,\d+)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -91,7 +96,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 2,
                 'id_user' => 1,
                 'grade' => 6,
-                'correct_answer' => 81.74, // Jawaban desimal
+                'correct_answer' => '/^81[,.]74(\s?(m2|meter\s?persegi))?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -100,10 +105,10 @@ class QuestionSeeder extends Seeder
                 'location_name' => 'Pantai Papuma',
                 'longitude' => 113.554032, 'latitude' => -8.428511,
                 'question_image' => 'https://picsum.photos/seed/papuma/400/200',
-                'id_district' => 3, // Anggap masuk district lain
+                'id_district' => 3,
                 'id_user' => 2,
                 'grade' => 3,
-                'correct_answer' => 40,
+                'correct_answer' => '/^40(\s?warung)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -115,7 +120,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 2,
                 'id_user' => 1,
                 'grade' => 6,
-                'correct_answer' => 190,
+                'correct_answer' => '/^190(\s?orang)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
             [
@@ -127,7 +132,7 @@ class QuestionSeeder extends Seeder
                 'id_district' => 3,
                 'id_user' => 2,
                 'grade' => 7,
-                'correct_answer' => 120, 
+                'correct_answer' => '/^120(\s?derajat|°)?$/i',
                 'created_at' => now(), 'updated_at' => now(),
             ],
         ]);
