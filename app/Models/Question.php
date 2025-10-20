@@ -39,11 +39,6 @@ class Question extends Model
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
-    public function district()
-    {
-        return $this->belongsTo(District::class, 'id_district', 'id_district');
-    }
-
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'tag_questions', 'id_question', 'id_tag');

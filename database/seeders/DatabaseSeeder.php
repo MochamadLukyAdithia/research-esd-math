@@ -31,7 +31,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
-            DistrictSeeder::class,
             TagSeeder::class,
             QuestionSeeder::class,
             QuestionRelationSeeder::class,
