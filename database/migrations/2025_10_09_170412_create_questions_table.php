@@ -11,10 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('questions', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_question');
+            $table->text('title');
+            $table->string('question');
+            $table->string('location_name');
+            $table->float('longitude');
+            $table->float('latitude');
+            $table->integer('grade');
+            $table->text('question_image');
+            $table->foreignId('id_district')->constrained(table: 'districts', column: 'id_district');
+            $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
+            $table->text('correct_answer');
             $table->timestamps();
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

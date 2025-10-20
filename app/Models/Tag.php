@@ -10,7 +10,7 @@ class Tag extends Model
     use HasFactory;
 
     protected $primaryKey = 'id_tag';
-    
+
     public $timestamps = false;
 
     protected $fillable = [

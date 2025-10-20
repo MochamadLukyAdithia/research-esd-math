@@ -1,5 +1,6 @@
 import '../css/app.css';
 import './bootstrap';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

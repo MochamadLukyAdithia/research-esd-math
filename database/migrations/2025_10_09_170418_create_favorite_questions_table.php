@@ -11,10 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('favorite_questions', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_favorite');
+            $table->foreignId('id_question')->constrained(table: 'questions', column: 'id_question');
+            $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
             $table->timestamps();
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
