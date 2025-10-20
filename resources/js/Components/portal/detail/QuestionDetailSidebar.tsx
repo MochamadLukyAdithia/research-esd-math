@@ -103,6 +103,7 @@ export default function QuestionDetailSidebar({
         <AnswerCard
           questionId={question.id_question}
           userAnswer={question.user_answer}
+          
         />
 
         <HintsCard hints={question.hints} />

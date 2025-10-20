@@ -13,7 +13,7 @@ class Hint extends Model
 
     protected $fillable = [
         'id_question',
-        'image',
+        // 'image',
         'hint_description',
     ];
 

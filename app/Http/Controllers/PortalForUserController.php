@@ -11,7 +11,7 @@ use Inertia\Inertia;
 
 class PortalForUserController extends Controller
 {
-    public function index()
+      public function index()
     {
         $query = Question::with(['tags', 'favoritedBy']);
 
@@ -28,7 +28,7 @@ class PortalForUserController extends Controller
                 'location_name' => $question->location_name,
                 'latitude' => (float) $question->latitude,
                 'longitude' => (float) $question->longitude,
-                'question_image' => $question->question_image,
+                'question_image' => $question->question_image_url,
                 'tags' => $question->tags,
                 'grade' => $question->grade,
                 'is_favorite' => Auth::check()
@@ -72,7 +72,7 @@ class PortalForUserController extends Controller
             'location_name' => $question->location_name,
             'latitude' => (float) $question->latitude,
             'longitude' => (float) $question->longitude,
-            'question_image' => $question->question_image,
+            'question_image' => $question->question_image_url, 
             'tags' => $question->tags,
             'grade' => $question->grade,
             'is_favorite' => Auth::check()
@@ -103,58 +103,62 @@ class PortalForUserController extends Controller
     }
 
     public function checkAnswer(Request $request, $id)
-    {
-        $request->validate([
-            'answer' => 'required|string',
+{
+    $request->validate([
+        'answer' => 'required|string',
+    ]);
+
+    if (!Auth::check()) {
+        return response()->json([
+            'error' => 'Anda harus login untuk menjawab soal',
+        ], 401);
+    }
+
+    $question = Question::findOrFail($id);
+
+    // Cek apakah sudah pernah jawab BENAR sebelumnya
+    $existingCorrectAnswer = UserAnswer::where('id_question', $id)
+        ->where('id_user', Auth::id())
+        ->where('is_correct', true)
+        ->first();
+
+    if ($existingCorrectAnswer) {
+        return response()->json([
+            'already_answered' => true,
+            'is_correct' => true,
+            'user_answer' => $existingCorrectAnswer->answer,
+            'message' => 'Anda sudah menjawab soal ini dengan benar sebelumnya! ',
         ]);
+    }
 
-        if (!Auth::check()) {
-            return response()->json([
-                'error' => 'Anda harus login untuk menjawab soal',
-            ], 401);
-        }
+    $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
 
-        $question = Question::findOrFail($id);
 
-        $existingAnswer = UserAnswer::where('id_question', $id)
-            ->where('id_user', Auth::id())
-            ->first();
-
-        if ($existingAnswer) {
-            return response()->json([
-                'already_answered' => true,
-                'is_correct' => $existingAnswer->is_correct,
-                'user_answer' => $existingAnswer->answer,
-                'correct_answer' => !$existingAnswer->is_correct
-                    ? $this->formatCorrectAnswer($question->correct_answer)
-                    : null,
-                'message' => $existingAnswer->is_correct
-                    ? 'Anda sudah menjawab soal ini dengan benar sebelumnya! 🎉'
-                    : 'Anda sudah pernah mencoba soal ini.',
-            ]);
-        }
-
-        $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
-
+    if ($isCorrect) {
         UserAnswer::create([
             'id_question' => $id,
             'id_user' => Auth::id(),
             'answer' => $request->answer,
-            'is_correct' => $isCorrect,
+            'is_correct' => true,
             'answered_at' => now(),
         ]);
 
         return response()->json([
-            'is_correct' => $isCorrect,
+            'is_correct' => true,
             'user_answer' => $request->answer,
-            'correct_answer' => !$isCorrect
-                ? $this->formatCorrectAnswer($question->correct_answer)
-                : null,
-            'message' => $isCorrect
-                ? 'Jawaban Anda benar! 🎉'
-                : 'Jawaban Anda salah.',
+            'message' => 'Jawaban Anda benar! ',
+            'saved_to_db' => true,
+        ]);
+    } else {
+
+        return response()->json([
+            'is_correct' => false,
+            'user_answer' => $request->answer,
+            'message' => 'Jawaban Anda salah. Silakan coba lagi!',
+            'saved_to_db' => false,
         ]);
     }
+}
 
     private function validateAnswer($userAnswer, $correctAnswerPattern)
     {

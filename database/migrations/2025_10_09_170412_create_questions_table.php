@@ -22,7 +22,6 @@ return new class extends Migration
             $table->float('latitude');
             $table->integer('grade');
             $table->text('question_image');
-            $table->foreignId('id_district')->constrained(table: 'districts', column: 'id_district');
             $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
             $table->text('correct_answer');
             $table->timestamps();
