@@ -13,8 +13,8 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-    ])->name('home');
-});
+    ]);
+})->name('home');
 
 Route::middleware('auth', 'verified', 'role:user')->group(function () {
     Route::get('/dashboard', function () {
