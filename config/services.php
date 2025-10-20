@@ -13,7 +13,9 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
-
+     'mapbox' => [
+        'token' => env('MAPBOX_ACCESS_TOKEN'),
+    ],
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

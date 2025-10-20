@@ -13,16 +13,16 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
-    ])->name('home');
-});
+    ]);
+})->name('home');
 
-Route::middleware('auth', 'verified', 'role:user')->group(function () {
+Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 });
 
-Route::middleware('auth', 'verified', 'role:admin')->group(function () {});
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {});
 
 Route::get('/about-us', function () {
     return Inertia::render('About');
