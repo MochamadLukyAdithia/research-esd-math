@@ -1,5 +1,6 @@
-import { Globe, GraduationCap, LocateFixed, Star } from 'lucide-react';
+import { Globe, GraduationCap, LocateFixed, Star, Loader2, ImageOff } from 'lucide-react';
 import { Task } from '@/Pages/Portal/Index';
+import { useState } from 'react';
 
 interface TaskListProps {
   tasks: Task[];
@@ -18,30 +19,54 @@ export default function TaskList({
   onShowQuestion,
   isLoadingLocation
 }: TaskListProps) {
+  const [loadingTaskId, setLoadingTaskId] = useState<number | null>(null);
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  const handleCardClick = async (task: Task) => {
+    setLoadingTaskId(task.id_question);
+    await onShowQuestion(task);
+  };
+
+  const handleImageError = (taskId: number) => {
+    setImageErrors(prev => new Set(prev).add(taskId));
+  };
+
   return (
     <div className="space-y-3 px-6 pb-4">
       {tasks.length > 0 ? (
         tasks.map(task => (
           <div
             key={task.id_question}
-            onClick={() => onShowQuestion(task)}
-            className={`rounded-lg shadow-lg border border-transparent transition-all duration-200 overflow-hidden cursor-pointer ${
+            onClick={() => handleCardClick(task)}
+            className={`rounded-lg shadow-lg border border-transparent transition-all duration-200 overflow-hidden cursor-pointer relative ${
               selectedTask?.id_question === task.id_question
                 ? 'border border-primary shadow-lg'
                 : 'hover:border hover:border-gray-300'
-            }`}
+            } ${loadingTaskId === task.id_question ? 'opacity-60 pointer-events-none' : ''}`}
           >
+            {loadingTaskId === task.id_question && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+                <Loader2 className="animate-spin text-secondary" size={24} />
+              </div>
+            )}
+
             <div className="p-3">
               <div className="flex gap-3 mb-2">
-                <img
-                  src={task.question_image}
-                  alt={task.title}
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = 'https://via.placeholder.com/80x80/F5C400/001840?text=No+Image';
-                  }}
-                  className="w-16 h-16 object-cover flex-shrink-0 bg-gray-100"
-                />
+                <div className="w-16 h-16 flex-shrink-0 bg-gray-100 rounded-sm overflow-hidden relative">
+                  {imageErrors.has(task.id_question) ? (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                      <ImageOff size={20} className="text-gray-400" />
+                    </div>
+                  ) : (
+                    <img
+                      src={task.question_image}
+                      alt={task.title}
+                      onError={() => handleImageError(task.id_question)}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
 
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
                   <h3 className="font-semibold text-secondary mb-1.5 truncate text-md md:text-lg">
@@ -70,6 +95,7 @@ export default function TaskList({
                     onToggleFavorite(task.id_question);
                   }}
                   className="flex-shrink-0 self-start p-1.5 hover:bg-gray-50 rounded-full transition-colors"
+                  disabled={loadingTaskId === task.id_question}
                 >
                   <Star
                     size={16}

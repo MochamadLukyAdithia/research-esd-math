@@ -12,7 +12,7 @@ interface MapProps {
 }
 
 export default function MapComponent({ tasks, userLocation, viewState, onViewStateChange, onTaskSelect }: MapProps) {
-  const MAPBOX_TOKEN = import.meta.env.MAPBOX_ACCESS_TOKEN || '';
+  const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
   const goToUserLocation = () => {
     if (userLocation) {
