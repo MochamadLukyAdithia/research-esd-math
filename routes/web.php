@@ -1,6 +1,7 @@
 <?php
 
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\RoleMiddleware;
@@ -13,14 +14,10 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'user' => Auth::user(),
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-});
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {});
 

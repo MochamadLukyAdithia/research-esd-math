@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, GraduationCap, Copy, Check, Star } from 'lucide-react';
+import { Globe, GraduationCap, Copy, Check, Star, ImageOff } from 'lucide-react';
 
 interface Tag {
   id_tag: number;
@@ -32,6 +32,8 @@ export default function QuestionCard({
   onToggleFavorite
 }: QuestionCardProps) {
   const [copied, setCopied] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const handleCopyQuestion = async () => {
     try {
@@ -48,18 +50,44 @@ export default function QuestionCard({
     onToggleFavorite(questionId);
   };
 
+  const handleImageError = () => {
+    console.error('Failed to load image:', questionImage);
+    setImageError(true);
+    setImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setImageError(false);
+  };
+
   return (
     <div className="bg-background shadow-md overflow-hidden">
-      <div className="relative w-full h-64">
-        <img
-          src={questionImage}
-          alt={title}
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = 'https://via.placeholder.com/400x200/F5C400/001840?text=No+Image';
-          }}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative w-full h-64 bg-gray-100">
+        {imageLoading && !imageError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+            <div className="animate-pulse text-gray-400">
+              <Globe size={32} />
+            </div>
+          </div>
+        )}
+
+        {imageError ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+            <ImageOff size={48} className="text-gray-400 mb-2" />
+            <p className="text-xs text-gray-500">Gambar tidak tersedia</p>
+          </div>
+        ) : (
+          <img
+            src={questionImage}
+            alt={title}
+            onError={handleImageError}
+            onLoad={handleImageLoad}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${
+              imageLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+          />
+        )}
       </div>
 
       <div className="px-6 py-4">

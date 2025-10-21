@@ -27,7 +27,7 @@ const galleryItems = [
     id: 5,
     imageSrc: '/assets/home/gallery/gallery_5.webp',
     title: 'Kerja Sama Tim',
-    description: 'Selesaikan misi khusus bersama teman-temanmu.'
+    description: 'Selesaikan soal-soal bersama teman-temanmu.'
   },
   {
     id: 6,
