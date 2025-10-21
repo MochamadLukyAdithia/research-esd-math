@@ -64,7 +64,7 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                 isScrolled ? "shadow-lg border-b-2 border-secondary/10" : "border-b-2 border-transparent"
             )}
         >
-            <div className="container mx-auto max-w-7xl px-6 h-full flex items-center justify-between">
+            <div className="container mx-auto max-w-7xl h-full flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3" onClick={closeAllMenus}>
                     {/* <img src="/logo/logo.png" alt="Logo" width={32} height={32} /> */}
                     <span className="sm:block text-xl font-bold text-secondary">ESD MathPath</span>
