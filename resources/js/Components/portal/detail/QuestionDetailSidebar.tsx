@@ -32,13 +32,23 @@ interface QuestionDetail {
     email: string;
     avatar?: string | null;
   };
-  hints: Hint[];
+  hints: Array<{
+    id_hint: number;
+    image: string;
+    hint_description: string;
+  }>;
   distance?: number;
   user_answer?: {
     answer: string;
     is_correct: boolean;
     answered_at: string;
-    correct_answer?: string | null;
+  } | null;
+  attempt_info?: {  
+    total_attempts: number;
+    max_attempts: number;
+    attempts_remaining: number;
+    is_cooldown?: boolean;
+    cooldown_remaining?: number;
   } | null;
 }
 
@@ -99,13 +109,11 @@ export default function QuestionDetailSidebar({
         />
 
         <CreatorCard creator={question.creator} />
-
         <AnswerCard
-          questionId={question.id_question}
-          userAnswer={question.user_answer}
-          
+        questionId={question.id_question}
+        userAnswer={question.user_answer}
+        attemptInfo={question.attempt_info}
         />
-
         <HintsCard hints={question.hints} />
       </div>
     </div>

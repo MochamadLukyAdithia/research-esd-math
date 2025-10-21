@@ -6,17 +6,26 @@ interface TaskListProps {
   selectedTask: Task | null;
   onTaskSelect: (task: Task) => void;
   onToggleFavorite: (taskId: number) => void;
+  onShowQuestion: (task: Task) => void;
   isLoadingLocation: boolean;
 }
 
-export default function TaskList({ tasks, selectedTask, onTaskSelect, onToggleFavorite, isLoadingLocation }: TaskListProps) {
+export default function TaskList({
+  tasks,
+  selectedTask,
+  onTaskSelect,
+  onToggleFavorite,
+  onShowQuestion,
+  isLoadingLocation
+}: TaskListProps) {
   return (
     <div className="space-y-3 px-6 pb-4">
       {tasks.length > 0 ? (
         tasks.map(task => (
           <div
             key={task.id_question}
-            className={`rounded-lg shadow-lg border border-transparent transition-all duration-200 overflow-hidden ${
+            onClick={() => onShowQuestion(task)}
+            className={`rounded-lg shadow-lg border border-transparent transition-all duration-200 overflow-hidden cursor-pointer ${
               selectedTask?.id_question === task.id_question
                 ? 'border border-primary shadow-lg'
                 : 'hover:border hover:border-gray-300'
@@ -89,6 +98,7 @@ export default function TaskList({ tasks, selectedTask, onTaskSelect, onToggleFa
                 <a
                   onClick={(e) => {
                     e.preventDefault();
+                    e.stopPropagation();
                     onTaskSelect(task);
                   }}
                   className="text-xs text-secondary underline font-medium cursor-pointer hover:text-blue-700 transition-colors whitespace-nowrap ml-2"

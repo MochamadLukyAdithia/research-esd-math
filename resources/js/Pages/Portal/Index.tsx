@@ -98,7 +98,6 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
 const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-// Tidak pakai default Surabaya — inisialisasi kosong dulu
 const [viewState, setViewState] = useState({
   longitude: 0,
   latitude: 0,
@@ -260,22 +259,23 @@ useEffect(() => {
               <div className="h-full overflow-y-auto">
                 <TaskFilter tags={tags} filters={filters} onFilterChange={setFilters} />
                 <TaskList
-                  tasks={displayedTasks}
-                  selectedTask={selectedTask}
-                  onTaskSelect={(task) => {
+                tasks={displayedTasks}
+                selectedTask={selectedTask}
+                onTaskSelect={(task) => {
                     setSelectedTask(task);
                     setShowMap(true);
                     if (task.latitude && task.longitude) {
-                      setViewState(prev => ({
+                    setViewState(prev => ({
                         ...prev,
                         longitude: task.longitude,
                         latitude: task.latitude,
                         zoom: 15
-                      }));
+                    }));
                     }
-                  }}
-                  onToggleFavorite={toggleFavorite}
-                  isLoadingLocation={isLoadingLocation}
+                }}
+                onToggleFavorite={toggleFavorite}
+                onShowQuestion={handleShowQuestion}
+                isLoadingLocation={isLoadingLocation}
                 />
                 {hasMoreTasks && (
                   <div className="px-6 pb-4">
