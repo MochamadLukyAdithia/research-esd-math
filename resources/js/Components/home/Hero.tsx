@@ -3,22 +3,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    image: '/assets/home/hero/hero_1.jpeg',
+    image: '/assets/home/hero/hero_1.webp',
     headline: 'Ubah Dunia Menjadi Arena Belajarmu',
     description: 'Jelajahi lingkungan sekitarmu, pecahkan teka-teki matematika yang menantang, dan lihat bagaimana angka membentuk dunia di sekitar kita.',
     buttonText: 'Mulai Petualangan',
+    buttonLink: '/portal',
   },
   {
-    image: '/assets/home/hero/hero_2.jpeg',
+    image: '/assets/home/hero/hero_2.webp',
     headline: 'Pembelajaran Interaktif Berbasis Peta',
     description: 'Dengan ESD MathPath, setiap sudut kota adalah ruang kelas baru. Belajar matematika tidak pernah semenyenangkan ini.',
     buttonText: 'Jelajahi Fitur',
+    buttonLink: '#feature',
   },
   {
-    image: '/assets/home/hero/hero_3.jpeg',
+    image: '/assets/home/hero/hero_3.webp',
     headline: 'Terhubung dengan Tujuan Pembangunan Berkelanjutan',
     description: 'Setiap misi dirancang untuk meningkatkan kesadaran akan SDGs, menjadikanmu agen perubahan untuk masa depan yang lebih baik.',
     buttonText: 'Pelajari SDGs',
+    buttonLink: '#sdgs',
   },
 ];
 
@@ -49,6 +52,16 @@ const Hero = () => {
     return () => clearInterval(slideInterval);
   }, [currentSlide]);
 
+  const handleButtonClick = (link: string) => {
+    if (link.startsWith('#')) {
+      const element = document.querySelector(link);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      window.location.href = link;
+    }
+  };
 
   return (
     <div className="h-screen w-full relative group overflow-hidden -mt-[72px]">
@@ -67,9 +80,16 @@ const Hero = () => {
 
       <div className="absolute inset-0 bg-black/60"></div>
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white p-4">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center text-white p-4 w-full max-w-4xl">
         {slides.map((slide, index) => (
-          <div key={index} className={`transition-opacity duration-1000 ${currentSlide === index ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}>
+          <div
+            key={index}
+            className={`transition-opacity duration-1000 ${
+              currentSlide === index
+                ? 'opacity-100 relative z-10'
+                : 'opacity-0 absolute inset-0 pointer-events-none'
+            }`}
+          >
              {currentSlide === index && (
                 <div className="animate-fadeIn">
                     <h1 className="text-4xl md:text-6xl font-bold mb-4 text-shadow-lg">
@@ -78,12 +98,12 @@ const Hero = () => {
                     <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-shadow">
                         {slide.description}
                     </p>
-                    <a
-                        href="#"
-                        className="bg-primary text-secondary font-bold py-3 px-8 rounded-lg text-lg hover:bg-primary-light transition-all duration-300 transform hover:scale-105"
+                    <button
+                        onClick={() => handleButtonClick(slide.buttonLink)}
+                        className="bg-primary text-secondary font-bold py-3 px-8 rounded-lg text-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 inline-block"
                     >
                         {slide.buttonText}
-                    </a>
+                    </button>
                 </div>
              )}
           </div>
