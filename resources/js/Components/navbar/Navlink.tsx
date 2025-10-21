@@ -10,6 +10,7 @@ interface NavigationLinksProps {
 
 const links = [
     { href: "/", label: "Beranda" },
+    { href: "/portal", label: "Portal" },
     { href: "/tutorial", label: "Tutorial" },
     { href: "/about-us", label: "About Us" },
 ];

@@ -19,11 +19,10 @@ const Footer: React.FC = () => {
             <div>
               <h4 className="text-xl font-bold mb-5">Quick Links</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="hover:underline">Portal</a></li>
-                <li><a href="#" className="hover:underline">Home</a></li>
-                <li><a href="#" className="hover:underline">Tutorial</a></li>
-                <li><a href="#" className="hover:underline">About Us</a></li>
-                <li><a href="#" className="hover:underline">Contact Us</a></li>
+                <li><a href="/" className="hover:underline">Home</a></li>
+                <li><a href="/portal" className="hover:underline">Portal</a></li>
+                <li><a href="/tutorial" className="hover:underline">Tutorial</a></li>
+                <li><a href="/about-us" className="hover:underline">About Us</a></li>
               </ul>
             </div>
 
@@ -31,7 +30,6 @@ const Footer: React.FC = () => {
               <h4 className="text-xl font-bold mb-5">Contact</h4>
               <ul className="space-y-3">
                 <li className="flex items-start">
-                  <i className="fas fa-map-marker-alt mt-1 mr-3"></i>
                   <span>
                     Malang Creative Center
                     <br />
@@ -41,7 +39,6 @@ const Footer: React.FC = () => {
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <i className="fas fa-phone mt-1 mr-3"></i>
                   <span>081238038207</span>
                 </li>
               </ul>
