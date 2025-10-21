@@ -5,6 +5,7 @@ export interface User {
     email_verified_at?: string;
     avatar: string | null;
     role: 'user' | 'admin';
+    created_at?: string;
 }
 
 export type PageProps<
