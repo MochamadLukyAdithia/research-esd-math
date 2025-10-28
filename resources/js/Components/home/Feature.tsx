@@ -2,10 +2,8 @@ import React from 'react';
 
 const FeatureSection = () => {
   return (
-    <section className="bg-secondary text-white py-20 px-4 sm:px-6 lg:px-8">
+    <section id='feature' className="bg-secondary text-white py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-
-        {/* Kolom Kiri: Teks Deskripsi */}
         <div className="pr-8">
           <h2 className="text-4xl font-bold mb-6">
             ESD.MathPath

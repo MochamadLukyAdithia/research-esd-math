@@ -1,6 +1,7 @@
 <?php
 
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\RoleMiddleware;
@@ -13,16 +14,11 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'user' => Auth::user(),
     ]);
 })->name('home');
 
-Route::middleware('auth', 'verified', 'role:user')->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-});
-
-Route::middleware('auth', 'verified', 'role:admin')->group(function () {});
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {});
 
 Route::get('/about-us', function () {
     return Inertia::render('About');
@@ -32,10 +28,11 @@ Route::get('/tutorial', function () {
     return Inertia::render('Tutorial');
 })->name('tutorial');
 
-
-
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', function () {
+        return Inertia::render('Profile/Show');
+    })->name('profile.show'); 
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
