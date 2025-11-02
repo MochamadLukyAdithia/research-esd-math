@@ -8,9 +8,9 @@ class MapboxPicker extends Field
 {
     protected string $view = 'filament.forms.components.mapbox-picker';
 
-  protected float $defaultLat = -8.1733;
-protected float $defaultLng = 113.7031;
-protected int $defaultZoom = 15; 
+    protected float $defaultLat = -8.1733;
+    protected float $defaultLng = 113.7031;
+    protected int $defaultZoom = 15;
     protected string $accessToken = '';
 
     public function defaultLocation(float $lat, float $lng): static
@@ -49,6 +49,6 @@ protected int $defaultZoom = 15;
 
     public function getAccessToken(): string
     {
-        return $this->accessToken ?: env('MAPBOX_ACCESS_TOKEN');
+        return $this->accessToken ?: env('VITE_MAPBOX_TOKEN');
     }
 }
