@@ -22,21 +22,21 @@ class Question extends Model
         'correct_answer',
         'grade',
         'id_user',
+        'id_question_type',        
         'created_at',
         'updated_at',
         'question_image'
-
-
     ];
 
 
     protected $casts = [
+        'question_image' => 'string',
+        'correct_answer' => 'string',
         'longitude' => 'float',
         'latitude' => 'float',
         'grade' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-
     ];
 
      public function getQuestionImageUrlAttribute()
@@ -71,19 +71,15 @@ class Question extends Model
         return !empty($this->question_image);
     }
 
-
-
-
-
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
     }
 
-    // public function district()
-    // {
-    //     return $this->belongsTo(District::class, 'id_district', 'id_district');
-    // }
+    public function questionType()
+    {
+        return $this->belongsTo(QuestionType::class, 'id_question_type', 'id_question_type');
+    }
 
     public function tags()
     {
@@ -103,6 +99,11 @@ class Question extends Model
     public function favoritedBy()
     {
         return $this->belongsToMany(User::class, 'favorite_questions', 'id_question', 'id_user');
+    }
+
+    public function questionOptions()
+    {
+        return $this->hasMany(QuestionOption::class, 'id_question', 'id_question');
     }
 
     public function getTotalAnswers(): int
