@@ -18,9 +18,18 @@ return new class extends Migration
             $table->foreignId('id_question')->constrained(table: 'questions', column: 'id_question');
             $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
             $table->text('answer');
-            $table->boolean('is_correct');
-            $table->timestamp('answered_at');
+            $table->boolean('is_correct')->default(false);
+            $table->timestamp('answered_at')->useCurrent();
             $table->timestamps();
+
+            // Indexes
+            $table->index('id_user');
+            $table->index('id_question');
+            $table->index('is_correct');
+            $table->index('answered_at');
+            
+            // Unique constraint: user tidak bisa jawab 2x pertanyaan yang sama
+            $table->unique(['id_user', 'id_question']);
         });
 
         Schema::enableForeignKeyConstraints();

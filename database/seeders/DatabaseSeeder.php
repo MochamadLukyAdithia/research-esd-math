@@ -31,10 +31,10 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,
-            // DistrictSeeder::class,
             TagSeeder::class,
+            QuestionTypeSeeder::class,
             QuestionSeeder::class,
-            QuestionRelationSeeder::class,
+            // QuestionRelationSeeder::class,
         ]);
     }
 }
