@@ -1,0 +1,227 @@
+{
+  "nav": {
+    "home": "Omah",
+    "portal": "Portal",
+    "tutorial": "Tutorial",
+    "about": "Babagan Kita",
+    "login": "Mlebu",
+    "register": "Ndaftar",
+    "logout": "Metu",
+    "dashboard": "Dasbor",
+    "profile": "Profil",
+    "masuk": "Mlebu",
+    "daftar": "Ndaftar",
+    "footer": "Platform inovatif sing dirancang kanggo mbantu siswa, guru, lan sapa wae sing pengin sinau matematika kanthi cara sing luwih interaktif."
+  },
+  "hero": {
+    "slides": {
+      "slide1": {
+        "headline": "Owahi Donya Dadi Arena Sinau Sampeyan",
+        "description": "Jelajahi lingkungan sakiwa tengenmu, pecahno teka-teki matematika sing tantangan, lan deloken kepiye angka mbentuk donya ing sakiwa tengen kita.",
+        "buttonText": "Miwiti Petualangan"
+      },
+      "slide2": {
+        "headline": "Pembelajaran Interaktif Adhedhasar Peta",
+        "description": "Karo ESD MathPath, saben pojok kutha dadi kelas anyar. Sinau matematika ora tau semenyenangke iki.",
+        "buttonText": "Jelajahi Fitur"
+      },
+      "slide3": {
+        "headline": "Nyambung karo Tujuan Pembangunan Berkelanjutan",
+        "description": "Saben misi dirancang kanggo nambah kesadaran babagan SDGs, dadi agen owah-owahan kanggo masa depan sing luwih apik.",
+        "buttonText": "Sinau SDGs"
+      }
+    }
+  },
+  "feature": {
+    "deskripsi": "ESD MathPath minangka platform inovatif sing dirancang kanggo mbantu siswa, guru, lan sapa wae sing pengin sinau matematika kanthi cara sing luwih interaktif. Liwat peta digital, sampeyan bisa nemokake macem-macem masalah matematika kontekstual sing langsung disambungake menyang lingkungan sampeyan. Salajengipun, ESD MathPath uga ngidini pangguna kanggo ngatasi masalah, ngirit kemajuan, lan mbandhingake asil sinau kanthi cara sing nyenengake."
+  },
+  "stem": {
+    "deskripsi": "STEM, sing diwiwiti dening Amerika Serikat, minangka pendekatan sing nggabungake papat disiplin kasebut dadi metode pembelajaran adhedhasar masalah lan ngatasi acara kontekstual saben dina. Metode pembelajaran berbasis STEM ngetrapake kawruh lan katrampilan bebarengan kanggo ngrampungake masalah. Pendekatan iki dianggep minangka pendekatan pembelajaran abad 21 kanthi tujuan kanggo ngasilake sumber daya manusia sing berkualitas kanthi kompetensi kognitif, psikomotor, lan afektif."
+  },
+  "sdgs": {
+    "1": "Mungkasi kamlaratan ing kabeh wujud ing ngendi wae.",
+    "2": "Mungkasi keluwen, nggayuh ketahanan pangan lan nutrisi sing luwih apik, lan ningkatake pertanian sing lestari.",
+    "3": "Njamin urip sing sehat lan ningkatake kesejahteraan kanggo kabeh wong ing kabeh umur.",
+    "4": "Njamin pendidikan sing berkualitas, inklusif, lan merata lan ningkatake kesempatan sinau seumur hidup kanggo kabeh wong.",
+    "5": "Nggayuh kesetaraan gender lan mberdayakake kabeh wong wadon lan bocah wadon.",
+    "6": "Njamin kasedhiyan lan pengelolaan banyu lan sanitasi sing lestari kanggo kabeh wong.",
+    "7": "Njamin akses menyang energi sing terjangkau, andal, lestari, lan modern kanggo kabeh wong.",
+    "8": "Ningkatake pertumbuhan ekonomi sing inklusif lan lestari, lapangan kerja sing produktif, lan pakaryan sing layak kanggo kabeh wong.",
+    "9": "Mbangun infrastruktur sing tangguh, ningkatake industrialisasi sing inklusif lan lestari, lan nyengkuyung inovasi.",
+    "10": "Ngurangi ketimpangan ing sajrone lan antarane negara.",
+    "11": "Nggawe kutha lan pemukiman manungsa sing inklusif, aman, tangguh, lan lestari.",
+    "12": "Njamin pola konsumsi lan produksi sing lestari.",
+    "13": "Njupuk tindakan darurat kanggo nglawan owah-owahan iklim lan dampake.",
+    "14": "Nguri-uri lan nggunakake samudra, segara, lan sumber daya laut kanthi lestari kanggo pembangunan sing lestari.",
+    "15": "Ngreksa, mulihake, lan ningkatake panggunaan ekosistem darat sing lestari, ngatur alas kanthi lestari, nglawan penggurunan, mungkasi lan mbalikake degradasi lahan, lan mungkasi ilange keanekaragaman hayati.",
+    "16": "Ningkatake masyarakat sing tentrem lan inklusif kanggo pembangunan sing lestari, nyedhiyakake akses keadilan kanggo kabeh wong, lan mbangun institusi sing efektif, akuntabel, lan inklusif ing kabeh tingkatan.",
+    "17": "Nguatake sarana implementasi lan revitalisasi Kemitraan Global kanggo Pembangunan Berkelanjutan.",
+    "18": "Deleng kabeh tujuan"
+  },
+  "persuate": {
+    "judul": "Ayo Miwiti Perjalanan ing ESD MathPath",
+    "deskripsi": "Siap kanggo njelajah fitur macem saka ESD MathPath? Kanthi mlebu saiki, sampeyan bisa ngakses kabeh fitur, nyimpen kemajuan, lan nyoba macem-macem alat interaktif sing nggawe sinau luwih nyenengake. Aja mung browsing; miwiti lelungan lan nikmati pengalaman sinau sing beda karo ESD MathPath!",
+    "cta": "Coba Saiki"
+  },
+  "gallery": {
+    "items": {
+      "1": {
+        "title": "Jelajahi Rute Sinau",
+        "description": "Temokake dalan-dalan matematika sing tantangan ing sakiwa tengenmu."
+      },
+      "2": {
+        "title": "Pecahno Teka-Teki Interaktif",
+        "description": "Saben lokasi duwe tantangan unik kanggo dirampungake."
+      },
+      "3": {
+        "title": "Sinau Sambil Dolanan",
+        "description": "Ngowahi lingkungan sakiwa tengen dadi papan dolanan gedhe."
+      },
+      "4": {
+        "title": "Klumpukno Poin & Lencana",
+        "description": "Entukno penghargaan kanggo saben misi sing kasil dirampungake."
+      },
+      "5": {
+        "title": "Kerja Sama Tim",
+        "description": "Rampungno soal-soal bareng kanca-kancamu."
+      },
+      "6": {
+        "title": "Petualangan Njaba Ruangan",
+        "description": "Jadikno saben pojok kutha dadi arena sinau anyarmu."
+      }
+    }
+  },
+  "tutorial": {
+    "hero": {
+      "title": "Tutorial",
+      "titleHighlight": "ESD MathPath",
+      "description": "Pandhuan lengkap kanggo ngowahi lingkunganmu dadi petualangan matematika sing nyenengake lan interaktif."
+    },
+    "intro": {
+      "title": "Apa iku ESD MathPath Portal?",
+      "description": "yaiku platform sinau matematika adhedhasar lokasi sing ngowahi lingkunganmu dadi kelas interaktif. Temokake soal matematika kontekstual, kerjo nganggo sistem jawaban repetitif, lan lacak kemajuanmu nganggo peta digital sing nyenengake!",
+      "highlight": "ESD MathPath Portal"
+    },
+    "steps": {
+      "title": "Miwiiti Petualanganmu",
+      "step1": {
+        "title": "Daftar & Mlebu",
+        "description": "Gawe akun anyar utawa mlebu menyang ESD MathPath Portal kanggo miwiti sinau"
+      },
+      "step2": {
+        "title": "Bukak Portal",
+        "description": "Klik menu 'Portal' kanggo ndeleng peta interaktif karo soal matematika"
+      },
+      "step3": {
+        "title": "Pilih Soal",
+        "description": "Goleki soal paling cedhak utawa gunakake filter kanggo nemokake soal sing cocog"
+      },
+      "step4": {
+        "title": "Jawab Soal",
+        "description": "Wangsulana lan kirim jawabanmu! Sistem bakal mriksa otomatis"
+      }
+    },
+    "search": {
+      "title": "Carane Golek Soal",
+      "map": {
+        "title": "Jelajah Peta Interaktif",
+        "description": "Gunakake peta kanggo ndeleng soal sing ana ing sakupenge sampeyan. Pin warna nuduhake lokasi soal."
+      },
+      "list": {
+        "title": "Tampilan Daftar",
+        "description": "Delengen daftar soal ing sidebar. Saben kartu nuduhake informasi lokasi lan jarak."
+      },
+      "distance": {
+        "title": "Urut Miturut Jarak",
+        "description": "Soal otomatis diurut saka sing paling cedhak karo posisimu."
+      },
+      "click": {
+        "title": "Klik Kanggo Rincian",
+        "description": "Klik kartu soal utawa pin ing peta kanggo ndeleng tampilan ringkes, banjur klik 'Tampilno Soal'."
+      }
+    },
+    "filter": {
+      "title": "Filter & Golèk",
+      "searchBar": {
+        "title": "Kolom Pencarian",
+        "description": "Ketik jeneng lokasi utawa kata kunci kanggo nemokake soal tartamtu."
+      },
+      "tags": {
+        "title": "Filter Adhedhasar Tag",
+        "description": "Pilih tag kaya 'Geometri', 'Aljabar', utawa liyane kanggo nyaring soal miturut kategori."
+      },
+      "favorites": {
+        "title": "Favoritku",
+        "description": "Aktifake filter 'Favorit' kanggo nampilake soal sing wis kowe tandhani."
+      },
+      "sorting": {
+        "title": "Pilihan Urut",
+        "description": "Urutkan soal miturut jarak paling cedhak utawa tanggal paling anyar."
+      }
+    },
+    "cooldown": {
+      "title": "Sistem Jawaban & Wektu Tundha",
+      "description": "ESD MathPath nggunakake sistem jawaban repetitif karo wektu tundha kanggo ndhukung sinau efektif lan nyegah spam.",
+      "unlimited": {
+        "title": "Jawab nganti Bener",
+        "description": "Kowe isa njawab bola-bali nganti bener. Ora ono watesan!"
+      },
+      "warning": {
+        "title": "Salah 3x = Wektu Tundha",
+        "description": "Yen 3x salah berturut-turut, sistem bakal menehi cooldown 30 detik."
+      },
+      "reset": {
+        "title": "Reset Otomatis",
+        "description": "Counter bakal reset otomatis sawise 30 menit ora aktif utawa sawise cooldown rampung."
+      },
+      "tips": {
+        "title": "Tips Nglampahi Soal",
+        "tip1": "Waca soal kanthi teliti dhisik",
+        "tip2": "Perhatikan format jawaban sing diminta",
+        "tip3": "Gunakake petunjuk nek ono",
+        "tip4": "Yen salah loro, pikir maneh sadurunge nyoba sing ketelu"
+      }
+    },
+    "features": {
+      "favorite": {
+        "title": "Favorit & Tandha",
+        "description": "Tandhani soal favoritmu kanthi klik ikon bintang. Soal favorit gampang ditemokake maneh kapan wae.",
+        "info": "Cocok banget kanggo nyimpen soal sing pengin sinau maneh!"
+      },
+      "copy": {
+        "title": "Salin Soal",
+        "description": "Gunakake tombol salin kanggo nyalin soal lan informasi lokasi.",
+        "info": "Format wis rapi lan siap ditempel!"
+      }
+    },
+    "faq": {
+      "title": "Pitakon Paling Asring Ditakokaké",
+      "q1": {
+        "question": "Apa sing kudu ditindakake yen kena cooldown?",
+        "answer": "Tunggu nganti rampung (30 detik). Gunakake wektu iki kanggo maca petunjuk utawa soal liyane."
+      },
+      "q2": {
+        "question": "Apa isa ngulang soal sing wis bener?",
+        "answer": "Ora isa dijawab maneh yen wis bener, tapi tetep isa dideleng lan direview."
+      },
+      "q3": {
+        "question": "Carane perhitungan jarak?",
+        "answer": "Sistem nganggo GPS lan rumus Haversine. Aktifake GPS supaya akurat!"
+      },
+      "q4": {
+        "question": "Apa ana pelacakan progres?",
+        "answer": "Ana! Saben jawaban bener disimpen karo timestamp."
+      }
+    },
+    "cta": {
+      "title": "Wis siap petualangan matematikamu?",
+      "description": "Jelajahi atusan soal ing sakupenge lan tingkatake kemampuanmu kanthi cara nyenengake!",
+      "button": "Bukak Portal Saiki"
+    }
+  },
+  "about": {
+    "fokus": "Fokus Utama",
+    "tentang": "Babagan Panjenenganipun",
+    "deskripsi": "Dr. Dian Kurniati punika dosen lan panaliti ing bidang Pendidikan Matematika, kanthi fokus ing integrasi Education for Sustainable Development (ESD), Etnomatematika, lan pendekatan STEM ing pambelajaran matematika. Panjenenganipun aktif ngembangake model pambelajaran inovatif kang nggabungake kearifan lokal lan teknologi digital liwat macem-macem proyek riset, publikasi, lan kolaborasi nasional uga internasional."
+  }
+}
