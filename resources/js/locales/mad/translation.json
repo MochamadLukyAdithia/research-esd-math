@@ -1,0 +1,227 @@
+{
+  "nav": {
+    "home": "Omma",
+    "portal": "Portal",
+    "tutorial": "Tutorial",
+    "about": "Tentang Kita",
+    "login": "Tamong",
+    "register": "Daftar",
+    "logout": "Keluar",
+    "dashboard": "Dasbor",
+    "profile": "Profil",
+    "masuk": "Maso'",
+    "daftar": "Daftar",
+    "footer": "Platform inovatif sè èrancang kaangghuy abhânto mored, ghuru, bân sapa bisaos sè terro ajhâr matematika kalabân cara sè lebbi interaktif."
+  },
+  "hero": {
+    "slides": {
+      "slide1": {
+        "headline": "Robah Dunya Jadi Arena Belajar Sampean",
+        "description": "Jelajahi lingkungan sakabbina, pecahagi teka-teki matematika se menantang, ban liatagi kepegimana angka mbentuk dunya ba sakabbine kita.",
+        "buttonText": "Mola Petualangan"
+      },
+      "slide2": {
+        "headline": "Pembelajaran Interaktif Berbasis Peta",
+        "description": "Sareng ESD MathPath, saban pojok kota jadi kelas baru. Belajar matematika ta' parna semenyenangka kaangguy.",
+        "buttonText": "Jelajahi Fitur"
+      },
+      "slide3": {
+        "headline": "Nyambung sareng Tujuan Pembangunan Berkelanjutan",
+        "description": "Saban misi dirancang buwat nambai kesadaran tentang SDGs, jadikagi sampean agen perubahan buwat masa depan se lebih bagus.",
+        "buttonText": "Belajar SDGs"
+      }
+    }
+  },
+  "feature": {
+    "deskripsi": "ESD MathPath panèka platform inovatif sè èrancang kaangghuy abhânto mored, ghuru, bân sapa bisaos sè terro ajhâr matematika kalabân cara sè lebbi interaktif. Lebat peta digital, panjhennengngan bisa nemmoè bânnya' masalah matematika kontekstual sè nyambung langsung dâ' lingkungan panjhennengngan. Salaèn jârèya, ESD MathPath jhughân mampu aghâbây pangghuna alako masalah, aghâdhui kamajuan, bân abhândhingaghi hasèl ajhâr kalabân cara sè senneng."
+  },
+  "stem": {
+    "deskripsi": "STEM, sè èmolaè sareng Amèrika Serikat, panèka pendekatan sè aghâdhui empa' disiplin ilmu dâ' dâlem metode ajhâr berbasis masalah bân abâhas peristiwa kontekstual sabbhân arè. Metode ajhâr berbasis STEM aghâdhui pangataowan bân katerampilan è bâkto sè padâ kaangghuy ngatase masalah. Pendekatan panèka èangghep mènangka pendekatan ajhâr abad ke-21 sè ètojjuaghi kaangghuy ngasèllaghi SDM sè berkualitas tèngghi kalabân kompetensi kognitif, psikomotor, bân afektif."
+  },
+  "sdgs": {
+    "1": "Angkana kamarekan ka sadaja bentukna ba ka sadaja tempat.",
+    "2": "Angkana kaleparran, neka'aghi ketahanan pangan ban gizi se lebih bagus, ban ngembangagi pertanian se lestari.",
+    "3": "Njamin orep se sehat ban ngembangagi kesejahteraan buwat sadaja oreng ba sadaja omor.",
+    "4": "Njamin pendidikan se berkualitas, inklusif, ban merata ban ngembangagi kesempatan belajar seumur hidup buwat sadaja oreng.",
+    "5": "Neka'aghi kesetaraan gender ban mberdayakagi sadaja bine'an ban anak bine'an.",
+    "6": "Njamin kasedhiyan ban pengelolaan aeng ban sanitasi se lestari buwat sadaja oreng.",
+    "7": "Njamin akses ka energi se terjangkau, andal, lestari, ban modern buwat sadaja oreng.",
+    "8": "Ngembangagi pertumbuhan ekonomi se inklusif ban lestari, lapangan kerja se produktif, ban pakerjaan se layak buwat sadaja oreng.",
+    "9": "Mbangun infrastruktur se tangguh, ngembangagi industrialisasi se inklusif ban lestari, ban nyengkuyung inovasi.",
+    "10": "Ngurangi ketimpangan ba jero ban antara negara.",
+    "11": "Ngajadikagi kota ban pemukiman manusia se inklusif, aman, tangguh, ban lestari.",
+    "12": "Njamin pola konsumsi ban produksi se lestari.",
+    "13": "Ngambil tindakan darurat buwat nglawan perubahan iklim ban dampakna.",
+    "14": "Nguri-uri ban nggunaagi samudra, segara, ban sumber daya laut sareng lestari buwat pembangunan se lestari.",
+    "15": "Ngreksa, mulihagi, ban ngembangagi panggunaan ekosistem darat se lestari, ngatur alas sareng lestari, nglawan penggurunan, angkana ban mbalikagi degradasi lahan, ban angkana ilangna keanekaragaman hayati.",
+    "16": "Ngembangagi masyarakat se tentrem ban inklusif buwat pembangunan se lestari, nyedhiyakagi akses keadilan buwat sadaja oreng, ban mbangun institusi se efektif, akuntabel, ban inklusif ba sadaja tingkatan.",
+    "17": "Nguatagi sarana implementasi ban revitalisasi Kemitraan Global buwat Pembangunan Berkelanjutan.",
+    "18": "Liatagi sadaja tujuan"
+  },
+  "persuate": {
+    "judul": "Ayo molaè parjhâlânanna è ESD MathPath",
+    "deskripsi": "Siap kaangghuy ajhârbâ'aghi fitur-fitur sè serrèng dâri ESD MathPath? Kalabân maso' satèya, panjhennengngan bisa ngaksès kabbhi fitur, aghâdhui kamajuan, bân nyoba' bânnya' alat interaktif sè aghâbây ajhâr lebbi senneng. Jhâ' coma nyarè; molaè parjhâlânan bân nikmati pangalaman ajhâr sè bhân-sabbhân kalabân ESD MathPath!",
+    "cta": "Cobâ sateya"
+  },
+  "gallery": {
+    "items": {
+      "1": {
+        "title": "Jelajahi Rute Belajar",
+        "description": "Temokagi jalur-jalur matematika se menantang ba sakabbine sampean."
+      },
+      "2": {
+        "title": "Pecahagi Teka-Teki Interaktif",
+        "description": "Saban lokasi ghaddhu tantangan unik buwat diselesaikagi."
+      },
+      "3": {
+        "title": "Belajar Sambil Maen",
+        "description": "Robah lingkungan sakabbina jadi papan dolanan gede."
+      },
+      "4": {
+        "title": "Kumpulagi Poin & Lencana",
+        "description": "Olleagi penghargaan buwat saban misi se berhasil sampean selesaikagi."
+      },
+      "5": {
+        "title": "Kerja Sama Tim",
+        "description": "Selesaikagi soal-soal sareng kanca-kanca sampean."
+      },
+      "6": {
+        "title": "Petualangan Lowar Ruangan",
+        "description": "Jadikagi saban pojok kota jadi arena belajar baru sampean."
+      }
+    }
+  },
+  "tutorial": {
+    "hero": {
+      "title": "Tutorial",
+      "titleHighlight": "ESD MathPath",
+      "description": "Pandhuan lengkap ben takkonah lingkungan se jadi petualangan matematika se seru ben interaktif."
+    },
+    "intro": {
+      "title": "Apah ESD MathPath Portal?",
+      "description": "enga' platform e-belajar matematika adhar tempat se ngajak sampean belajar ngangguy soal kontekstual, sistem jawab berulang, ben ngelacak progres sampean ngangguy peta digital se menarik!",
+      "highlight": "ESD MathPath Portal"
+    },
+    "steps": {
+      "title": "Mulai Petualangan",
+      "step1": {
+        "title": "Daftar & Login",
+        "description": "Buat akun anyar atawa login ben bisa mulai belajar"
+      },
+      "step2": {
+        "title": "Buka Portal",
+        "description": "Klik menu 'Portal' ben ngelihat peta interaktif ben soal matematika"
+      },
+      "step3": {
+        "title": "Pilih Soal",
+        "description": "Cari soal se paling dekat atau filter soal sesuai kebutuhan"
+      },
+      "step4": {
+        "title": "Jawab Soal",
+        "description": "Jawab soal ben kirim! Sistem otomatis ngecek jawaban"
+      }
+    },
+    "search": {
+      "title": "Carah Nyaè Soal",
+      "map": {
+        "title": "Jelajah Peta Interaktif",
+        "description": "Gunakag peta ben ngelihat soal e sekitar sampean. Pin warna nuduh tempat soal."
+      },
+      "list": {
+        "title": "Tampilan Daftar",
+        "description": "Soal bisa dilihat dalam bentuk daftar kartu e samping layar."
+      },
+      "distance": {
+        "title": "Urut Berdasarkan Jarak",
+        "description": "Soal otomatis diurut dari se paling dekat."
+      },
+      "click": {
+        "title": "Klik Ben Rinciyan",
+        "description": "Klik kartu atau pin e peta ben lihat rincian soal."
+      }
+    },
+    "filter": {
+      "title": "Filter & Nyèri",
+      "searchBar": {
+        "title": "Kotak Pencarian",
+        "description": "Ketik nama lokasi atau kata kunci ben nyèri soal tertentu."
+      },
+      "tags": {
+        "title": "Filter Berdasar Tag",
+        "description": "Pilih tag kaya 'Geometri', 'Aljabar' ben lainah."
+      },
+      "favorites": {
+        "title": "Favorit",
+        "description": "Tampilan soal se sampean tandhai sebagai favorit."
+      },
+      "sorting": {
+        "title": "Pilihan Urut",
+        "description": "Urut soal bedasar jarak atawa tanggal terbaru."
+      }
+    },
+    "cooldown": {
+      "title": "Sistem Jawab & Tungguan",
+      "description": "Sistem jawab berulang ben ada cooldown ben ngedukung belajar se efektif.",
+      "unlimited": {
+        "title": "Jawab Sampek Bener",
+        "description": "Bisa jawab berkali-kali sampek bener."
+      },
+      "warning": {
+        "title": "Salah 3x = Tungguan",
+        "description": "Salah 3x berturut-turut = cooldown 30 detik."
+      },
+      "reset": {
+        "title": "Reset Otomatis",
+        "description": "Counter reset otomatis sakalaban 30 menit ora aktif atau cooldown selesai."
+      },
+      "tips": {
+        "title": "Tips Ngelesaikan Soal",
+        "tip1": "Baca soal se tenang",
+        "tip2": "Perhatike format jawaban",
+        "tip3": "Gunakag petunjuk kalaben ada",
+        "tip4": "Lek salah 2x, pikir ben tambah jhelas sebelum nyoba se ketelu"
+      }
+    },
+    "features": {
+      "favorite": {
+        "title": "Favorit & Simpen",
+        "description": "Klik ikon bintang ben nandhai soal favorit.",
+        "info": "Mudah ben dipelajari ulang kapan saja!"
+      },
+      "copy": {
+        "title": "Salin Soal",
+        "description": "Gunakag tombol salin ben nyalin soal ben informasina.",
+        "info": "Sudah rapi ben siap ditempel!"
+      }
+    },
+    "faq": {
+      "title": "Pertanyaan se sering muncul",
+      "q1": {
+        "question": "Apah se tak lakoni lek kena cooldown?",
+        "answer": "Tunggu sakalaban rampung (30 detik). Bisa baca petunjuk atawa soal lain."
+      },
+      "q2": {
+        "question": "Bisa ulang soal se sudah bener?",
+        "answer": "Tak bisa jawab lagi, tapi tetap bisa dilihat ben direview."
+      },
+      "q3": {
+        "question": "Carah hitung jarak?",
+        "answer": "Ngangguy GPS ben rumus Haversine. Aktifag GPS!"
+      },
+      "q4": {
+        "question": "Ana pelacak progres?",
+        "answer": "Ana! Jawaban bener dicatat kalaben waktu."
+      }
+    },
+    "cta": {
+      "title": "Siyap mulai petualangan matematikah?",
+      "description": "Jelajah ratusan soal e sekeliling ben tingkatag kemampuan sampean!",
+      "button": "Buka Portal Sekera"
+    }
+  },
+  "about": {
+    "fokus": "Fokus Utama",
+    "tentang": "Tentang Dheenah",
+    "deskripsi": "Dr. Dian Kurniati se oreng dosen ben panaliti dalam bidang Pendidikan Matematika, ben fokus ka integrasi Education for Sustainable Development (ESD), Etnomatematika, ben pendekatan STEM dalam pelajaran matematika. Dheenah aktif ngembangang model pembelajaran inovatif se nyareaghi kearifan lokal ben teknologi digital lewat bhanyak proyek penelitian, publikasi, serta kolaborasi nasional ben internasional."
+  }
+}

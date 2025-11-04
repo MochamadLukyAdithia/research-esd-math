@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from "react-i18next";
+
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <>
       <footer className="bg-primary text-secondary py-10 px-5 md:px-12">
@@ -10,19 +13,17 @@ const Footer: React.FC = () => {
             <div className="md:w-2/5">
               <h4 className="text-xl font-bold mb-5">ESD.MathPath</h4>
               <p className="leading-relaxed">
-                Platform inovatif yang dirancang untuk membantu siswa, guru, dan
-                siapa saja yang ingin belajar matematika dengan cara yang lebih
-                interaktif.
+                {t('nav.footer')  }
               </p>
             </div>
 
             <div>
               <h4 className="text-xl font-bold mb-5">Quick Links</h4>
               <ul className="space-y-3">
-                <li><a href="/" className="hover:underline">Home</a></li>
-                <li><a href="/portal" className="hover:underline">Portal</a></li>
-                <li><a href="/tutorial" className="hover:underline">Tutorial</a></li>
-                <li><a href="/about-us" className="hover:underline">About Us</a></li>
+                <li><a href="/" className="hover:underline">{t('nav.home')}</a></li>
+                <li><a href="/portal" className="hover:underline">{t('nav.portal')}</a></li>
+                <li><a href="/tutorial" className="hover:underline">{t('nav.tutorial')}</a></li>
+                <li><a href="/about-us" className="hover:underline">{t('nav.about')}</a></li>
               </ul>
             </div>
 

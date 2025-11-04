@@ -1,0 +1,227 @@
+{
+  "nav": {
+    "home": "Home",
+    "portal": "Portal",
+    "tutorial": "Tutorial",
+    "about": "About Us",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "masuk": "Login",
+    "daftar": "Register",
+    "footer": "An innovative platform designed to help students, teachers, and anyone who wants to learn mathematics in a more interactive way."
+  },
+  "hero": {
+    "slides": {
+      "slide1": {
+        "headline": "Transform the World into Your Learning Arena",
+        "description": "Explore your surroundings, solve challenging math puzzles, and see how numbers shape the world around us.",
+        "buttonText": "Start Adventure"
+      },
+      "slide2": {
+        "headline": "Interactive Map-Based Learning",
+        "description": "With ESD MathPath, every corner of the city is a new classroom. Learning math has never been this fun.",
+        "buttonText": "Explore Features"
+      },
+      "slide3": {
+        "headline": "Connected with Sustainable Development Goals",
+        "description": "Every mission is designed to raise awareness of SDGs, making you an agent of change for a better future.",
+        "buttonText": "Learn SDGs"
+      }
+    }
+  },
+  "feature":{
+    "deskripsi": "ESD MathPath is an innovative platform designed to help students, teachers, and anyone who wants to learn mathematics in a more interactive way. Through digital maps, you can find various contextual math problems that are directly related to the surrounding environment. Not only that, ESD MathPath also allows users to work on problems, save their progress, and compare learning outcomes in a fun way."
+  },
+  "stem": {
+    "deskripsi": "STEM, which was initiated by the United States, is an approach that integrates the four disciplines into problem-based learning methods and everyday contextual events. STEM-based learning methods apply knowledge and skills simultaneously to solve a case. This approach is declared as a 21st-century learning approach in an effort to produce human resources with high-quality cognitive, psychomotor, and affective skills."
+  },
+  "sdgs": {
+    "1": "End poverty in all its forms everywhere.",
+    "2": "End hunger, achieve food security and improved nutrition and promote sustainable agriculture.",
+    "3": "Ensure healthy lives and promote well-being for all at all ages.",
+    "4": "Ensure inclusive and equitable quality education and promote lifelong learning opportunities for all.",
+    "5": "Achieve gender equality and empower all women and girls.",
+    "6": "Ensure availability and sustainable management of water and sanitation for all.",
+    "7": "Ensure access to affordable, reliable, sustainable and modern energy for all.",
+    "8": "Promote sustained, inclusive and sustainable economic growth, full and productive employment and decent work for all.",
+    "9": "Build resilient infrastructure, promote inclusive and sustainable industrialization and foster innovation.",
+    "10": "Reduce inequality within and among countries.",
+    "11": "Make cities and human settlements inclusive, safe, resilient and sustainable.",
+    "12": "Ensure sustainable consumption and production patterns.",
+    "13": "Take urgent action to combat climate change and its impacts.",
+    "14": "Conserve and sustainably use the oceans, seas and marine resources for sustainable development.",
+    "15": "Protect, restore and promote sustainable use of terrestrial ecosystems, sustainably manage forests, combat desertification, and halt and reverse land degradation and halt biodiversity loss.",
+    "16": "Promote peaceful and inclusive societies for sustainable development, provide access to justice for all and build effective, accountable and inclusive institutions at all levels.",
+    "17": "Strengthen the means of implementation and revitalize the Global Partnership for Sustainable Development.",
+    "18": "See all goals"
+  },
+  "persuate": {
+    "judul": "Let's Start Your Journey at ESD MathPath",
+    "deskripsi": "Ready to explore all the exciting features on ESD MathPath? Log in now to access all the features, save your learning progress, and try out various interactive tools that make learning more fun. Don't just browse, start your journey and enjoy a different learning experience with ESD MathPath!",
+    "cta": "Try It Now"
+  },
+  "gallery": {
+    "items": {
+      "1": {
+        "title": "Explore Learning Routes",
+        "description": "Discover challenging mathematical paths around you."
+      },
+      "2": {
+        "title": "Solve Interactive Puzzles",
+        "description": "Every location has unique challenges to solve."
+      },
+      "3": {
+        "title": "Learn While Playing",
+        "description": "Transform your surroundings into a giant game board."
+      },
+      "4": {
+        "title": "Collect Points & Badges",
+        "description": "Get rewards for every mission you successfully complete."
+      },
+      "5": {
+        "title": "Teamwork",
+        "description": "Solve problems together with your friends."
+      },
+      "6": {
+        "title": "Outdoor Adventures",
+        "description": "Make every corner of the city your new learning arena."
+      }
+    }
+  },
+  "tutorial": {
+    "hero": {
+      "title": "Tutorial",
+      "titleHighlight": "ESD MathPath",
+      "description": "Complete guide to transform your surroundings into an exciting and interactive math adventure."
+    },
+    "intro": {
+      "title": "What is ESD MathPath Portal?",
+      "description": "is a location-based math learning platform that transforms your surroundings into an interactive classroom. Find contextual math problems, work with a repetitive answer system, and track your progress with an engaging digital map!",
+      "highlight": "ESD MathPath Portal"
+    },
+    "steps": {
+      "title": "Start Your Adventure",
+      "step1": {
+        "title": "Register & Login",
+        "description": "Create a new account or login to ESD MathPath Portal to start learning"
+      },
+      "step2": {
+        "title": "Open Portal",
+        "description": "Click the 'Portal' menu to view the interactive map with math problems"
+      },
+      "step3": {
+        "title": "Choose Problem",
+        "description": "Find the nearest problem or use filters to find problems that suit your needs"
+      },
+      "step4": {
+        "title": "Solve Problem",
+        "description": "Answer the problem and submit! The system will auto-check your answer"
+      }
+    },
+    "search": {
+      "title": "How to Find Problems",
+      "map": {
+        "title": "Explore Interactive Map",
+        "description": "Use the map to see all problems around you. Colored pins show problem locations."
+      },
+      "list": {
+        "title": "List View",
+        "description": "View list of problems as cards in the sidebar. Each card displays location info and distance."
+      },
+      "distance": {
+        "title": "Sorting by Distance",
+        "description": "Problems are automatically sorted by nearest distance from your current location."
+      },
+      "click": {
+        "title": "Click for Details",
+        "description": "Click problem card or pin on map to see preview, then click 'Show Problem' to start."
+      }
+    },
+    "filter": {
+      "title": "Filter & Search",
+      "searchBar": {
+        "title": "Search Bar",
+        "description": "Type location name or keywords to quickly find specific problems."
+      },
+      "tags": {
+        "title": "Filter by Tags",
+        "description": "Select tags like 'Geometry', 'Algebra', or other topics to filter problems by category."
+      },
+      "favorites": {
+        "title": "My Favorites",
+        "description": "Enable 'Favorites' filter to only display problems you've marked as favorites."
+      },
+      "sorting": {
+        "title": "Sorting Options",
+        "description": "Sort problems by nearest distance or latest date according to your preference."
+      }
+    },
+    "cooldown": {
+      "title": "Answer System & Cooldown",
+      "description": "ESD MathPath uses a repetitive answer system with cooldown to encourage effective learning and prevent spam.",
+      "unlimited": {
+        "title": "Answer Until Correct",
+        "description": "You can answer repeatedly until the answer is correct. No limit on total attempts!"
+      },
+      "warning": {
+        "title": "3x Wrong = Cooldown",
+        "description": "After 3 consecutive wrong answers, the system will activate a 30-second cooldown."
+      },
+      "reset": {
+        "title": "Auto Reset",
+        "description": "Attempt counter will reset automatically after 30 minutes of inactivity or after cooldown ends."
+      },
+      "tips": {
+        "title": "Problem Solving Tips",
+        "tip1": "Read the problem carefully before answering",
+        "tip2": "Pay attention to the requested answer format (numbers, text, or combination)",
+        "tip3": "Use hints if available to help understanding",
+        "tip4": "If wrong 2x, rethink strategy before 3rd attempt to avoid cooldown"
+      }
+    },
+    "features": {
+      "favorite": {
+        "title": "Favorites & Bookmark",
+        "description": "Mark your favorite problems by clicking the star icon. Favorited problems can be quickly accessed through the \"My Favorites\" filter to rework or review anytime.",
+        "info": "The favorite feature is very useful for saving problems you want to study more deeply or share with friends!"
+      },
+      "copy": {
+        "title": "Copy Problem",
+        "description": "Use the copy button to copy problem text along with location information. Perfect for offline study or sharing problems with classmates.",
+        "info": "Copied text is already neatly formatted and ready to paste into notes or messaging apps!"
+      }
+    },
+    "faq": {
+      "title": "Frequently Asked Questions (FAQ)",
+      "q1": {
+        "question": "What should I do if I get a cooldown?",
+        "answer": "Wait until the cooldown timer finishes (30 seconds). Use this time to read hints, study related material, or try other problems that haven't been cooldown."
+      },
+      "q2": {
+        "question": "Can I work on the same problem repeatedly?",
+        "answer": "After answering correctly, the problem will be marked as \"Already Answered\" and cannot be answered again. However, you can still view the problem and your answer for review."
+      },
+      "q3": {
+        "question": "How does distance calculation work?",
+        "answer": "The system uses your GPS location to calculate distance to each problem using the Haversine formula. Make sure GPS is active for accurate results!"
+      },
+      "q4": {
+        "question": "Is there progress tracking?",
+        "answer": "Yes! The system saves all your correct answers along with timestamps. You can see progress through the \"Already Answered\" status on each problem card."
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Your Math Adventure?",
+      "description": "Explore hundreds of math problems around you and improve your skills in a fun way!",
+      "button": "Open Portal Now"
+    }
+  },
+  "about": {
+    "fokus": "Main Focus",
+    "tentang": "About Her",
+    "deskripsi": "Dr. Dian Kurniati is a lecturer and researcher in Mathematics Education, focusing on the integration of Education for Sustainable Development (ESD), Ethnomathematics, and STEM approaches in mathematics learning. She actively develops innovative learning models that combine local wisdom and digital technology through various research projects, publications, and both national and international collaborations."
+  }
+}

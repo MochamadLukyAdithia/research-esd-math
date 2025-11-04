@@ -1,11 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
-const languages = {
-    id: { name: 'Indonesia', flag: '🇮🇩' },
-    en: { name: 'English', flag: '🇺🇸' },
-};
+interface Language {
+    code: string;
+    name: string;
+    flag: string;
+}
+
+const languages: Language[] = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'id', name: 'Indonesia', flag: '🇮🇩' },
+    { code: 'jv', name: 'Jawa', flag: '🇮🇩' },
+    { code: 'mad', name: 'Madura', flag: '🇮🇩' },
+];
 
 const menuVariants = {
     hidden: { opacity: 0, y: -10, scale: 0.95 },
@@ -14,9 +23,11 @@ const menuVariants = {
 };
 
 export default function LanguageDropdown() {
-    const [currentLang, setCurrentLang] = useState<'id' | 'en'>('id');
+    const { i18n } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -28,8 +39,8 @@ export default function LanguageDropdown() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLanguageChange = (lang: 'id' | 'en') => {
-        setCurrentLang(lang);
+    const handleLanguageChange = async (langCode: string) => {
+        await i18n.changeLanguage(langCode);
         setIsOpen(false);
     };
 
@@ -41,7 +52,8 @@ export default function LanguageDropdown() {
                 aria-label="Change language"
             >
                 <Globe className="w-4 h-4" />
-                <span className="hidden sm:inline">{currentLang.toUpperCase()}</span>
+                <span className="hidden sm:inline">{currentLanguage.code.toUpperCase()}</span>
+                <span className="text-lg sm:hidden">{currentLanguage.flag}</span>
             </button>
 
             <AnimatePresence>
@@ -55,19 +67,19 @@ export default function LanguageDropdown() {
                         className="absolute right-0 mt-2 w-48 bg-primary rounded-lg shadow-xl z-50 border-2 border-secondary/20 overflow-hidden"
                     >
                         <div className="py-1">
-                            {Object.entries(languages).map(([code, { name, flag }]) => (
+                            {languages.map((lang) => (
                                 <button
-                                    key={code}
-                                    onClick={() => handleLanguageChange(code as 'id' | 'en')}
+                                    key={lang.code}
+                                    onClick={() => handleLanguageChange(lang.code)}
                                     className={`flex items-center gap-3 w-full px-4 py-2 text-sm transition-colors ${
-                                        currentLang === code
+                                        i18n.language === lang.code
                                             ? 'bg-secondary/10 text-secondary font-medium'
                                             : 'text-secondary-light hover:bg-secondary/5 hover:text-secondary'
                                     }`}
                                 >
-                                    <span className="text-lg">{flag}</span>
-                                    <span>{name}</span>
-                                    {currentLang === code && (
+                                    <span className="text-lg">{lang.flag}</span>
+                                    <span>{lang.name}</span>
+                                    {i18n.language === lang.code && (
                                         <span className="ml-auto text-secondary">✓</span>
                                     )}
                                 </button>

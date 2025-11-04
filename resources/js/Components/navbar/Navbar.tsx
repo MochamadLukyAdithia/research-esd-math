@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, usePage } from "@inertiajs/react";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 
 import { User as Profile } from '@/types';
@@ -28,6 +29,7 @@ const mobileMenuVariants = {
 };
 
 export default function Navbar({ user: propUser }: NavbarProps) {
+    const { t } = useTranslation();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -108,14 +110,14 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                                             onClick={closeAllMenus}
                                             className="text-center text-primary bg-transparent border-2 border-primary hover:bg-primary hover:text-secondary font-medium rounded-lg text-sm px-4 py-2.5 transition-all"
                                         >
-                                            Masuk
+                                            {t('nav.login')}
                                         </Link>
                                         <Link
                                             href={route('register')}
                                             onClick={closeAllMenus}
                                             className="text-center text-secondary bg-primary border-2 border-primary hover:bg-primary/90 font-medium rounded-lg text-sm px-4 py-2.5 transition-all"
                                         >
-                                            Daftar
+                                            {t('nav.register')}
                                         </Link>
                                     </div>
                                 )}

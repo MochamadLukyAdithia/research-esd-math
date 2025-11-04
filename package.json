@@ -30,8 +30,11 @@
     "dependencies": {
         "framer-motion": "^12.23.22",
         "haversine-distance": "^1.2.4",
+        "i18next": "^25.6.0",
+        "i18next-browser-languagedetector": "^8.2.0",
         "lucide-react": "^0.544.0",
         "mapbox-gl": "^3.15.0",
+        "react-i18next": "^16.2.4",
         "react-map-gl": "^7.1.7"
     }
 }

@@ -1,32 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-const slides = [
-  {
-    image: '/assets/home/hero/hero_1.webp',
-    headline: 'Ubah Dunia Menjadi Arena Belajarmu',
-    description: 'Jelajahi lingkungan sekitarmu, pecahkan teka-teki matematika yang menantang, dan lihat bagaimana angka membentuk dunia di sekitar kita.',
-    buttonText: 'Mulai Petualangan',
-    buttonLink: '/portal',
-  },
-  {
-    image: '/assets/home/hero/hero_2.webp',
-    headline: 'Pembelajaran Interaktif Berbasis Peta',
-    description: 'Dengan ESD MathPath, setiap sudut kota adalah ruang kelas baru. Belajar matematika tidak pernah semenyenangkan ini.',
-    buttonText: 'Jelajahi Fitur',
-    buttonLink: '#feature',
-  },
-  {
-    image: '/assets/home/hero/hero_3.webp',
-    headline: 'Terhubung dengan Tujuan Pembangunan Berkelanjutan',
-    description: 'Setiap misi dirancang untuk meningkatkan kesadaran akan SDGs, menjadikanmu agen perubahan untuk masa depan yang lebih baik.',
-    buttonText: 'Pelajari SDGs',
-    buttonLink: '#sdgs',
-  },
-];
+interface Slide {
+  image: string;
+  translationKey: string;
+  buttonLink: string;
+}
 
 const Hero = () => {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides: Slide[] = [
+    {
+      image: '/assets/home/hero/hero_1.webp',
+      translationKey: 'hero.slides.slide1',
+      buttonLink: '/portal',
+    },
+    {
+      image: '/assets/home/hero/hero_2.webp',
+      translationKey: 'hero.slides.slide2',
+      buttonLink: '#feature',
+    },
+    {
+      image: '/assets/home/hero/hero_3.webp',
+      translationKey: 'hero.slides.slide3',
+      buttonLink: '#sdgs',
+    },
+  ];
 
   const prevSlide = () => {
     const isFirstSlide = currentSlide === 0;
@@ -90,22 +92,22 @@ const Hero = () => {
                 : 'opacity-0 absolute inset-0 pointer-events-none'
             }`}
           >
-             {currentSlide === index && (
-                <div className="animate-fadeIn">
-                    <h1 className="text-4xl md:text-6xl font-bold mb-4 text-shadow-lg">
-                        {slide.headline}
-                    </h1>
-                    <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-shadow">
-                        {slide.description}
-                    </p>
-                    <button
-                        onClick={() => handleButtonClick(slide.buttonLink)}
-                        className="bg-primary text-secondary font-bold py-3 px-8 rounded-lg text-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 inline-block"
-                    >
-                        {slide.buttonText}
-                    </button>
-                </div>
-             )}
+            {currentSlide === index && (
+              <div className="animate-fadeIn">
+                <h1 className="text-4xl md:text-6xl font-bold mb-4 text-shadow-lg">
+                  {t(`${slide.translationKey}.headline`)}
+                </h1>
+                <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-shadow">
+                  {t(`${slide.translationKey}.description`)}
+                </p>
+                <button
+                  onClick={() => handleButtonClick(slide.buttonLink)}
+                  className="bg-primary text-secondary font-bold py-3 px-8 rounded-lg text-lg hover:bg-primary/90 transition-all duration-300 transform hover:scale-105 inline-block"
+                >
+                  {t(`${slide.translationKey}.buttonText`)}
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -121,7 +123,9 @@ const Hero = () => {
           <div
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${currentSlide === index ? 'bg-primary scale-125' : 'bg-white/50'}`}
+            className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 ${
+              currentSlide === index ? 'bg-primary scale-125' : 'bg-white/50'
+            }`}
           ></div>
         ))}
       </div>

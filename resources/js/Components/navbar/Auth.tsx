@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from '@inertiajs/react';
 import { User, LogOut, LayoutDashboard } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { UserAvatar } from './UserAvatar';
@@ -13,6 +14,7 @@ const menuVariants = {
 };
 
 export function AuthSection({ user }: { user: Profile | null }) {
+    const { t } = useTranslation();
     const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
     const profileMenuRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,7 @@ export function AuthSection({ user }: { user: Profile | null }) {
                                 className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-secondary-light hover:bg-red-500/10 hover:text-red-600 transition-colors"
                             >
                                 <LogOut className="w-4 h-4" />
-                                Keluar
+                                {t('nav.logout')}
                             </Link>
                         </motion.div>
                     )}
@@ -89,14 +91,14 @@ export function AuthSection({ user }: { user: Profile | null }) {
                 href={route('login')}
                 className="text-center text-secondary bg-transparent border-2 border-secondary hover:bg-secondary hover:text-primary font-medium rounded-lg text-sm px-4 py-2 transition-all"
             >
-                Masuk
+                {t('nav.masuk')}
             </Link>
 
             <Link
                 href={route('register')}
                 className="text-center text-primary bg-secondary border-2 border-secondary hover:bg-secondary/90 font-medium rounded-lg text-sm px-4 py-2 transition-all"
             >
-                Daftar
+                {t('nav.daftar')}
             </Link>
         </div>
     );

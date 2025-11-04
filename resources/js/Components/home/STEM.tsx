@@ -1,4 +1,7 @@
+import { useTranslation } from "react-i18next";
+
 const STEM = () => {
+  const { t } = useTranslation();
   return (
     <section className="relative py-20 bg-primary text-secondary overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,15 +37,7 @@ const STEM = () => {
               Science, Technology, Engineering, and Mathematics
             </h2>
             <p className="mt-4 text-base sm:text-lg leading-relaxed opacity-90">
-              STEM yang digagas oleh Amerika Serikat ini merupakan pendekatan
-              yang menggabungkan keempat disiplin ilmu tersebut secara terpadu
-              ke dalam metode pembelajaran berbasis masalah dan kejadian
-              kontekstual sehari-hari. Metode pembelajaran berbasis STEM
-              menerapkan pengetahuan dan keterampilan secara bersamaan untuk
-              menyelesaikan suatu kasus. Pendekatan ini dinyatakan sebagai
-              pendekatan pembelajaran abad-21 dalam upaya untuk menghasilkan
-              sumber daya manusia dengan kognitif, psikomotor dan afektif yang
-              berkualitas.
+              {t('stem.deskripsi')}
             </p>
           </div>
         </div>

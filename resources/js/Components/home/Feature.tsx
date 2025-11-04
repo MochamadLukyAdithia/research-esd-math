@@ -1,6 +1,8 @@
+import { useTranslation } from "react-i18next";
 import React from 'react';
 
 const FeatureSection = () => {
+  const { t } = useTranslation(); 
   return (
     <section id='feature' className="bg-secondary text-white py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -9,7 +11,7 @@ const FeatureSection = () => {
             ESD.MathPath
           </h2>
           <p className="text-lg leading-relaxed opacity-90">
-            ESD MathPath adalah platform inovatif yang dirancang untuk membantu siswa, guru, dan siapa saja yang ingin belajar matematika dengan cara yang lebih interaktif. Melalui peta digital, kamu bisa menemukan berbagai soal matematika kontekstual yang terhubung langsung dengan lingkungan sekitar. Tidak hanya itu, ESD MathPath juga memungkinkan pengguna untuk mengerjakan soal, menyimpan progres, dan membandingkan hasil belajar dengan cara yang menyenangkan.
+            {t('feature.deskripsi')}
           </p>
         </div>
 

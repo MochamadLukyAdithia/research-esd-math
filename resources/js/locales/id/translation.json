@@ -1,0 +1,226 @@
+{
+   "nav": {
+    "home": "Beranda",
+    "portal": "Portal",
+    "tutorial": "Tutorial",
+    "about": "Tentang Kami",
+    "login": "Masuk",
+    "register": "Daftar",
+    "logout": "Keluar",
+    "dashboard": "Dashboard",
+    "profile": "Profil",
+    "masuk": "Masuk",
+    "daftar": "Daftar",
+    "footer": "Platform inovatif yang dirancang untuk membantu siswa, guru, dan siapa saja yang ingin belajar matematika dengan cara yang lebih interaktif."
+  },
+  "hero": {
+    "slides": {
+      "slide1": {
+        "headline": "Ubah Dunia Menjadi Arena Belajarmu",
+        "description": "Jelajahi lingkungan sekitarmu, pecahkan teka-teki matematika yang menantang, dan lihat bagaimana angka membentuk dunia di sekitar kita.",
+        "buttonText": "Mulai Petualangan"
+      },
+      "slide2": {
+        "headline": "Pembelajaran Interaktif Berbasis Peta",
+        "description": "Dengan ESD MathPath, setiap sudut kota adalah ruang kelas baru. Belajar matematika tidak pernah semenyenangkan ini.",
+        "buttonText": "Jelajahi Fitur"
+      },
+      "slide3": {
+        "headline": "Terhubung dengan Tujuan Pembangunan Berkelanjutan",
+        "description": "Setiap misi dirancang untuk meningkatkan kesadaran akan SDGs, menjadikanmu agen perubahan untuk masa depan yang lebih baik.",
+        "buttonText": "Pelajari SDGs"
+      }
+    }
+  },
+  "feature":{
+    "deskripsi": "ESD MathPath adalah platform inovatif yang dirancang untuk membantu siswa, guru, dan siapa saja yang ingin belajar matematika dengan cara yang lebih interaktif. Melalui peta digital, kamu bisa menemukan berbagai soal matematika kontekstual yang terhubung langsung dengan lingkungan sekitar. Tidak hanya itu, ESD MathPath juga memungkinkan pengguna untuk mengerjakan soal, menyimpan progres, dan membandingkan hasil belajar dengan cara yang menyenangkan."
+  },
+  "stem": {
+    "deskripsi": "STEM yang digagas oleh Amerika Serikat ini merupakan pendekatan yang menggabungkan keempat disiplin ilmu tersebut secara terpadu ke dalam metode pembelajaran berbasis masalah dan kejadian kontekstual sehari-hari. Metode pembelajaran berbasis STEM menerapkan pengetahuan dan keterampilan secara bersamaan untuk menyelesaikan suatu kasus. Pendekatan ini dinyatakan sebagai pendekatan pembelajaran abad-21 dalam upaya untuk menghasilkan sumber daya manusia dengan kognitif, psikomotor dan afektif yang berkualitas."
+  },
+  "sdgs": {
+    "1": "Mengakhiri kemiskinan dalam segala bentuknya di mana pun.",
+    "2": "Mengakhiri kelaparan, mencapai ketahanan pangan dan gizi yang lebih baik, serta mempromosikan pertanian berkelanjutan.",
+    "3": "Memastikan kehidupan yang sehat dan mempromosikan kesejahteraan bagi semua orang di segala usia.",
+    "4": "Memastikan pendidikan berkualitas yang inklusif dan merata serta mempromosikan kesempatan belajar seumur hidup bagi semua orang.",
+    "5": "Mencapai kesetaraan gender dan memberdayakan semua perempuan dan anak perempuan.",
+    "6": "Memastikan ketersediaan dan pengelolaan air dan sanitasi yang berkelanjutan untuk semua.",
+    "7": "Memastikan akses terhadap energi yang terjangkau, andal, berkelanjutan, dan modern untuk semua.",
+    "8": "Mempromosikan pertumbuhan ekonomi yang berkelanjutan, inklusif, dan berkelanjutan, lapangan kerja yang produktif penuh, dan pekerjaan yang layak untuk semua.",
+    "9": "Membangun infrastruktur yang tangguh, mempromosikan industrialisasi yang inklusif dan berkelanjutan, serta mendorong inovasi.",
+    "10": "Mengurangi ketimpangan di dalam dan di antara negara.",
+    "11": "Menjadikan kota dan pemukiman manusia inklusif, aman, tangguh, dan berkelanjutan.",
+    "12": "Memastikan pola konsumsi dan produksi yang berkelanjutan.",
+    "13": "Mengambil tindakan mendesak untuk memerangi perubahan iklim dan dampaknya.",
+    "14": "Melestarikan dan memanfaatkan secara berkelanjutan samudra, laut, dan sumber daya laut untuk pembangunan berkelanjutan.",
+    "15": "Melindungi, memulihkan, dan mempromosikan penggunaan berkelanjutan ekosistem terestrial, mengelola hutan secara berkelanjutan, memerangi penggurunan, menghentikan dan membalikkan degradasi lahan, serta menghentikan hilangnya keanekaragaman hayati.",
+    "16": "Mempromosikan masyarakat yang damai dan inklusif untuk pembangunan berkelanjutan, menyediakan akses keadilan untuk semua, dan membangun institusi yang efektif, akuntabel, dan inklusif di semua tingkatan.",
+    "17": "Memperkuat sarana implementasi dan merevitalisasi Kemitraan Global untuk Pembangunan Berkelanjutan.",
+    "18": "Lihat semua tujuan"
+  },
+  "persuate": {
+    "judul": "Ayo Mulai Perjalananmu di ESD MathPath",
+    "deskripsi": "Sudah siap menjelajahi berbagai fitur seru di ESD MathPath? Dengan login sekarang juga, kamu bisa mengakses seluruh fitur lengkap, menyimpan progres belajarmu, dan mencoba berbagai tools interaktif yang membuat proses belajar jadi lebih menyenangkan. Jangan cuma lihat-lihat, yuk mulai perjalananmu dan nikmati pengalaman belajar yang berbeda bersama ESD MathPath!",
+    "cta": "Cobain Sekarang Juga"
+  },
+  "gallery": {
+    "items": {
+      "1": {
+        "title": "Jelajahi Rute Belajar",
+        "description": "Temukan jalur-jalur matematika yang menantang di sekitarmu."
+      },
+      "2": {
+        "title": "Pecahkan Teka-Teki Interaktif",
+        "description": "Setiap lokasi memiliki tantangan unik untuk diselesaikan."
+      },
+      "3": {
+        "title": "Belajar Sambil Bermain",
+        "description": "Mengubah lingkungan sekitar menjadi papan permainan raksasa."
+      },
+      "4": {
+        "title": "Kumpulkan Poin & Lencana",
+        "description": "Dapatkan penghargaan untuk setiap misi yang berhasil kamu selesaikan."
+      },
+      "5": {
+        "title": "Kerja Sama Tim",
+        "description": "Selesaikan soal-soal bersama teman-temanmu."
+      },
+      "6": {
+        "title": "Petualangan Luar Ruangan",
+        "description": "Jadikan setiap sudut kota sebagai arena belajarmu yang baru."
+      }
+    }
+  },
+  "tutorial": {
+    "hero": {
+      "title": "Tutorial",
+      "titleHighlight": "ESD MathPath",
+      "description": "Panduan lengkap untuk mengubah lingkungan sekitar Anda menjadi petualangan matematika yang seru dan interaktif."
+    },
+    "intro": {
+      "title": "Apa itu ESD MathPath Portal?",
+      "description": "adalah platform pembelajaran matematika berbasis lokasi yang mengubah lingkungan sekitar menjadi ruang kelas interaktif. Temukan soal matematika kontekstual, kerjakan dengan sistem jawaban berulang, dan lacak progress Anda dengan peta digital yang menarik!"
+    },
+    "steps": {
+      "title": "Mulai Petualangan Anda",
+      "step1": {
+        "title": "Registrasi & Login",
+        "description": "Daftar akun baru atau login ke ESD MathPath Portal untuk mulai belajar"
+      },
+      "step2": {
+        "title": "Buka Portal",
+        "description": "Klik menu 'Portal' untuk melihat peta interaktif dengan soal-soal matematika"
+      },
+      "step3": {
+        "title": "Pilih Soal",
+        "description": "Cari soal terdekat atau gunakan filter untuk menemukan soal sesuai kebutuhan"
+      },
+      "step4": {
+        "title": "Kerjakan Soal",
+        "description": "Jawab soal dan submit! Sistem akan auto-check jawaban Anda"
+      }
+    },
+    "search": {
+      "title": "Cara Mencari Soal",
+      "map": {
+        "title": "Jelajahi Peta Interaktif",
+        "description": "Gunakan peta untuk melihat semua soal di sekitar Anda. Pin berwarna menunjukkan lokasi soal."
+      },
+      "list": {
+        "title": "List View",
+        "description": "Lihat daftar soal dalam bentuk card di sidebar. Setiap card menampilkan info lokasi dan jarak."
+      },
+      "distance": {
+        "title": "Sorting by Distance",
+        "description": "Soal otomatis diurutkan berdasarkan jarak terdekat dari lokasi Anda saat ini."
+      },
+      "click": {
+        "title": "Klik untuk Detail",
+        "description": "Klik card soal atau pin di peta untuk melihat preview, lalu klik 'Tampilkan Soal' untuk mulai."
+      }
+    },
+    "filter": {
+      "title": "Filter & Pencarian",
+      "searchBar": {
+        "title": "Search Bar",
+        "description": "Ketik nama lokasi atau kata kunci untuk mencari soal spesifik dengan cepat."
+      },
+      "tags": {
+        "title": "Filter by Tags",
+        "description": "Pilih tag seperti 'Geometri', 'Aljabar', atau topik lain untuk filter soal berdasarkan kategori."
+      },
+      "favorites": {
+        "title": "Favorit Saya",
+        "description": "Aktifkan filter 'Favorit' untuk hanya menampilkan soal yang sudah Anda tandai favoritkan."
+      },
+      "sorting": {
+        "title": "Sorting Options",
+        "description": "Urutkan soal berdasarkan jarak terdekat atau tanggal terbaru sesuai preferensi."
+      }
+    },
+    "cooldown": {
+      "title": "Sistem Jawaban & Cooldown",
+      "description": "ESD MathPath menggunakan sistem jawaban berulang dengan cooldown untuk mendorong pembelajaran yang efektif dan mencegah spam.",
+      "unlimited": {
+        "title": "Jawab Sampai Benar",
+        "description": "Anda bisa menjawab berulang kali sampai jawaban benar. Tidak ada batasan jumlah percobaan total!"
+      },
+      "warning": {
+        "title": "3x Salah = Cooldown",
+        "description": "Setelah 3 jawaban salah berturut-turut, sistem akan mengaktifkan cooldown selama 30 detik."
+      },
+      "reset": {
+        "title": "Auto Reset",
+        "description": "Counter percobaan akan reset otomatis setelah 30 menit tidak aktif atau setelah cooldown selesai."
+      },
+      "tips": {
+        "title": "Tips Mengerjakan Soal",
+        "tip1": "Baca soal dengan teliti sebelum menjawab",
+        "tip2": "Perhatikan format jawaban yang diminta (angka, teks, atau kombinasi)",
+        "tip3": "Gunakan hint jika tersedia untuk membantu pemahaman",
+        "tip4": "Jika salah 2x, pikirkan ulang strategi sebelum attempt ke-3 untuk menghindari cooldown"
+      }
+    },
+    "features": {
+      "favorite": {
+        "title": "Favorit & Bookmark",
+        "description": "Tandai soal favorit Anda dengan klik ikon bintang. Soal yang difavoritkan bisa diakses cepat melalui filter \"Favorit Saya\" untuk dikerjakan ulang atau direview kapan saja.",
+        "info": "Fitur favorit sangat berguna untuk menyimpan soal-soal yang ingin Anda pelajari lebih dalam atau bagikan ke teman!"
+      },
+      "copy": {
+        "title": "Copy Soal",
+        "description": "Gunakan tombol copy untuk menyalin teks soal beserta informasi lokasi. Cocok untuk belajar offline atau berbagi soal dengan teman sekelas Anda.",
+        "info": "Teks yang dicopy sudah terformat rapi dan siap untuk di-paste ke aplikasi notes atau messaging!"
+      }
+    },
+    "faq": {
+      "title": "Pertanyaan Umum (FAQ)",
+      "q1": {
+        "question": "Apa yang harus dilakukan jika saya kena cooldown?",
+        "answer": "Tunggu hingga timer cooldown selesai (30 detik). Gunakan waktu ini untuk membaca hint, mempelajari materi terkait, atau mencoba soal lain yang belum kena cooldown."
+      },
+      "q2": {
+        "question": "Apakah saya bisa mengerjakan soal yang sama berulang kali?",
+        "answer": "Setelah menjawab benar, soal tersebut akan ditandai sebagai \"Sudah Dijawab\" dan tidak bisa dijawab lagi. Namun Anda masih bisa melihat soal dan jawaban Anda untuk review."
+      },
+      "q3": {
+        "question": "Bagaimana cara kerja perhitungan jarak?",
+        "answer": "Sistem menggunakan GPS lokasi Anda untuk menghitung jarak ke setiap soal menggunakan formula Haversine. Pastikan GPS aktif untuk hasil yang akurat!"
+      },
+      "q4": {
+        "question": "Apakah ada progress tracking?",
+        "answer": "Ya! Sistem menyimpan semua jawaban benar Anda beserta timestamp. Anda bisa melihat progress melalui status \"Sudah Dijawab\" di setiap card soal."
+      }
+    },
+    "cta": {
+      "title": "Siap Memulai Petualangan Matematika?",
+      "description": "Jelajahi ratusan soal matematika di sekitar Anda dan tingkatkan kemampuan dengan cara yang menyenangkan!",
+      "button": "Buka Portal Sekarang"
+    }
+  },
+  "about": {
+    "fokus": "Fokus Utama",
+    "tentang": "Tentang Beliau",
+    "deskripsi": "Dr. Dian Kurniati adalah seorang dosen dan peneliti di bidang Pendidikan Matematika, dengan fokus pada integrasi Education for Sustainable Development (ESD), Etnomatematika, dan pendekatan STEM dalam pembelajaran matematika. Beliau aktif mengembangkan model pembelajaran inovatif yang menggabungkan kearifan lokal dan teknologi digital melalui berbagai proyek penelitian, publikasi, serta kolaborasi nasional maupun internasional."
+  }
+}
