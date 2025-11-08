@@ -21,13 +21,13 @@ class Question extends Model
         'question_image',
         'correct_answer',
         'grade',
+        'points', // Tambahkan points ke fillable
         'id_user',
-        'id_question_type',        
+        'id_question_type',
         'created_at',
         'updated_at',
         'question_image'
     ];
-
 
     protected $casts = [
         'question_image' => 'string',
@@ -35,26 +35,26 @@ class Question extends Model
         'longitude' => 'float',
         'latitude' => 'float',
         'grade' => 'integer',
+        'points' => 'integer', // Cast untuk points
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
-     public function getQuestionImageUrlAttribute()
+    // Tambahkan attribute appends jika ingin mengakses relasi points
+    protected $appends = ['total_user_points'];
+
+    public function getQuestionImageUrlAttribute()
     {
-        
         if (empty($this->question_image) || $this->question_image === '') {
             return Storage::url('questions/default/default.png');
         }
-
 
         if (str_starts_with($this->question_image, 'http')) {
             return $this->question_image;
         }
 
-
         return Storage::url($this->question_image);
     }
-
 
     public function getQuestionImageFullUrlAttribute()
     {
@@ -65,15 +65,39 @@ class Question extends Model
         return asset(Storage::url($this->question_image));
     }
 
-
     public function hasImage()
     {
         return !empty($this->question_image);
     }
 
+    // Relasi dengan user yang membuat question
     public function user()
     {
         return $this->belongsTo(User::class, 'id_user', 'id_user');
+    }
+
+    // Relasi dengan user points (user yang mendapatkan points dari question ini)
+    public function userPoints()
+    {
+        return $this->hasMany(UserPoint::class, 'id_question', 'id_question');
+    }
+
+    // Accessor untuk total points yang diberikan dari question ini
+    public function getTotalUserPointsAttribute()
+    {
+        return $this->userPoints()->sum('points_earned');
+    }
+
+    // Method untuk menambahkan points ke user
+    public function awardPointsToUser($userId, $points = null)
+    {
+        $pointsToAward = $points ?? $this->points;
+
+        return UserPoint::create([
+            'id_user' => $userId,
+            'id_question' => $this->id_question,
+            'points_earned' => $pointsToAward
+        ]);
     }
 
     public function questionType()
@@ -124,4 +148,6 @@ class Question extends Model
         }
         return ($this->getCorrectAnswersCount() / $total) * 100;
     }
+//       
 }
+

@@ -31,7 +31,7 @@ Route::get('/tutorial', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', function () {
         return Inertia::render('Profile/Show');
-    })->name('profile.show'); 
+    })->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -44,6 +44,10 @@ Route::middleware('auth')->group(function () {
         ->name('portal.questions.detail');
     Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
         ->name('portal.questions.checkAnswer');
+
+ Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
+        ->name('portal.questions.checkAnswer');
 });
+
 
 require __DIR__ . '/auth.php';
