@@ -9,22 +9,24 @@ interface Tag {
   tag_name: string;
 }
 
-interface Hint {
-  id_hint: number;
-  image: string;
-  hint_description: string;
+interface QuestionOption {
+  id_question_option: number;
+  option_text: string;
+  is_correct: boolean;
 }
 
 interface QuestionDetail {
   id_question: number;
   title: string;
   question: string;
+  question_type: 'pilihan_ganda' | 'isian';
   location_name: string;
   latitude: number;
   longitude: number;
   question_image: string;
   tags: Tag[];
   grade: number;
+  options?: QuestionOption[] | null;
   is_favorite: boolean;
   created_at: string;
   creator: {
@@ -43,7 +45,7 @@ interface QuestionDetail {
     is_correct: boolean;
     answered_at: string;
   } | null;
-  attempt_info?: {  
+  attempt_info?: {
     total_attempts: number;
     max_attempts: number;
     attempts_remaining: number;
@@ -109,11 +111,15 @@ export default function QuestionDetailSidebar({
         />
 
         <CreatorCard creator={question.creator} />
+
         <AnswerCard
-        questionId={question.id_question}
-        userAnswer={question.user_answer}
-        attemptInfo={question.attempt_info}
+          questionId={question.id_question}
+          questionType={question.question_type}
+          options={question.options}
+          userAnswer={question.user_answer}
+          attemptInfo={question.attempt_info}
         />
+
         <HintsCard hints={question.hints} />
       </div>
     </div>

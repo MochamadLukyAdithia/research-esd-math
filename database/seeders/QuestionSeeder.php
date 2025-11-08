@@ -85,7 +85,7 @@ class QuestionSeeder extends Seeder
             'grade' => 9,
             'id_user' => 1,
             'correct_answer' => 'x = -2 atau x = -3',
-            'id_question_type' => 1, 
+            'id_question_type' => 1,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -93,21 +93,21 @@ class QuestionSeeder extends Seeder
         // Options untuk Question 3
         DB::table('question_options')->insert([
             [
-                'id_question' => $questionId1,
+                'id_question' => $questionId3,
                 'option_text' => 'x = -2 atau x = -3',
                 'is_correct' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id_question' => $questionId1,
+                'id_question' => $questionId3,
                 'option_text' => 'x = 2 atau x = 3',
                 'is_correct' => false,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'id_question' => $questionId1,
+                'id_question' => $questionId3,
                 'option_text' => 'x = -1 atau x = -6',
                 'is_correct' => false,
                 'created_at' => now(),
@@ -240,6 +240,6 @@ class QuestionSeeder extends Seeder
         //         'created_at' => now(), 'updated_at' => now(),
         //     ],
         // ]);
-        
+
     }
 }

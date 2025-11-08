@@ -18,7 +18,7 @@ class PortalForUserController extends Controller
 
     public function index()
     {
-        $query = Question::with(['tags', 'favoritedBy']);
+        $query = Question::with(['tags', 'favoritedBy', 'questionType']);
 
         if (Auth::check()) {
             $query->with(['favoritedBy' => function($q) {
@@ -36,6 +36,7 @@ class PortalForUserController extends Controller
                 'question_image' => $question->question_image_url,
                 'tags' => $question->tags,
                 'grade' => $question->grade,
+                'question_type' => $question->questionType->question_type,
                 'is_favorite' => Auth::check()
                     ? $question->favoritedBy->isNotEmpty()
                     : false,
@@ -53,7 +54,7 @@ class PortalForUserController extends Controller
 
     public function getQuestionDetail($id)
     {
-        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints'])
+        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionType', 'questionOptions'])
             ->findOrFail($id);
 
         if (Auth::check()) {
@@ -74,16 +75,29 @@ class PortalForUserController extends Controller
             $attemptInfo = $this->getAttemptInfo($id);
         }
 
+        $options = null;
+        if ($question->questionType->question_type === 'pilihan_ganda') {
+            $options = $question->questionOptions->map(function ($opt) {
+                return [
+                    'id_question_option' => $opt->id_question_option,
+                    'option_text' => $opt->option_text,
+                    'is_correct' => $opt->is_correct,
+                ];
+            })->shuffle()->values();
+        }
+
         return response()->json([
             'id_question' => $question->id_question,
             'title' => $question->title,
             'question' => $question->question,
+            'question_type' => $question->questionType->question_type,
             'location_name' => $question->location_name,
             'latitude' => (float) $question->latitude,
             'longitude' => (float) $question->longitude,
             'question_image' => $question->question_image_url,
             'tags' => $question->tags,
             'grade' => $question->grade,
+            'options' => $options,
             'is_favorite' => Auth::check()
                 ? $question->favoritedBy->isNotEmpty()
                 : false,
@@ -112,7 +126,7 @@ class PortalForUserController extends Controller
     public function checkAnswer(Request $request, $id)
     {
         $request->validate([
-            'answer' => 'required|string',
+            'answer' => 'required',
         ]);
 
         if (!Auth::check()) {
@@ -122,7 +136,7 @@ class PortalForUserController extends Controller
         }
 
         $userId = Auth::id();
-        $question = Question::findOrFail($id);
+        $question = Question::with(['questionOptions', 'questionType'])->findOrFail($id);
 
         $existingCorrectAnswer = UserAnswer::where('id_question', $id)
             ->where('id_user', $userId)
@@ -147,13 +161,28 @@ class PortalForUserController extends Controller
             ], 429);
         }
 
-        $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
+        $isCorrect = false;
+        $answerText = $request->answer;
+
+        if ($question->questionType->question_type === 'pilihan_ganda') {
+            $selectedOption = $question->questionOptions()
+                ->where('id_question_option', $request->answer)
+                ->first();
+
+            if ($selectedOption && $selectedOption->is_correct) {
+                $isCorrect = true;
+                $answerText = $selectedOption->option_text;
+            }
+        } else {
+            $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
+            $answerText = $request->answer;
+        }
 
         if ($isCorrect) {
             UserAnswer::create([
                 'id_question' => $id,
                 'id_user' => $userId,
-                'answer' => $request->answer,
+                'answer' => $answerText,
                 'is_correct' => true,
                 'answered_at' => now(),
             ]);
@@ -162,7 +191,7 @@ class PortalForUserController extends Controller
 
             return response()->json([
                 'is_correct' => true,
-                'user_answer' => $request->answer,
+                'user_answer' => $answerText,
                 'message' => 'Selamat! Jawaban Anda benar! 🎉',
             ]);
         } else {
@@ -170,7 +199,7 @@ class PortalForUserController extends Controller
 
             return response()->json([
                 'is_correct' => false,
-                'user_answer' => $request->answer,
+                'user_answer' => $answerText,
                 'message' => 'Jawaban salah. Silakan coba lagi!',
                 'attempts_remaining' => $attemptInfo['attempts_remaining'],
                 'total_attempts' => $attemptInfo['total_attempts'],
@@ -287,35 +316,6 @@ class PortalForUserController extends Controller
         $normalized = strtolower($normalized);
         $normalized = preg_replace('/\s+/', ' ', $normalized);
         return $normalized;
-    }
-
-    private function formatCorrectAnswer($correctAnswerPattern)
-    {
-        if (!preg_match('/^\/.*\/[a-z]*$/i', $correctAnswerPattern)) {
-            return $correctAnswerPattern;
-        }
-
-        $pattern = preg_replace('/^\/\^?/', '', $correctAnswerPattern);
-        $pattern = preg_replace('/\$?\/[a-z]*$/i', '', $pattern);
-
-        if (preg_match('/^([^(\\\\]+)/', $pattern, $matches)) {
-            $mainAnswer = $matches[1];
-            $mainAnswer = str_replace(['\\s?', '\\?', '\\.', '\\', ','], '', $mainAnswer);
-
-            if (preg_match('/\(\\s\?([^)]+)\)\?/', $pattern, $unitMatches)) {
-                $unit = $unitMatches[1];
-                $unit = str_replace(['\\s?', '\\?', '\\'], '', $unit);
-                $units = explode('|', $unit);
-                if (!empty($units[0])) {
-                    return trim($mainAnswer) . ' ' . trim($units[0]);
-                }
-            }
-
-            return trim($mainAnswer);
-        }
-
-        $cleaned = str_replace(['/', '^', '$', '\\s?', '\\?', '(', ')', '|', '\\', ','], '', $correctAnswerPattern);
-        return trim($cleaned);
     }
 
     public function toggleFavorite($questionId)

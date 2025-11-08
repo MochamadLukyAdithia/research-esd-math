@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Loader2, Info, AlertCircle, Clock, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Info, AlertCircle, Clock } from 'lucide-react';
 import axios from 'axios';
 
 interface AttemptInfo {
@@ -10,8 +10,16 @@ interface AttemptInfo {
   cooldown_remaining?: number;
 }
 
+interface QuestionOption {
+  id_question_option: number;
+  option_text: string;
+  is_correct: boolean;
+}
+
 interface AnswerCardProps {
   questionId: number;
+  questionType: 'pilihan_ganda' | 'isian';
+  options?: QuestionOption[] | null;
   userAnswer?: {
     answer: string;
     is_correct: boolean;
@@ -20,8 +28,15 @@ interface AnswerCardProps {
   attemptInfo?: AttemptInfo | null;
 }
 
-export default function AnswerCard({ questionId, userAnswer, attemptInfo: initialAttemptInfo }: AnswerCardProps) {
+export default function AnswerCard({
+  questionId,
+  questionType,
+  options,
+  userAnswer,
+  attemptInfo: initialAttemptInfo
+}: AnswerCardProps) {
   const [answer, setAnswer] = useState('');
+  const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
   const [result, setResult] = useState<{
     isCorrect: boolean;
     message: string;
@@ -54,7 +69,14 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
 
   useEffect(() => {
     if (userAnswer && userAnswer.is_correct) {
-      setAnswer(userAnswer.answer);
+      if (questionType === 'pilihan_ganda') {
+        const correctOption = options?.find(opt => opt.option_text === userAnswer.answer);
+        if (correctOption) {
+          setSelectedOptionId(correctOption.id_question_option);
+        }
+      } else {
+        setAnswer(userAnswer.answer);
+      }
       setHasAnsweredCorrectly(true);
       setResult({
         isCorrect: true,
@@ -63,7 +85,7 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
         alreadyAnswered: true,
       });
     }
-  }, [userAnswer]);
+  }, [userAnswer, questionType, options]);
 
   const formatCooldownTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -74,7 +96,9 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!answer.trim()) {
+    const answerValue = questionType === 'pilihan_ganda' ? selectedOptionId : answer.trim();
+
+    if (!answerValue) {
       return;
     }
 
@@ -84,7 +108,7 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
     try {
       const response = await axios.post(
         `/portal/questions/${questionId}/check-answer`,
-        { answer: answer.trim() }
+        { answer: answerValue }
       );
 
       const data = response.data;
@@ -129,7 +153,11 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
           });
         }
 
-        setAnswer('');
+        if (questionType === 'isian') {
+          setAnswer('');
+        } else {
+          setSelectedOptionId(null);
+        }
       }
     } catch (error: any) {
       console.error('Error submitting answer:', error);
@@ -204,16 +232,44 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <input
-            type="text"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            placeholder="Masukkan jawaban..."
-            className="w-full px-3 py-2 text-sm bg-background border border-secondary rounded-lg outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-            disabled={isChecking || hasAnsweredCorrectly || isCooldownActive}
-          />
+          {questionType === 'pilihan_ganda' ? (
+            <div className="space-y-2">
+              {options?.map((option) => (
+                <label
+                  key={option.id_question_option}
+                  className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    selectedOptionId === option.id_question_option
+                      ? 'border-secondary bg-secondary/5'
+                      : 'border-gray-300 hover:border-secondary/50'
+                  } ${hasAnsweredCorrectly || isCooldownActive ? 'cursor-not-allowed opacity-60' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="answer"
+                    value={option.id_question_option}
+                    checked={selectedOptionId === option.id_question_option}
+                    onChange={(e) => setSelectedOptionId(Number(e.target.value))}
+                    disabled={hasAnsweredCorrectly || isCooldownActive || isChecking}
+                    className="w-4 h-4 text-secondary"
+                  />
+                  <span className="text-sm text-gray-700">{option.option_text}</span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <>
+              <input
+                type="text"
+                value={answer}
+                onChange={(e) => setAnswer(e.target.value)}
+                placeholder="Masukkan jawaban..."
+                className="w-full px-3 py-2 text-sm bg-background border border-secondary rounded-lg outline-none transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={isChecking || hasAnsweredCorrectly || isCooldownActive}
+              />
+            </>
+          )}
           <p className="mt-2 text-xs text-gray-500">
-            { isCooldownActive
+            {isCooldownActive
               ? 'Menunggu cooldown selesai...'
               : 'Max 3x percobaan sebelum cooldown 30 detik'}
           </p>
@@ -254,7 +310,12 @@ export default function AnswerCard({ questionId, userAnswer, attemptInfo: initia
         {!hasAnsweredCorrectly && (
           <button
             type="submit"
-            disabled={isChecking || !answer.trim() || hasAnsweredCorrectly || isCooldownActive}
+            disabled={
+              isChecking ||
+              hasAnsweredCorrectly ||
+              isCooldownActive ||
+              (questionType === 'pilihan_ganda' ? selectedOptionId === null : !answer.trim())
+            }
             className="w-full bg-secondary text-white py-2 px-3 text-sm rounded-lg font-semibold hover:bg-secondary/90 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {isChecking ? (

@@ -27,6 +27,7 @@ export interface Task {
   is_favorite: boolean;
   created_at: string;
   grade: number;
+  question_type: string;
   distance?: number;
 }
 
@@ -35,16 +36,24 @@ interface PageProps {
   tags: Tag[];
 }
 
+interface QuestionOption {
+  id_question_option: number;
+  option_text: string;
+  is_correct: boolean;
+}
+
 interface QuestionDetail {
   id_question: number;
   title: string;
   question: string;
+  question_type: 'pilihan_ganda' | 'isian';
   location_name: string;
   latitude: number;
   longitude: number;
   question_image: string;
   tags: Tag[];
   grade: number;
+  options?: QuestionOption[] | null;
   is_favorite: boolean;
   created_at: string;
   creator: {
@@ -62,6 +71,13 @@ interface QuestionDetail {
     answer: string;
     is_correct: boolean;
     answered_at: string;
+  } | null;
+  attempt_info?: {
+    total_attempts: number;
+    max_attempts: number;
+    attempts_remaining: number;
+    is_cooldown?: boolean;
+    cooldown_remaining?: number;
   } | null;
 }
 
@@ -95,41 +111,40 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
     sortDirection: 'asc',
   });
 
-const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-const [viewState, setViewState] = useState({
-  longitude: 0,
-  latitude: 0,
-  zoom: 12,
-});
+  const [viewState, setViewState] = useState({
+    longitude: 0,
+    latitude: 0,
+    zoom: 12,
+  });
 
-useEffect(() => {
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
-      setUserLocation(loc);
-      setViewState({
-        longitude: loc.lng,
-        latitude: loc.lat,
-        zoom: 13,
-      });
-      setIsLoadingLocation(false);
-    },
-    () => {
-      console.warn("User menolak izin lokasi. Menggunakan lokasi default Jember.");
-      const jemberLoc = { lat: -8.1723, lng: 113.6995 };
-      setUserLocation(jemberLoc);
-      setViewState({
-        longitude: jemberLoc.lng,
-        latitude: jemberLoc.lat,
-        zoom: 12,
-      });
-      setIsLoadingLocation(false);
-    }
-  );
-}, []);
-
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const loc = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setUserLocation(loc);
+        setViewState({
+          longitude: loc.lng,
+          latitude: loc.lat,
+          zoom: 13,
+        });
+        setIsLoadingLocation(false);
+      },
+      () => {
+        console.warn("User menolak izin lokasi. Menggunakan lokasi default Jember.");
+        const jemberLoc = { lat: -8.1723, lng: 113.6995 };
+        setUserLocation(jemberLoc);
+        setViewState({
+          longitude: jemberLoc.lng,
+          latitude: jemberLoc.lat,
+          zoom: 12,
+        });
+        setIsLoadingLocation(false);
+      }
+    );
+  }, []);
 
   useEffect(() => {
     setDisplayLimit(10);
@@ -250,32 +265,32 @@ useEffect(() => {
           <div className={`w-full md:w-96 border-r border-gray-200 bg-background overflow-y-auto ${showMap ? 'hidden md:block' : 'block'}`}>
             {showDetailView ? (
                 <QuestionDetailSidebar
-                question={questionDetail}
-                isLoading={isLoadingDetail}
-                onBack={handleBackToList}
-                onToggleFavorite={toggleFavorite}
+                  question={questionDetail}
+                  isLoading={isLoadingDetail}
+                  onBack={handleBackToList}
+                  onToggleFavorite={toggleFavorite}
                 />
             ) : (
               <div className="h-full overflow-y-auto">
                 <TaskFilter tags={tags} filters={filters} onFilterChange={setFilters} />
                 <TaskList
-                tasks={displayedTasks}
-                selectedTask={selectedTask}
-                onTaskSelect={(task) => {
+                  tasks={displayedTasks}
+                  selectedTask={selectedTask}
+                  onTaskSelect={(task) => {
                     setSelectedTask(task);
                     setShowMap(true);
                     if (task.latitude && task.longitude) {
-                    setViewState(prev => ({
+                      setViewState(prev => ({
                         ...prev,
                         longitude: task.longitude,
                         latitude: task.latitude,
                         zoom: 15
-                    }));
+                      }));
                     }
-                }}
-                onToggleFavorite={toggleFavorite}
-                onShowQuestion={handleShowQuestion}
-                isLoadingLocation={isLoadingLocation}
+                  }}
+                  onToggleFavorite={toggleFavorite}
+                  onShowQuestion={handleShowQuestion}
+                  isLoadingLocation={isLoadingLocation}
                 />
                 {hasMoreTasks && (
                   <div className="px-6 pb-4">
