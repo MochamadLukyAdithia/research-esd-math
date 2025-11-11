@@ -36,6 +36,10 @@ class QuestionsTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+                //poin
+                TextColumn::make('points')
+                    ->label('Poin')
+                    ->numeric(),
 
                 TextColumn::make('updated_at')
                     ->label('Diperbarui')

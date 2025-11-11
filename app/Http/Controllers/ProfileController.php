@@ -10,17 +10,51 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
+    /**
+     * Menampilkan halaman profil pengguna (ShowProfile).
+     */
+    public function show(Request $request): Response
+    {
+        $user = $request->user();
 
+        // --- SEMUA LOGIKA STATS PINDAH KE SINI ---
+        $rank = $this->calculateUserRank($user);
+
+        $userStats = [
+            'total_points' => $user->total_points,
+            'questions_solved' => $user->questions_solved,
+            'accuracy_rate' => $user->accuracy_rate,
+            'rank' => $rank,
+        ];
+
+        return Inertia::render('Profile/Show', [
+            // Kirim stats ke halaman Profile/Show
+            'userStats' => $userStats,
+        ]);
+    }
+
+    /**
+     * Menampilkan halaman edit profil.
+     */
     public function edit(Request $request): Response
     {
+        // --- LOGIKA STATS DIHAPUS DARI SINI ---
+        // $user = $request->user();
+        // $rank = $this->calculateUserRank($user);
+        // 'userStats' => [...]
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
+            // 'userStats' => [...] // <-- Dihapus
         ]);
     }
+
+
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -50,5 +84,20 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    // Method untuk menghitung rank user
+    private function calculateUserRank(User $user): ?int
+    {
+        $usersWithPoints = User::withSum('points', 'points_earned')
+            ->has('points')
+            ->orderBy('points_sum_points_earned', 'desc')
+            ->get();
+
+        $rank = $usersWithPoints->search(function ($userItem) use ($user) {
+            return $userItem->id_user === $user->id_user;
+        });
+
+        return $rank !== false ? $rank + 1 : null;
     }
 }

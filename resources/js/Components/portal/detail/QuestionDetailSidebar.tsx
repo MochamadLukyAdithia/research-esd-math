@@ -9,24 +9,34 @@ interface Tag {
   tag_name: string;
 }
 
-interface Hint {
-  id_hint: number;
-  image: string;
-  hint_description: string;
+interface QuestionOption {
+  id_question_option: number;
+  option_text: string;
+  is_correct: boolean;
 }
 
+interface AnswerHistoryItem {
+  answer: string;
+  is_correct: boolean;
+  answered_at: string;
+  points_earned?: number;
+}
 interface QuestionDetail {
   id_question: number;
+  answer_history?: AnswerHistoryItem[];
   title: string;
   question: string;
+  question_type: 'pilihan_ganda' | 'isian';
   location_name: string;
   latitude: number;
   longitude: number;
   question_image: string;
   tags: Tag[];
   grade: number;
+  options?: QuestionOption[] | null;
   is_favorite: boolean;
   created_at: string;
+  points: number;
   creator: {
     name: string;
     email: string;
@@ -38,18 +48,20 @@ interface QuestionDetail {
     hint_description: string;
   }>;
   distance?: number;
-  user_answer?: {
-    answer: string;
-    is_correct: boolean;
-    answered_at: string;
-  } | null;
-  attempt_info?: {  
+user_answer?: {
+  answer: string;
+  is_correct: boolean;
+  answered_at: string;
+} | null;
+  attempt_info?: {
     total_attempts: number;
     max_attempts: number;
     attempts_remaining: number;
     is_cooldown?: boolean;
     cooldown_remaining?: number;
   } | null;
+    potential_points?: number | null;
+    points_earned?: number | null;
 }
 
 interface QuestionDetailSidebarProps {
@@ -106,14 +118,21 @@ export default function QuestionDetailSidebar({
           locationName={question.location_name}
           isFavorite={question.is_favorite}
           onToggleFavorite={onToggleFavorite}
+            points={question.points}
         />
 
         <CreatorCard creator={question.creator} />
+
         <AnswerCard
         questionId={question.id_question}
+        questionType={question.question_type}
+        options={question.options}
         userAnswer={question.user_answer}
         attemptInfo={question.attempt_info}
+        basePoints={question.points}
+        pointsEarned={question.points_earned}
         />
+
         <HintsCard hints={question.hints} />
       </div>
     </div>

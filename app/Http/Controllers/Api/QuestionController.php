@@ -26,76 +26,87 @@ class QuestionController extends Controller
         return response()->json($questions);
     }
 
-    public function getQuestionDetail($id)
-    {
-        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType'])
-            ->findOrFail($id);
+public function getQuestionDetail($id)
+{
+    $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType'])
+        ->findOrFail($id);
 
-        if (Auth::check()) {
-            $question->load(['favoritedBy' => function ($q) {
-                $q->where('users.id_user', Auth::id());
-            }]);
-        }
-
-        $userAnswer = null;
-        $attemptInfo = null;
-
-        if (Auth::check()) {
-            $userAnswer = UserAnswer::where('id_question', $id)
-                ->where('id_user', Auth::id())
-                ->where('is_correct', true)
-                ->first();
-
-            $attemptInfo = $this->getAttemptInfo($id);
-        }
-
-        $options = null;
-        if ($question->questionType->question_type === 'pilihan_ganda') {
-            $options = $question->questionOptions->map(function ($opt) {
-                return [
-                    'id_question_option' => $opt->id_question_option,
-                    'option_text' => $opt->option_text,
-                    'is_correct' => $opt->is_correct,
-                ];
-            })->shuffle()->values();
-        }
-
-        return response()->json([
-            'id_question' => $question->id_question,
-            'title' => $question->title,
-            'question' => $question->question,
-            'question_type' => $question->questionType->question_type,
-            'location_name' => $question->location_name,
-            'latitude' => (float) $question->latitude,
-            'longitude' => (float) $question->longitude,
-            'question_image' => $question->question_image_url ?? null,
-            'grade' => $question->grade,
-            'tags' => $question->tags,
-            'options' => $options,
-            'is_favorite' => Auth::check()
-                ? $question->favoritedBy->isNotEmpty()
-                : false,
-            'created_at' => $question->created_at->toIso8601String(),
-            'creator' => [
-                'name' => $question->user->name,
-                'email' => $question->user->email,
-                'avatar' => $question->user->avatar ?? null,
-            ],
-            'hints' => $question->hints->map(fn($hint) => [
-                'id_hint' => $hint->id_hint,
-                'image' => $hint->image,
-                'hint_description' => $hint->hint_description,
-            ]),
-
-            'user_answer' => $userAnswer ? [
-                'answer' => $userAnswer->answer,
-                'is_correct' => true,
-                'answered_at' => $userAnswer->answered_at->toIso8601String(),
-            ] : null,
-
-            'attempt_info' => $attemptInfo,
-        ]);
+    if (Auth::check()) {
+        $question->load(['favoritedBy' => function ($q) {
+            $q->where('users.id_user', Auth::id());
+        }]);
     }
+
+    $userAnswer = null;
+    $attemptInfo = null;
+
+    if (Auth::check()) {
+        $userId = Auth::id();
+
+        $userAnswer = UserAnswer::where('id_question', $id)
+            ->where('id_user', $userId)
+            ->where('is_correct', true)
+            ->first();
+
+        $attemptInfo = $this->getAttemptInfo($id);
+
+        $question->load(['userPoints' => function ($query) use ($userId) {
+            $query->where('id_user', $userId)
+                ->latest()
+                ->limit(1);
+        }]);
+
+    }
+
+    $options = null;
+    if ($question->questionType->question_type === 'pilihan_ganda') {
+        $options = $question->questionOptions->map(function ($opt) {
+            return [
+                'id_question_option' => $opt->id_question_option,
+                'option_text' => $opt->option_text,
+                'is_correct' => $opt->is_correct,
+            ];
+        })->shuffle()->values();
+    }
+
+    return response()->json([
+        'id_question' => $question->id_question,
+        'title' => $question->title,
+        'question' => $question->question,
+        'question_type' => $question->questionType->question_type,
+        'location_name' => $question->location_name,
+        'latitude' => (float) $question->latitude,
+        'longitude' => (float) $question->longitude,
+        'question_image' => $question->question_image_url ?? null,
+        'grade' => $question->grade,
+        'tags' => $question->tags,
+        'options' => $options,
+        'is_favorite' => Auth::check()
+            ? $question->favoritedBy->isNotEmpty()
+            : false,
+        'created_at' => $question->created_at->toIso8601String(),
+        'creator' => [
+            'name' => $question->user->name,
+            'email' => $question->user->email,
+            'avatar' => $question->user->avatar ?? null,
+        ],
+        'hints' => $question->hints->map(fn($hint) => [
+            'id_hint' => $hint->id_hint,
+            'image' => $hint->image,
+            'hint_description' => $hint->hint_description,
+        ]),
+
+        'user_answer' => $userAnswer ? [
+            'answer' => $userAnswer->answer,
+            'is_correct' => true,
+            'answered_at' => $userAnswer->answered_at->toIso8601String(),
+            'points_earned' => $question->userPoints->first()->points_earned ?? 0,
+        ] : null,
+
+        'attempt_info' => $attemptInfo,
+    ]);
+}
+
 
     public function checkAnswer(Request $request, $id)
     {
@@ -193,7 +204,7 @@ class QuestionController extends Controller
             return response()->json([
                 'is_correct' => true,
                 'user_answer' => $request->answer,
-                'message' => 'Selamat! Jawaban Anda benar! 🎉',
+                'message' => 'Selamat! Jawaban Anda benar! ',
             ]);
         }
 

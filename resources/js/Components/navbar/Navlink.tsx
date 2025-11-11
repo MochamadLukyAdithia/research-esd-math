@@ -19,26 +19,27 @@ const links: NavLink[] = [
     { href: "/portal", translationKey: "nav.portal" },
     { href: "/tutorial", translationKey: "nav.tutorial" },
     { href: "/about-us", translationKey: "nav.about" },
+    { href: "/news", translationKey: "nav.news" },
 ];
 
 export function NavigationLinks({ isMobile = false, onLinkClick, url }: NavigationLinksProps) {
     const { t } = useTranslation();
-    
+
     const isActive = useCallback(
         (path: string) => (path === '/' ? url === path : url.startsWith(path)),
         [url]
     );
 
-    const linkClass = isMobile 
-        ? "block px-4 py-3 rounded-md text-sm font-medium transition-colors" 
+    const linkClass = isMobile
+        ? "block px-4 py-3 rounded-md text-sm font-medium transition-colors"
         : "relative px-1 py-2 text-sm font-medium transition-colors group";
-    
-    const activeLinkClass = isMobile 
-        ? "bg-secondary/10 text-secondary" 
+
+    const activeLinkClass = isMobile
+        ? "bg-secondary/10 text-secondary"
         : "text-secondary";
-    
-    const inactiveLinkClass = isMobile 
-        ? "text-secondary-light hover:bg-secondary/5" 
+
+    const inactiveLinkClass = isMobile
+        ? "text-secondary-light hover:bg-secondary/5"
         : "text-secondary-light hover:text-secondary";
 
     return (
@@ -49,7 +50,7 @@ export function NavigationLinks({ isMobile = false, onLinkClick, url }: Navigati
                     href={link.href}
                     onClick={onLinkClick}
                     className={clsx(
-                        linkClass, 
+                        linkClass,
                         isActive(link.href) ? activeLinkClass : inactiveLinkClass
                     )}
                 >

@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             QuestionTypeSeeder::class,
             QuestionSeeder::class,
+            NewsSeeder::class,
             // QuestionRelationSeeder::class,
         ]);
     }

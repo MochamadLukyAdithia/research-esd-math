@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Application;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PortalForUserController;
 
@@ -28,13 +29,13 @@ Route::get('/tutorial', function () {
     return Inertia::render('Tutorial');
 })->name('tutorial');
 
+Route::get('/news', [NewsController::class, 'index'])->name('news.index');
+Route::get('/news/{id}', [NewsController::class, 'show'])->name('news.show');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', function () {
-        return Inertia::render('Profile/Show');
-    })->name('profile.show'); 
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/portal', [PortalForUserController::class, 'index'])
         ->name('portal.index');
@@ -43,6 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/portal/questions/{id}/detail', [PortalForUserController::class, 'getQuestionDetail'])
         ->name('portal.questions.detail');
     Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
+        ->name('portal.questions.checkAnswer');
+
+ Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
         ->name('portal.questions.checkAnswer');
 });
 

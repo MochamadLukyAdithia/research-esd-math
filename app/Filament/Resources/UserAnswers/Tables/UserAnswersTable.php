@@ -44,6 +44,8 @@ class UserAnswersTable
                     }),
 
 
+
+
                 IconColumn::make('is_correct')
                     ->label('Status')
                     ->boolean()
@@ -64,7 +66,7 @@ class UserAnswersTable
                         return $state;
                     }),
 
-                
+
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d M Y H:i')
