@@ -12,7 +12,9 @@
     "profile": "Profil",
     "masuk": "Maso'",
     "daftar": "Daftar",
-    "footer": "Platform inovatif sè èrancang kaangghuy abhânto mored, ghuru, bân sapa bisaos sè terro ajhâr matematika kalabân cara sè lebbi interaktif."
+    "footer": "Platform inovatif sè èrancang kaangghuy abhânto mored, ghuru, bân sapa bisaos sè terro ajhâr matematika kalabân cara sè lebbi interaktif.",
+    "contact": "Kontak",
+    "quick-link": "Link ghâncang"
   },
   "hero": {
     "slides": {
@@ -223,6 +225,8 @@
   "about": {
     "fokus": "Fokus Utama",
     "tentang": "Tentang Dheenah",
-    "deskripsi": "Dr. Dian Kurniati se oreng dosen ben panaliti dalam bidang Pendidikan Matematika, ben fokus ka integrasi Education for Sustainable Development (ESD), Etnomatematika, ben pendekatan STEM dalam pelajaran matematika. Dheenah aktif ngembangang model pembelajaran inovatif se nyareaghi kearifan lokal ben teknologi digital lewat bhanyak proyek penelitian, publikasi, serta kolaborasi nasional ben internasional."
+    "deskripsi": "Dr. Dian Kurniati se oreng dosen ben panaliti dalam bidang Pendidikan Matematika, ben fokus ka integrasi Education for Sustainable Development (ESD), Etnomatematika, ben pendekatan STEM dalam pelajaran matematika. Dheenah aktif ngembangang model pembelajaran inovatif se nyareaghi kearifan lokal ben teknologi digital lewat bhanyak proyek penelitian, publikasi, serta kolaborasi nasional ben internasional.",
+    "dev": "Tim Pengembang",
+    "devdeskripsi": "Tim para ahli sè èkhususaghi kaangghuy ngèmbangaghi platform ESDMathPath"
   }
 }

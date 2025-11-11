@@ -12,7 +12,9 @@
     "profile": "Profil",
     "masuk": "Mlebu",
     "daftar": "Ndaftar",
-    "footer": "Platform inovatif sing dirancang kanggo mbantu siswa, guru, lan sapa wae sing pengin sinau matematika kanthi cara sing luwih interaktif."
+    "footer": "Platform inovatif sing dirancang kanggo mbantu siswa, guru, lan sapa wae sing pengin sinau matematika kanthi cara sing luwih interaktif.",
+    "contact": "Kontak",
+    "quick-link": "Link cepet"
   },
   "hero": {
     "slides": {
@@ -223,6 +225,8 @@
   "about": {
     "fokus": "Fokus Utama",
     "tentang": "Babagan Panjenenganipun",
-    "deskripsi": "Dr. Dian Kurniati punika dosen lan panaliti ing bidang Pendidikan Matematika, kanthi fokus ing integrasi Education for Sustainable Development (ESD), Etnomatematika, lan pendekatan STEM ing pambelajaran matematika. Panjenenganipun aktif ngembangake model pambelajaran inovatif kang nggabungake kearifan lokal lan teknologi digital liwat macem-macem proyek riset, publikasi, lan kolaborasi nasional uga internasional."
+    "deskripsi": "Dr. Dian Kurniati punika dosen lan panaliti ing bidang Pendidikan Matematika, kanthi fokus ing integrasi Education for Sustainable Development (ESD), Etnomatematika, lan pendekatan STEM ing pambelajaran matematika. Panjenenganipun aktif ngembangake model pambelajaran inovatif kang nggabungake kearifan lokal lan teknologi digital liwat macem-macem proyek riset, publikasi, lan kolaborasi nasional uga internasional.",
+    "dev": "Tim Pangembang",
+    "devdeskripsi": "Tim profesional sing darmabakti kanggo ngembangake platform ESDMathPath"
   }
 }
