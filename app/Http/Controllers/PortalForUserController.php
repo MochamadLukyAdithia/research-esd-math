@@ -162,20 +162,48 @@ class PortalForUserController extends Controller
         }
 
         $isCorrect = false;
+<<<<<<< HEAD
         $answerText = $request->answer;
 
         if ($question->questionType->question_type === 'pilihan_ganda') {
             $selectedOption = $question->questionOptions()
+=======
+
+        // Jika soal punya correct_answer = berarti mode isian
+        if ($question->correct_answer !== null) {
+            $correctAnswer = trim(strtolower($question->correct_answer));
+            $userAnswer = trim(strtolower($request->answer));
+
+            // Jika correct_answer berupa angka, buat regex toleran terhadap variasi (200, 200.0, 200,0, dst)
+            if (is_numeric($correctAnswer)) {
+                // Buat pola regex agar mendeteksi:
+                // - angka yang sama (200)
+                // - dengan variasi titik atau koma (200.0, 200,0)
+                // - diikuti opsional spasi dan satuan (meter, m, dll)
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
+            } else {
+                // Untuk teks biasa, cocokkan kata atau frasa secara longgar
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
+            }
+
+            $isCorrect = preg_match($pattern, $userAnswer) === 1;
+        } else {
+            $selectedOption = $question->options()
+>>>>>>> 497c6997abd1863916931bd7ecdc12fb02e5d3a3
                 ->where('id_question_option', $request->answer)
                 ->first();
 
             if ($selectedOption && $selectedOption->is_correct) {
                 $isCorrect = true;
+<<<<<<< HEAD
                 $answerText = $selectedOption->option_text;
             }
         } else {
             $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
             $answerText = $request->answer;
+=======
+            }
+>>>>>>> 497c6997abd1863916931bd7ecdc12fb02e5d3a3
         }
 
         if ($isCorrect) {

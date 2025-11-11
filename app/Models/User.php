@@ -15,11 +15,6 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $primaryKey = 'id_user';
 
     protected $fillable = [
@@ -29,21 +24,11 @@ class User extends Authenticatable implements FilamentUser
         'role',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -52,21 +37,13 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
-    // Untuk Filament admin panel
+    // ===== FILAMENT =====
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->role === 'admin';
     }
 
-    public function hasRole($role)
-    {
-        if (is_array($role)) {
-            return in_array($this->role, $role);
-        }
-        return $this->role === $role;
-    }
-
-    // Relationships
+    // ===== RELATIONSHIPS =====
     public function questions()
     {
         return $this->hasMany(Question::class, 'id_user', 'id_user');
@@ -77,10 +54,32 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(UserAnswer::class, 'id_user', 'id_user');
     }
 
-    public function favoriteQuestions()
+    public function points()
     {
-        return $this->belongsToMany(Question::class, 'favorite_questions', 'id_user', 'id_question')
-                    ->withPivot('id_favorite')
-                    ->withTimestamps();
+        return $this->hasMany(UserPoint::class, 'id_user', 'id_user');
+    }
+
+    // ===== ATTRIBUTE ACCESSORS =====
+    public function getTotalPointsAttribute()
+    {
+        return $this->points()->sum('points_earned');
+    }
+
+    public function getAccuracyRateAttribute()
+    {
+        $totalAnswers = $this->userAnswers()->count();
+        $correctAnswers = $this->userAnswers()->where('is_correct', true)->count();
+
+        return $totalAnswers > 0 ? round(($correctAnswers / $totalAnswers) * 100, 1) : 0;
+    }
+
+    public function getQuestionsSolvedAttribute()
+    {
+        return $this->points()->count();
+    }
+
+    public function getLastActivityAttribute()
+    {
+        return $this->userAnswers()->latest()->first()?->created_at?->diffForHumans() ?? '-';
     }
 }
