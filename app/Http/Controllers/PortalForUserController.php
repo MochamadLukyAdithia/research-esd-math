@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Question;
 use App\Models\Tag;
 use App\Models\UserAnswer;
+use App\Models\UserPoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
-
 class PortalForUserController extends Controller
 {
     const MAX_ATTEMPTS_BEFORE_COOLDOWN = 3;
@@ -18,7 +19,7 @@ class PortalForUserController extends Controller
 
     public function index()
     {
-        $query = Question::with(['tags', 'favoritedBy']);
+        $query = Question::with(['tags', 'favoritedBy', 'questionType']);
 
         if (Auth::check()) {
             $query->with(['favoritedBy' => function($q) {
@@ -36,10 +37,13 @@ class PortalForUserController extends Controller
                 'question_image' => $question->question_image_url,
                 'tags' => $question->tags,
                 'grade' => $question->grade,
+                'points' => $question->points,
+                'question_type' => $question->questionType->question_type,
                 'is_favorite' => Auth::check()
                     ? $question->favoritedBy->isNotEmpty()
                     : false,
                 'created_at' => $question->created_at->toIso8601String(),
+                'user_points' => $question->userPoints()->where('id_user', Auth::id())->sum('points_earned'),
             ];
         });
 
@@ -53,7 +57,7 @@ class PortalForUserController extends Controller
 
     public function getQuestionDetail($id)
     {
-        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints'])
+        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionType', 'questionOptions'])
             ->findOrFail($id);
 
         if (Auth::check()) {
@@ -64,6 +68,8 @@ class PortalForUserController extends Controller
 
         $userAnswer = null;
         $attemptInfo = null;
+        $pointsEarned = null;
+        $potentialPoints = null;
 
         if (Auth::check()) {
             $userAnswer = UserAnswer::where('id_question', $id)
@@ -72,18 +78,41 @@ class PortalForUserController extends Controller
                 ->first();
 
             $attemptInfo = $this->getAttemptInfo($id);
+
+            $userPoint = UserPoint::where('id_question', $id)
+                ->where('id_user', Auth::id())
+                ->first();
+
+            if ($userPoint) {
+                $pointsEarned = $userPoint->points_earned;
+            } else if (!$userAnswer) {
+                $potentialPoints = $question->points;
+            }
+        }
+
+        $options = null;
+        if ($question->questionType->question_type === 'pilihan_ganda') {
+            $options = $question->questionOptions->map(function ($opt) {
+                return [
+                    'id_question_option' => $opt->id_question_option,
+                    'option_text' => $opt->option_text,
+                ];
+            })->shuffle()->values();
         }
 
         return response()->json([
             'id_question' => $question->id_question,
             'title' => $question->title,
             'question' => $question->question,
+            'question_type' => $question->questionType->question_type,
             'location_name' => $question->location_name,
             'latitude' => (float) $question->latitude,
             'longitude' => (float) $question->longitude,
             'question_image' => $question->question_image_url,
             'tags' => $question->tags,
             'grade' => $question->grade,
+            'points' => $question->points,
+            'options' => $options,
             'is_favorite' => Auth::check()
                 ? $question->favoritedBy->isNotEmpty()
                 : false,
@@ -105,24 +134,26 @@ class PortalForUserController extends Controller
                 'is_correct' => true,
                 'answered_at' => $userAnswer->answered_at->toIso8601String(),
             ] : null,
-            'attempt_info' => $attemptInfo,
+            'attempt_info' => $userAnswer ? null : $attemptInfo,
+            'points_earned' => $pointsEarned,
+            'potential_points' => $userAnswer ? null : $potentialPoints,
         ]);
     }
+
 
     public function checkAnswer(Request $request, $id)
     {
         $request->validate([
-            'answer' => 'required|string',
+            'answer' => 'required',
         ]);
 
         if (!Auth::check()) {
-            return response()->json([
-                'error' => 'Anda harus login untuk menjawab soal',
-            ], 401);
+            return response()->json(['error' => 'Anda harus login'], 401);
         }
 
         $userId = Auth::id();
-        $question = Question::findOrFail($id);
+
+        $question = Question::with(['questionOptions', 'questionType'])->findOrFail($id);
 
         $existingCorrectAnswer = UserAnswer::where('id_question', $id)
             ->where('id_user', $userId)
@@ -130,11 +161,16 @@ class PortalForUserController extends Controller
             ->first();
 
         if ($existingCorrectAnswer) {
+            $pointsEarned = UserPoint::where('id_question', $id)
+                ->where('id_user', $userId)
+                ->value('points_earned');
+
             return response()->json([
                 'already_answered' => true,
                 'is_correct' => true,
                 'user_answer' => $existingCorrectAnswer->answer,
                 'message' => 'Anda sudah menjawab soal ini dengan benar!',
+                'points_earned' => $pointsEarned,
             ]);
         }
 
@@ -148,57 +184,48 @@ class PortalForUserController extends Controller
         }
 
         $isCorrect = false;
+        $answerText = $request->answer;
 
-        // Jika soal punya correct_answer = berarti mode isian
-        if ($question->correct_answer !== null) {
-            $correctAnswer = trim(strtolower($question->correct_answer));
-            $userAnswer = trim(strtolower($request->answer));
-
-            // Jika correct_answer berupa angka, buat regex toleran terhadap variasi (200, 200.0, 200,0, dst)
-            if (is_numeric($correctAnswer)) {
-                // Buat pola regex agar mendeteksi:
-                // - angka yang sama (200)
-                // - dengan variasi titik atau koma (200.0, 200,0)
-                // - diikuti opsional spasi dan satuan (meter, m, dll)
-                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
-            } else {
-                // Untuk teks biasa, cocokkan kata atau frasa secara longgar
-                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
-            }
-
-            $isCorrect = preg_match($pattern, $userAnswer) === 1;
-        } else {
-            $selectedOption = $question->options()
+        if ($question->questionType->question_type === 'pilihan_ganda') {
+            $selectedOption = $question->questionOptions()
                 ->where('id_question_option', $request->answer)
                 ->first();
-
-            if ($selectedOption && $selectedOption->is_correct) {
-                $isCorrect = true;
+            if ($selectedOption) {
+                $isCorrect = $selectedOption->is_correct;
+                $answerText = $selectedOption->option_text;
             }
+        } else {
+            $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
+            $answerText = $request->answer;
         }
 
         if ($isCorrect) {
-            UserAnswer::create([
-                'id_question' => $id,
-                'id_user' => $userId,
-                'answer' => $request->answer,
-                'is_correct' => true,
-                'answered_at' => now(),
-            ]);
+            DB::transaction(function () use ($id, $userId, $answerText) {
+                UserAnswer::create([
+                    'id_question' => $id,
+                    'id_user' => $userId,
+                    'answer' => $answerText,
+                    'is_correct' => true,
+                    'answered_at' => now(),
+                ]);
+
+            });
 
             $this->clearAttempts($id, $userId);
 
             return response()->json([
                 'is_correct' => true,
-                'user_answer' => $request->answer,
-                'message' => 'Selamat! Jawaban Anda benar! 🎉',
+                'user_answer' => $answerText,
+                'message' => 'Selamat! Jawaban Anda benar!',
+                'points_earned' => $question->points,
+                'bonus_message' => null,
             ]);
+
         } else {
             $attemptInfo = $this->incrementAttempt($id, $userId);
-
             return response()->json([
                 'is_correct' => false,
-                'user_answer' => $request->answer,
+                'user_answer' => $answerText,
                 'message' => 'Jawaban salah. Silakan coba lagi!',
                 'attempts_remaining' => $attemptInfo['attempts_remaining'],
                 'total_attempts' => $attemptInfo['total_attempts'],
@@ -206,6 +233,80 @@ class PortalForUserController extends Controller
                 'cooldown_remaining' => $attemptInfo['cooldown_remaining'] ?? null,
             ]);
         }
+    }
+
+    private function getUserStats($userId)
+    {
+        $totalPoints = UserPoint::getTotalPoints($userId);
+
+        $rank = null;
+
+        $totalAnswered = UserAnswer::where('id_user', $userId)
+            ->where('is_correct', true)
+            ->count();
+
+        return [
+            'total_points' => $totalPoints,
+            'rank' => $rank,
+            'total_answered' => $totalAnswered,
+        ];
+    }
+
+    public function getLeaderboard(Request $request)
+    {
+        $limit = $request->input('limit', 10);
+
+        $leaderboard = UserPoint::select('id_user')
+            ->selectRaw('SUM(points_earned) as total_points')
+            ->selectRaw('COUNT(DISTINCT id_question) as questions_answered')
+            ->with('user:id_user,name,email,avatar')
+            ->groupBy('id_user')
+            ->orderByDesc('total_points')
+            ->limit($limit)
+            ->get()
+            ->map(function ($item, $index) {
+                return [
+                    'rank' => $index + 1,
+                    'user' => [
+                        'id' => $item->user->id_user,
+                        'name' => $item->user->name,
+                        'email' => $item->user->email,
+                        'avatar' => $item->user->avatar,
+                    ],
+                    'total_points' => $item->total_points,
+                    'questions_answered' => $item->questions_answered,
+                ];
+            });
+
+        return response()->json($leaderboard);
+    }
+
+    public function getUserProfile()
+    {
+        if (!Auth::check()) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $userId = Auth::id();
+        $stats = $this->getUserStats($userId);
+
+        $recentActivities = UserPoint::where('id_user', $userId)
+            ->with('question:id_question,title')
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get()
+            ->map(function ($point) {
+                return [
+                    'question_title' => $point->question->title,
+                    'points_earned' => $point->points_earned,
+                    'earned_at' => $point->created_at->toIso8601String(),
+                ];
+            });
+
+        return response()->json([
+            'stats' => $stats,
+            'recent_activities' => $recentActivities,
+        ]);
     }
 
     private function checkCooldown($questionId, $userId)
@@ -216,11 +317,10 @@ class PortalForUserController extends Controller
         if ($cooldownUntil) {
             $remaining = $cooldownUntil - time();
             if ($remaining > 0) {
-                $minutes = ceil($remaining / 60);
                 return [
                     'is_cooldown' => true,
                     'remaining_seconds' => $remaining,
-                    'message' => "Anda harus menunggu {$minutes} menit sebelum mencoba lagi.",
+                    'message' => "Anda harus menunggu {$remaining} detik.",
                 ];
             }
         }
@@ -315,35 +415,6 @@ class PortalForUserController extends Controller
         $normalized = strtolower($normalized);
         $normalized = preg_replace('/\s+/', ' ', $normalized);
         return $normalized;
-    }
-
-    private function formatCorrectAnswer($correctAnswerPattern)
-    {
-        if (!preg_match('/^\/.*\/[a-z]*$/i', $correctAnswerPattern)) {
-            return $correctAnswerPattern;
-        }
-
-        $pattern = preg_replace('/^\/\^?/', '', $correctAnswerPattern);
-        $pattern = preg_replace('/\$?\/[a-z]*$/i', '', $pattern);
-
-        if (preg_match('/^([^(\\\\]+)/', $pattern, $matches)) {
-            $mainAnswer = $matches[1];
-            $mainAnswer = str_replace(['\\s?', '\\?', '\\.', '\\', ','], '', $mainAnswer);
-
-            if (preg_match('/\(\\s\?([^)]+)\)\?/', $pattern, $unitMatches)) {
-                $unit = $unitMatches[1];
-                $unit = str_replace(['\\s?', '\\?', '\\'], '', $unit);
-                $units = explode('|', $unit);
-                if (!empty($units[0])) {
-                    return trim($mainAnswer) . ' ' . trim($units[0]);
-                }
-            }
-
-            return trim($mainAnswer);
-        }
-
-        $cleaned = str_replace(['/', '^', '$', '\\s?', '\\?', '(', ')', '|', '\\', ','], '', $correctAnswerPattern);
-        return trim($cleaned);
     }
 
     public function toggleFavorite($questionId)

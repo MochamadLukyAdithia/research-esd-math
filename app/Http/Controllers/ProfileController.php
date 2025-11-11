@@ -14,24 +14,46 @@ use App\Models\User;
 
 class ProfileController extends Controller
 {
-    public function edit(Request $request): Response
+    /**
+     * Menampilkan halaman profil pengguna (ShowProfile).
+     */
+    public function show(Request $request): Response
     {
         $user = $request->user();
 
-      
+        // --- SEMUA LOGIKA STATS PINDAH KE SINI ---
         $rank = $this->calculateUserRank($user);
+
+        $userStats = [
+            'total_points' => $user->total_points,
+            'questions_solved' => $user->questions_solved,
+            'accuracy_rate' => $user->accuracy_rate,
+            'rank' => $rank,
+        ];
+
+        return Inertia::render('Profile/Show', [
+            // Kirim stats ke halaman Profile/Show
+            'userStats' => $userStats,
+        ]);
+    }
+
+    /**
+     * Menampilkan halaman edit profil.
+     */
+    public function edit(Request $request): Response
+    {
+        // --- LOGIKA STATS DIHAPUS DARI SINI ---
+        // $user = $request->user();
+        // $rank = $this->calculateUserRank($user);
+        // 'userStats' => [...]
 
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
-            'userStats' => [
-                'total_points' => $user->total_points,
-                'questions_solved' => $user->questions_solved,
-                'accuracy_rate' => $user->accuracy_rate,
-                'rank' => $rank,
-            ]
+            // 'userStats' => [...] // <-- Dihapus
         ]);
     }
+
 
     public function update(Request $request): RedirectResponse
     {

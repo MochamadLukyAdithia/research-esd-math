@@ -82,6 +82,7 @@ class Question extends Model
         return $this->hasMany(UserPoint::class, 'id_question', 'id_question');
     }
 
+
     // Accessor untuk total points yang diberikan dari question ini
     public function getTotalUserPointsAttribute()
     {
@@ -148,6 +149,6 @@ class Question extends Model
         }
         return ($this->getCorrectAnswersCount() / $total) * 100;
     }
-//       
+//
 }
 

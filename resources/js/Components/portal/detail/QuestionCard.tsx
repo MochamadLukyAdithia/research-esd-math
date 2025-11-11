@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Globe, GraduationCap, Copy, Check, Star, ImageOff } from 'lucide-react';
+import { Globe, GraduationCap, Copy, Check, Star, ImageOff, Trophy } from 'lucide-react';
 
 interface Tag {
   id_tag: number;
@@ -13,6 +13,7 @@ interface QuestionCardProps {
   questionImage: string;
   tags: Tag[];
   grade: number;
+  points: number;
   distance?: number;
   locationName: string;
   isFavorite: boolean;
@@ -26,6 +27,7 @@ export default function QuestionCard({
   questionImage,
   tags,
   grade,
+  points,
   distance,
   locationName,
   isFavorite,
@@ -115,13 +117,17 @@ export default function QuestionCard({
         <div className="flex items-center justify-end pt-3">
           <div className="flex items-center gap-2 text-secondary">
             <div className="flex items-center gap-1">
+              <Globe size={16} />
+            </div>
+            <div className="flex items-center gap-1">
               <GraduationCap size={16} />
               <span className='mr-1 text-sm'>{grade}</span>
             </div>
-
-            <div className="flex items-center gap-1">
-              <Globe size={16} />
+            <div className='flex items-center gap-1'>
+                <Trophy size={14} />
+                <span className="text-sm">{points}</span>
             </div>
+
 
             <button
               onClick={handleCopyQuestion}
