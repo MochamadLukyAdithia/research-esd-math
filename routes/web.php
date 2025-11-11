@@ -53,8 +53,4 @@ Route::middleware('auth')->group(function () {
         ->name('portal.questions.checkAnswer');
 });
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 497c6997abd1863916931bd7ecdc12fb02e5d3a3
 require __DIR__ . '/auth.php';

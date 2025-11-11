@@ -18,7 +18,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-      
+
         $rank = $this->calculateUserRank($user);
 
         return Inertia::render('Profile/Edit', [
@@ -32,6 +32,7 @@ class ProfileController extends Controller
             ]
         ]);
     }
+
 
     public function update(Request $request): RedirectResponse
     {

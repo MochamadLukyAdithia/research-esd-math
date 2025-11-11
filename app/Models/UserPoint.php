@@ -32,4 +32,9 @@ class UserPoint extends Model
     {
         return $this->belongsTo(Question::class, 'id_question', 'id_question');
     }
+
+    public static function getTotalPoints($userId)
+    {
+        return self::where('id_user', $userId)->sum('points_earned');
+    }
 }
