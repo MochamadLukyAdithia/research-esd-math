@@ -29,10 +29,10 @@ export default function ShowProfile() {
                             </Link>
                         </div>
                     </div>
-                    
+
                     <div className="bg-white shadow-xl rounded-2xl p-8">
                         <div className="flex flex-col items-center sm:flex-row sm:items-start sm:gap-8">
-                            
+
                             <div className="flex-shrink-0 mb-6 sm:mb-0">
                                 {user?.avatar ? (
                                     <img
@@ -50,7 +50,7 @@ export default function ShowProfile() {
                                     </div>
                                 )}
                             </div>
-                            
+
                             <div className="flex-1 text-center sm:text-left">
                                 <h2 className="text-3xl font-bold text-gray-900">{user?.name}</h2>
                                 <p className="mt-1 text-lg text-gray-500">{user?.email}</p>

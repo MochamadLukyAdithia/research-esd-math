@@ -41,6 +41,11 @@ class QuestionInfolist
                     ->weight('bold')
                     ->size('lg'),
 
+                //poin
+                TextEntry::make('points')
+                    ->label('Poin')
+                    ->numeric(),
+
 
                 \Filament\Infolists\Components\ViewEntry::make('map')
                     ->view('filament.infolists.components.map-view ')
