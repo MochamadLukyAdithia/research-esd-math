@@ -428,7 +428,7 @@ class PortalForUserController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        $isFavorite = $user->favoriteQuestions()->where('questions.id_question', $questionId)->exists();
+        $isFavorite = $user->favoriteQuestions()->where('favorite_questions.id_question', $questionId)->exists();
 
         if ($isFavorite) {
             $user->favoriteQuestions()->detach($questionId);
