@@ -147,7 +147,35 @@ class PortalForUserController extends Controller
             ], 429);
         }
 
-        $isCorrect = $this->validateAnswer($request->answer, $question->correct_answer);
+        $isCorrect = false;
+
+        // Jika soal punya correct_answer = berarti mode isian
+        if ($question->correct_answer !== null) {
+            $correctAnswer = trim(strtolower($question->correct_answer));
+            $userAnswer = trim(strtolower($request->answer));
+
+            // Jika correct_answer berupa angka, buat regex toleran terhadap variasi (200, 200.0, 200,0, dst)
+            if (is_numeric($correctAnswer)) {
+                // Buat pola regex agar mendeteksi:
+                // - angka yang sama (200)
+                // - dengan variasi titik atau koma (200.0, 200,0)
+                // - diikuti opsional spasi dan satuan (meter, m, dll)
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
+            } else {
+                // Untuk teks biasa, cocokkan kata atau frasa secara longgar
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
+            }
+
+            $isCorrect = preg_match($pattern, $userAnswer) === 1;
+        } else {
+            $selectedOption = $question->options()
+                ->where('id_question_option', $request->answer)
+                ->first();
+
+            if ($selectedOption && $selectedOption->is_correct) {
+                $isCorrect = true;
+            }
+        }
 
         if ($isCorrect) {
             UserAnswer::create([
