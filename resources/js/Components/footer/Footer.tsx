@@ -24,6 +24,7 @@ const Footer: React.FC = () => {
                 <li><a href="/portal" className="hover:underline">{t('nav.portal')}</a></li>
                 <li><a href="/tutorial" className="hover:underline">{t('nav.tutorial')}</a></li>
                 <li><a href="/about-us" className="hover:underline">{t('nav.about')}</a></li>
+                <li><a href="/news" className="hover:underline">{t('nav.news')}</a></li>
               </ul>
             </div>
 
