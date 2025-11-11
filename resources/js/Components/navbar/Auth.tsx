@@ -33,7 +33,7 @@ export function AuthSection({ user }: { user: Profile | null }) {
     if (user && user.name) {
         const isAdmin = user.role === 'admin';
         const ProfileIcon = isAdmin ? LayoutDashboard : User;
-        const profileLink = isAdmin ? route('admin.dashboard') : route('profile.edit');
+        const profileLink = isAdmin ? route('admin.dashboard') : route('profile.show');
         const profileText = isAdmin ? 'Dashboard' : 'Profil Anda';
 
         return (
