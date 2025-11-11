@@ -27,6 +27,7 @@ export interface Task {
   is_favorite: boolean;
   created_at: string;
   grade: number;
+  points: number;
   question_type: string;
   distance?: number;
 }
@@ -53,6 +54,7 @@ interface QuestionDetail {
   question_image: string;
   tags: Tag[];
   grade: number;
+  points: number;
   options?: QuestionOption[] | null;
   is_favorite: boolean;
   created_at: string;
@@ -79,7 +81,10 @@ interface QuestionDetail {
     is_cooldown?: boolean;
     cooldown_remaining?: number;
   } | null;
+  potential_points?: number | null;
+  points_earned?: number | null;
 }
+
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
