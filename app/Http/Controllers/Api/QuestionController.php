@@ -19,6 +19,13 @@ class QuestionController extends Controller
     const COOLDOWN_DURATION = 30;
     const ATTEMPT_RESET_DURATION = 300;
 
+    public function getAllQuestions()
+    {
+        $questions = Question::with('tags', 'user', 'questionType', 'questionOptions')->paginate(10);
+
+        return response()->json($questions);
+    }
+
     public function getQuestionDetail($id)
     {
         $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType'])
@@ -103,7 +110,7 @@ class QuestionController extends Controller
         }
 
         $userId = Auth::id();
-        $question = Question::with('options')->findOrFail($id);
+        $question = Question::with('questionOptions')->findOrFail($id);
 
         // Cek apakah sudah pernah benar
         $existingCorrectAnswer = UserAnswer::where('id_question', $id)
@@ -142,7 +149,22 @@ class QuestionController extends Controller
 
         // Jika soal punya correct_answer = berarti mode isian
         if ($question->correct_answer !== null) {
-            $isCorrect = strtolower(trim($request->answer)) === strtolower(trim($question->correct_answer));
+            $correctAnswer = trim(strtolower($question->correct_answer));
+            $userAnswer = trim(strtolower($request->answer));
+
+            // Jika correct_answer berupa angka, buat regex toleran terhadap variasi (200, 200.0, 200,0, dst)
+            if (is_numeric($correctAnswer)) {
+                // Buat pola regex agar mendeteksi:
+                // - angka yang sama (200)
+                // - dengan variasi titik atau koma (200.0, 200,0)
+                // - diikuti opsional spasi dan satuan (meter, m, dll)
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
+            } else {
+                // Untuk teks biasa, cocokkan kata atau frasa secara longgar
+                $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
+            }
+
+            $isCorrect = preg_match($pattern, $userAnswer) === 1;
         } else {
             // Multiple choice
             $selectedOption = $question->options()
@@ -153,6 +175,7 @@ class QuestionController extends Controller
                 $isCorrect = true;
             }
         }
+
 
         if ($isCorrect) {
             // Simpan jawaban hanya jika benar
