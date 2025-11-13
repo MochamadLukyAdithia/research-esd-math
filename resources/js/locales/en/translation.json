@@ -12,7 +12,9 @@
     "profile": "Profile",
     "masuk": "Login",
     "daftar": "Register",
-    "footer": "An innovative platform designed to help students, teachers, and anyone who wants to learn mathematics in a more interactive way."
+    "footer": "An innovative platform designed to help students, teachers, and anyone who wants to learn mathematics in a more interactive way.",
+    "contact": "Contact",
+    "quick-link": "Quick Links"
   },
   "hero": {
     "slides": {
@@ -223,6 +225,8 @@
   "about": {
     "fokus": "Main Focus",
     "tentang": "About Her",
-    "deskripsi": "Dr. Dian Kurniati is a lecturer and researcher in Mathematics Education, focusing on the integration of Education for Sustainable Development (ESD), Ethnomathematics, and STEM approaches in mathematics learning. She actively develops innovative learning models that combine local wisdom and digital technology through various research projects, publications, and both national and international collaborations."
+    "deskripsi": "Dr. Dian Kurniati is a lecturer and researcher in Mathematics Education, focusing on the integration of Education for Sustainable Development (ESD), Ethnomathematics, and STEM approaches in mathematics learning. She actively develops innovative learning models that combine local wisdom and digital technology through various research projects, publications, and both national and international collaborations.",
+    "dev": "Development Team",
+    "devdeskripsi": "A team of professionals dedicated to developing the ESDMathPath platform"
   }
 }

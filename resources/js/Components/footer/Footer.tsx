@@ -18,7 +18,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="text-xl font-bold mb-5">Quick Links</h4>
+              <h4 className="text-xl font-bold mb-5">{t('nav.quick-link')}</h4>
               <ul className="space-y-3">
                 <li><a href="/" className="hover:underline">{t('nav.home')}</a></li>
                 <li><a href="/portal" className="hover:underline">{t('nav.portal')}</a></li>
@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div>
-              <h4 className="text-xl font-bold mb-5">Contact</h4>
+              <h4 className="text-xl font-bold mb-5">{t('nav.contact')}</h4>
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <span>

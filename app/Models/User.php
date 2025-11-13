@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Filament\Panel;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasApiTokens, Notifiable;
 
     protected $primaryKey = 'id_user';
 
@@ -47,6 +48,11 @@ class User extends Authenticatable implements FilamentUser
     public function questions()
     {
         return $this->hasMany(Question::class, 'id_user', 'id_user');
+    }
+
+    public function favoriteQuestions()
+    {
+        return $this->belongsToMany(Question::class, 'favorite_questions', 'id_user', 'id_question');
     }
 
     public function userAnswers()
