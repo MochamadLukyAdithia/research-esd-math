@@ -9,14 +9,24 @@ use Filament\Tables\Table;
 use Filament\Support\Enums\IconPosition;
 use BackedEnum;
 use Filament\Support\Icons\Heroicon;
+use App\Helpers\NavigationHelper;
 
 
 class LeaderboardResource extends Resource
 {
     protected static ?string $model = User::class;
 
-       protected static string|BackedEnum|null $navigationIcon = Heroicon::Fire;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::Fire;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Sembunyikan jika admin khusus question only
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
 
     protected static ?string $navigationLabel = 'Leaderboard';
 
@@ -27,9 +37,7 @@ class LeaderboardResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-              
-            ]);
+            ->columns([]);
     }
 
     public static function getPages(): array

@@ -7,6 +7,7 @@ use App\Filament\Resources\News\Pages\EditNews;
 use App\Filament\Resources\News\Pages\ListNews;
 use App\Filament\Resources\News\Schemas\NewsForm;
 use App\Filament\Resources\News\Tables\NewsTable;
+use App\Helpers\NavigationHelper;
 use App\Models\News;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -21,6 +22,16 @@ class NewsResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'News';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Sembunyikan jika admin khusus question only
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
 
     public static function form(Schema $schema): Schema
     {

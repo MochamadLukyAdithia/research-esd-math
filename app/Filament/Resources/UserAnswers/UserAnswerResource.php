@@ -9,6 +9,7 @@ use App\Filament\Resources\UserAnswers\Pages\ViewUserAnswer;
 use App\Filament\Resources\UserAnswers\Schemas\UserAnswerForm;
 use App\Filament\Resources\UserAnswers\Schemas\UserAnswerInfolist;
 use App\Filament\Resources\UserAnswers\Tables\UserAnswersTable;
+use App\Helpers\NavigationHelper;
 use App\Models\UserAnswer;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -23,6 +24,16 @@ class UserAnswerResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::AcademicCap;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Sembunyikan jika admin khusus question only
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
 
     public static function form(Schema $schema): Schema
     {

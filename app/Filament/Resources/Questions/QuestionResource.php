@@ -9,6 +9,7 @@ use App\Filament\Resources\Questions\Pages\ViewQuestion;
 use App\Filament\Resources\Questions\Schemas\QuestionForm;
 use App\Filament\Resources\Questions\Schemas\QuestionInfolist;
 use App\Filament\Resources\Questions\Tables\QuestionsTable;
+use App\Helpers\NavigationHelper;
 use App\Models\Question;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -46,7 +47,47 @@ class QuestionResource extends Resource
         ];
     }
 
-    
+    // Batasi akses Edit
+    public static function canEdit($record): bool
+    {
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+
+        return parent::canEdit($record);
+    }
+
+    // Batasi akses Delete
+    public static function canDelete($record): bool
+    {
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+
+        return parent::canDelete($record);
+    }
+
+    // Batasi bulk delete
+    public static function canDeleteAny(): bool
+    {
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+
+        return parent::canDeleteAny();
+    }
+
+    // Izinkan View (Read)
+    public static function canView($record): bool
+    {
+        return true; 
+    }
+
+    // Izinkan Create
+    public static function canCreate(): bool
+    {
+        return true; 
+    }
 
     public static function getPages(): array
     {
