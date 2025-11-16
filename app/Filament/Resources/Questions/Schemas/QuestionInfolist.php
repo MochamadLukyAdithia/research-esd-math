@@ -35,6 +35,21 @@ class QuestionInfolist
                     ->separator(',')
                     ->color('primary'),
 
+                RepeatableEntry::make('questionImages')
+                    ->label('Gambar Soal')
+                    ->schema([
+                        ImageEntry::make('image_path')
+                            ->label('Gambar')
+                            ->getStateUsing(fn($record) => asset('storage/' . $record->image_path))
+                            ->columnSpanFull()
+                            ->height(200)
+                            ->columnSpan(1),
+                    ])
+                    ->columns(3)
+                    ->columnSpanFull()
+                    ->visible(fn($record) => $record->questionImages()->exists()),
+
+
                 // LOKASI & MAP
                 TextEntry::make('location_name')
                     ->label('Nama Lokasi')
@@ -48,7 +63,7 @@ class QuestionInfolist
 
 
                 \Filament\Infolists\Components\ViewEntry::make('map')
-                    ->view('filament.infolists.components.map-view ')
+                    ->view('filament.infolists.components.map-view')
                     ->label('Peta Lokasi')
                     ->columnSpanFull(),
 
@@ -65,13 +80,6 @@ class QuestionInfolist
                     ->label('Tingkat Kesulitan')
                     ->numeric()
                     ->formatStateUsing(fn($state) => "Level {$state}"),
-
-                ImageEntry::make('question_image')
-                    ->label('Gambar Soal')
-                    ->disk('public')
-                    ->visibility('public')
-                    ->columnSpanFull()
-                    ->hidden(fn($state) => empty($state)),
 
 
                 TextEntry::make('user.name')
