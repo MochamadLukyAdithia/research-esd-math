@@ -11,6 +11,7 @@ use App\Filament\Forms\Components\MapboxPicker;
 
 use Filament\Forms\Components\FileUpload;
 use App\Models\QuestionType;
+use Dom\Text;
 
 class QuestionForm
 {
@@ -62,6 +63,12 @@ class QuestionForm
                     ->required()
                     ->preload()
                     ->searchable(),
+                TextInput::make('points')
+                    ->label('Points untuk Soal Ini')
+                    ->required()
+                    ->numeric()
+                    ->minValue(0)
+                    ->columnSpanFull(),
                 Repeater::make('questionImages')
                     ->required()
                     ->label('Gambar Soal')
