@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // migration file
-        Schema::table('users', function (Blueprint $table) {
-            $table->enum('role', ['user', 'admin', 'question_admin'])->default('user');
+        Schema::create('question_images', function (Blueprint $table) {
+            $table->id('id_question_image');
+            $table->foreignId('question_id')->constrained('questions', 'id_question')->onDelete('cascade');
+            $table->string('image_path');
+            $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('question_images');
     }
 };

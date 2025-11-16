@@ -22,7 +22,6 @@ return new class extends Migration
             $table->float('latitude');
             $table->integer('grade');
             $table->integer('points')->default(0); 
-            $table->text('question_image')->nullable();
             $table->foreignId('id_user')->constrained(table: 'users', column: 'id_user');
             $table->text('correct_answer')->nullable();
             $table->foreignId('id_question_type')

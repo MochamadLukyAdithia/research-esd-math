@@ -9,6 +9,7 @@ use App\Filament\Resources\Tags\Pages\ViewTag;
 use App\Filament\Resources\Tags\Schemas\TagForm;
 use App\Filament\Resources\Tags\Schemas\TagInfolist;
 use App\Filament\Resources\Tags\Tables\TagsTable;
+use App\Helpers\NavigationHelper;
 use App\Models\Tag;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -23,6 +24,16 @@ class TagResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        // Sembunyikan jika admin khusus question only
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+        
+        return true;
+    }
 
     public static function form(Schema $schema): Schema
     {

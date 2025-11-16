@@ -26,11 +26,9 @@ class Question extends Model
         'id_question_type',
         'created_at',
         'updated_at',
-        'question_image'
     ];
 
     protected $casts = [
-        'question_image' => 'string',
         'correct_answer' => 'string',
         'longitude' => 'float',
         'latitude' => 'float',
@@ -104,6 +102,11 @@ class Question extends Model
     public function questionType()
     {
         return $this->belongsTo(QuestionType::class, 'id_question_type', 'id_question_type');
+    }
+
+    public function questionImages()
+    {
+        return $this->hasMany(QuestionImage::class, 'question_id', 'id_question');
     }
 
     public function tags()
