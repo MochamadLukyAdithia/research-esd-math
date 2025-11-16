@@ -18,11 +18,11 @@ class QuestionForm
     {
         return $schema
             ->components([
-                Textarea::make('title')
+                TextInput::make('title')
                     ->label('Judul Soal')
                     ->required()
                     ->columnSpanFull(),
-                TextInput::make('question')
+                Textarea::make('question')
                     ->label('Pertanyaan')
                     ->required()
                     ->columnSpanFull(),
@@ -62,19 +62,28 @@ class QuestionForm
                     ->required()
                     ->preload()
                     ->searchable(),
-                FileUpload::make('question_image')
+                Repeater::make('questionImages')
+                    ->required()
                     ->label('Gambar Soal')
-                    ->image()
-                    ->directory('questions')
-                    ->disk('public')
-                    ->maxSize(5120)
-                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'image/gif'])
+                    ->relationship('questionImages')
+                    ->schema([
+                        FileUpload::make('image_path')
+                            ->label('Upload Gambar')
+                            ->image()
+                            ->directory('questions')
+                            ->disk('public')
+                            ->maxFiles(1)
+                            ->required(),
+                    ])
                     ->columnSpanFull()
-                    ->helperText('Format: JPG, PNG, GIF. Maksimal 5MB (Opsional)')
-                    ->multiple(false)
-                    ->maxFiles(1)
-                    ->default(''),
+                    ->collapsible()
+                    ->defaultItems(0)
+                    ->addActionLabel('Tambah Gambar')
+                    ->itemLabel(fn($state) => basename($state['image_path'] ?? 'Gambar Baru'))
+                    ->maxItems(3)
+                    ->minItems(1),
                 Select::make('tags')
+                    ->required()
                     ->relationship('tags', 'tag_name')
                     ->preload()
                     ->multiple()
@@ -88,7 +97,7 @@ class QuestionForm
                     ->searchable()
                     ->columnSpanFull(),
                 Textarea::make('correct_answer')
-                    // ->required()
+                    ->required()
                     ->columnSpanFull()
                     ->visible(function ($get) {
                         $id = $get('id_question_type');
