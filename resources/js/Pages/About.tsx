@@ -1,6 +1,6 @@
 import React from 'react';
 import User from '@/Layouts/UserLayout';
-import { Globe2, Brain, Atom } from 'lucide-react';
+import { Globe2, Brain, Atom, ExternalLink } from 'lucide-react';
 import { useTranslation } from "react-i18next";
 
 const ContentCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -107,6 +107,23 @@ const AboutUsPage: React.FC = () => {
                             <p className="text-lg font-semibold text-primary mb-6">
                                 Founder & Academic Coordinator – ESDMathPath
                             </p>
+
+                            {/* Scopus Button */}
+                            <div className="flex justify-center">
+                                <a
+                                    href="https://www.scopus.com/authid/detail.uri?authorId=57193683206"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
+                                    title="Lihat profil Scopus Dr. Dian Kurniati"
+                                >
+                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0m3.28 16.85c-.29.41-.8.64-1.34.64-.96 0-1.73-.77-1.73-1.73s.77-1.73 1.73-1.73c.53 0 1.04.24 1.34.64l1.05-.75c-.58-.82-1.54-1.35-2.64-1.35-2.07 0-3.76 1.68-3.76 3.76s1.68 3.76 3.76 3.76c1.54 0 2.86-.91 3.45-2.23l-1.2-.86z"/>
+                                    </svg>
+                                    View Scopus Profile
+                                    <ExternalLink size={18} />
+                                </a>
+                            </div>
                         </div>
 
                         <hr className="my-6 border-gray-200" />
