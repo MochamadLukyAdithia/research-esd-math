@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 class PortalForUserController extends Controller
 {
@@ -19,7 +20,7 @@ class PortalForUserController extends Controller
 
     public function index()
     {
-        $query = Question::with(['tags', 'favoritedBy', 'questionType']);
+        $query = Question::with(['tags', 'favoritedBy', 'questionType', 'questionImages']);
 
         if (Auth::check()) {
             $query->with(['favoritedBy' => function($q) {
@@ -28,6 +29,14 @@ class PortalForUserController extends Controller
         }
 
         $tasks = $query->get()->map(function ($question) {
+            $userAnswer = null;
+            if (Auth::check()) {
+                $userAnswer = UserAnswer::where('id_question', $question->id_question)
+                    ->where('id_user', Auth::id())
+                    ->where('is_correct', true)
+                    ->first();
+            }
+
             return [
                 'id_question' => $question->id_question,
                 'title' => $question->title,
@@ -35,6 +44,11 @@ class PortalForUserController extends Controller
                 'latitude' => (float) $question->latitude,
                 'longitude' => (float) $question->longitude,
                 'question_image' => $question->question_image_url,
+                'question_images' => $question->questionImages->map(fn($img) =>
+                    str_starts_with($img->image_path, 'http')
+                        ? $img->image_path
+                        : Storage::url($img->image_path)
+                )->toArray(),
                 'tags' => $question->tags,
                 'grade' => $question->grade,
                 'points' => $question->points,
@@ -42,6 +56,7 @@ class PortalForUserController extends Controller
                 'is_favorite' => Auth::check()
                     ? $question->favoritedBy->isNotEmpty()
                     : false,
+                'is_answered' => $userAnswer ? true : false,
                 'created_at' => $question->created_at->toIso8601String(),
                 'user_points' => $question->userPoints()->where('id_user', Auth::id())->sum('points_earned'),
             ];
@@ -57,7 +72,7 @@ class PortalForUserController extends Controller
 
     public function getQuestionDetail($id)
     {
-        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionType', 'questionOptions'])
+        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionType', 'questionOptions', 'questionImages'])
             ->findOrFail($id);
 
         if (Auth::check()) {
@@ -109,6 +124,11 @@ class PortalForUserController extends Controller
             'latitude' => (float) $question->latitude,
             'longitude' => (float) $question->longitude,
             'question_image' => $question->question_image_url,
+            'question_images' => $question->questionImages->map(fn($img) =>
+                str_starts_with($img->image_path, 'http')
+                    ? $img->image_path
+                    : Storage::url($img->image_path)
+            )->toArray(),
             'tags' => $question->tags,
             'grade' => $question->grade,
             'points' => $question->points,
@@ -116,6 +136,7 @@ class PortalForUserController extends Controller
             'is_favorite' => Auth::check()
                 ? $question->favoritedBy->isNotEmpty()
                 : false,
+            'is_answered' => $userAnswer ? true : false,
             'created_at' => $question->created_at->toIso8601String(),
             'creator' => [
                 'name' => $question->user->name,
