@@ -46,22 +46,24 @@ export default function MapComponent({ tasks, userLocation, viewState, onViewSta
               onClick={(e) => { e.stopPropagation(); onTaskSelect(task); }}
               className="transform transition-transform hover:scale-125 relative"
             >
-              <MapPin className="w-8 h-8 text-blue-800 fill-blue-200 drop-shadow-lg" strokeWidth={1.5} />
-              {task.is_favorite && (
-                <Star size={12} className="absolute -top-1 -right-1 fill-primary text-primary" />
-              )}
+              <MapPin
+                className={`w-8 h-8 drop-shadow-lg ${
+                  task.is_answered
+                    ? 'text-green-700 fill-green-300'
+                    : 'text-blue-800 fill-blue-200'
+                }`}
+              />
             </button>
           </Marker>
         ))}
       </Map>
-
       {userLocation && (
         <button
           onClick={goToUserLocation}
-          className="absolute bottom-4 right-4 md:bottom-6 md:right-6 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-all hover:scale-110 z-10"
+          className="absolute top-4 right-16 p-3 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-all z-10"
           title="Kembali ke lokasi saya"
         >
-          <Navigation size={20} className="text-primary" />
+          <Navigation size={20} className="text-secondary" />
         </button>
       )}
     </>

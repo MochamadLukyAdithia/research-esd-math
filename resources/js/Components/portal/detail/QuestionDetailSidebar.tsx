@@ -31,10 +31,12 @@ interface QuestionDetail {
   latitude: number;
   longitude: number;
   question_image: string;
+  question_images?: string[];
   tags: Tag[];
   grade: number;
   options?: QuestionOption[] | null;
   is_favorite: boolean;
+  is_answered?: boolean;
   created_at: string;
   points: number;
   creator: {
@@ -111,14 +113,15 @@ export default function QuestionDetailSidebar({
           questionId={question.id_question}
           title={question.title}
           question={question.question}
-          questionImage={question.question_image}
+          questionImages={question.question_images || (question.question_image ? [question.question_image] : [])}
           tags={question.tags}
           grade={question.grade}
           distance={question.distance}
           locationName={question.location_name}
           isFavorite={question.is_favorite}
+          isAnswered={question.is_answered}
           onToggleFavorite={onToggleFavorite}
-            points={question.points}
+          points={question.points}
         />
 
         <CreatorCard creator={question.creator} />

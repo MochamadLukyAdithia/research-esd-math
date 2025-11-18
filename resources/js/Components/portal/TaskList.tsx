@@ -77,7 +77,7 @@ export default function TaskList({
                                         </div>
                                     ) : (
                                         <img
-                                            src={task.question_image}
+                                            src={task.question_images && task.question_images.length > 0 ? task.question_images[0] : task.question_image}
                                             alt={task.title}
                                             onError={() =>
                                                 handleImageError(
