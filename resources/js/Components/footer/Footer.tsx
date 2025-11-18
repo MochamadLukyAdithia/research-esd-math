@@ -33,15 +33,15 @@ const Footer: React.FC = () => {
               <ul className="space-y-3">
                 <li className="flex items-start">
                   <span>
-                    Malang Creative Center
+                    Jalan Kalimantan No. 37, ,
                     <br />
-                    Jl. Ahmad Yani, Malang
+                    Kampus Tegalboto, Sumbersari
                     <br />
-                    Indonesia 65122
+                    Kabupaten Jember
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <span>081238038207</span>
+                  <span>+62 852-3639-5454</span>
                 </li>
               </ul>
             </div>
