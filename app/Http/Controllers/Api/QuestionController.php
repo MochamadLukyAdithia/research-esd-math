@@ -9,6 +9,7 @@ use App\Models\UserAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 use function Illuminate\Log\log;
@@ -21,14 +22,27 @@ class QuestionController extends Controller
 
     public function getAllQuestions()
     {
-        $questions = Question::with('tags', 'user', 'questionType', 'questionOptions')->paginate(10);
+        $questions = Question::with(['tags', 'user', 'questionType', 'questionOptions', 'questionImages'])->paginate(10);
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+            $questions = $questions->map(function($question) use ($userId) {
+                $userAnswer = UserAnswer::where('id_question', $question->id_question)
+                    ->where('id_user', $userId)
+                    ->where('is_correct', true)
+                    ->first();
+
+                $question->is_answered = $userAnswer ? true : false;
+                return $question;
+            });
+        }
 
         return response()->json($questions);
     }
 
 public function getQuestionDetail($id)
 {
-    $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType'])
+    $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType', 'questionImages'])
         ->findOrFail($id);
 
     if (Auth::check()) {
@@ -78,12 +92,18 @@ public function getQuestionDetail($id)
         'latitude' => (float) $question->latitude,
         'longitude' => (float) $question->longitude,
         'question_image' => $question->question_image_url ?? null,
+        'question_images' => $question->questionImages->map(fn($img) =>
+            str_starts_with($img->image_path, 'http')
+                ? $img->image_path
+                : Storage::url($img->image_path)
+        )->toArray() ?? [],
         'grade' => $question->grade,
         'tags' => $question->tags,
         'options' => $options,
         'is_favorite' => Auth::check()
             ? $question->favoritedBy->isNotEmpty()
             : false,
+        'is_answered' => $userAnswer ? true : false,
         'created_at' => $question->created_at->toIso8601String(),
         'creator' => [
             'name' => $question->user->name,

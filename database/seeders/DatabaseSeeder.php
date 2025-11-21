@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             TagSeeder::class,
             QuestionTypeSeeder::class,
             QuestionSeeder::class,
+            QuestionImageSeeder::class,
             NewsSeeder::class,
             // QuestionRelationSeeder::class,
         ]);

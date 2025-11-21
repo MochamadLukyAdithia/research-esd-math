@@ -22,9 +22,11 @@ export interface Task {
   location_name: string;
   latitude: number;
   longitude: number;
-  question_image: string;
+  question_image?: string;
+  question_images?: string[];
   tags: Tag[];
   is_favorite: boolean;
+  is_answered?: boolean;
   created_at: string;
   grade: number;
   points: number;

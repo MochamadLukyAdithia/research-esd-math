@@ -21,6 +21,13 @@ export default function TaskDetailModal({
         return null;
     }
 
+    const getImageUrl = () => {
+        if (task.question_images && task.question_images.length > 0) {
+            return task.question_images[0];
+        }
+        return task.question_image;
+    };
+
     const handleImageError = () => {
         setImageError(true);
     };
@@ -36,7 +43,7 @@ export default function TaskDetailModal({
 
             <div className="flex gap-4">
                 <img
-                    src={task.question_image}
+                    src={getImageUrl()}
                     alt={task.title}
                     onError={(e) => {
                         const target = e.target as HTMLImageElement;
