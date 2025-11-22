@@ -16,6 +16,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UserAnswersExport;
 
 class UserAnswerResource extends Resource
 {
@@ -47,7 +50,16 @@ class UserAnswerResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return UserAnswersTable::configure($table);
+        return UserAnswersTable::configure($table)
+         ->headerActions([
+            \Filament\Actions\Action::make('export')
+                ->label('Export to Excel')
+                // ->icon('download')
+                ->action(fn () => Excel::download(
+                    new UserAnswersExport,
+                    'user_answers.xlsx'
+                )),
+        ]);
     }
 
     public static function getRelations(): array
