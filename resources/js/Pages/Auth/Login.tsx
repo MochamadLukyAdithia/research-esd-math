@@ -19,7 +19,7 @@ export default function Login({ stats, status, canResetPassword }: LoginProps) {
     return (
         <>
             <Head title="Masuk" />
-            <div className="md:hidden text-center mb-8">
+            <div className="md:hidden text-center mb-8 ">
                 <Link href="/">
                     <img
                         src="/assets/auth/logo.png"
