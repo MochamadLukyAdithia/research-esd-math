@@ -17,7 +17,7 @@ class UserAnswersExport implements FromQuery, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'Judul'
+            'Judul Soal',
             'Soal',
             'User',
             'Jawaban',
