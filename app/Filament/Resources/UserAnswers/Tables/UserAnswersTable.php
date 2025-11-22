@@ -10,6 +10,9 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\UserAnswersExport;
+
 
 class UserAnswersTable
 {
@@ -19,6 +22,16 @@ class UserAnswersTable
             ->columns([
 
                 TextColumn::make('question.title')
+                    ->label('Judul Soal')
+                    ->limit(30)
+                    ->searchable()
+                    ->sortable()
+                    ->tooltip(function (TextColumn $column): ?string {
+                        $state = $column->getState();
+                        return $state;
+                    }),
+
+                TextColumn::make('question.question')
                     ->label('Soal')
                     ->limit(30)
                     ->searchable()
@@ -79,6 +92,14 @@ class UserAnswersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+                // ->headerActions([
+                //     Actions::make('export')
+                //         ->label('Export to Excel')
+                //         ->icon('heroicon-o-download')
+                //         ->action(fn () => Excel::download(new UserAnswersExport, 'user_answers.xlsx')),
+                // ])
+
+
             ->filters([
                 //
             ])
