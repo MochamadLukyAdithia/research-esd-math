@@ -17,6 +17,9 @@ class UserAnswerInfolist
                     ->label('Judul Soal')
                     ->columnSpanFull()
                     ->weight('bold'),
+                TextEntry::make('question.question')
+                     ->label('Pertanyaan Soal')
+                    ->columnSpanFull(),
 
                 
                 TextEntry::make('user.name')
