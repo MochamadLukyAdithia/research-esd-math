@@ -5,7 +5,7 @@ namespace App\Filament\Resources\News\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\TextArea;
+use Filament\Forms\Components\Textarea;
 
 class NewsForm
 {
@@ -25,7 +25,7 @@ class NewsForm
                     ->required()
                     ->preserveFilenames() 
                     ->columnSpanFull(),
-                TextArea::make('description')
+                Textarea::make('description')
                     ->label('Deskripsi')
                     ->columnSpanFull()
                     ->required(),
