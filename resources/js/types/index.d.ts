@@ -4,7 +4,7 @@ export interface User {
     email: string;
     email_verified_at?: string;
     avatar: string | null;
-    role: 'user' | 'admin';
+    role: 'user' | 'admin' | 'question_admin';
     created_at?: string;
 }
 
