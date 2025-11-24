@@ -19,11 +19,15 @@ const FocusBadge = ({ icon, label, color }: { icon: React.ReactNode; label: stri
 const TeamMemberCard = ({
     name,
     role,
-    imagePath
+    imagePath,
+    email,
+    scopus
 }: {
     name: string;
     role: string;
     imagePath: string;
+    email?: string;
+    scopus?: string;
 }) => (
     <ContentCard className="transition-all duration-300 hover:shadow-xl h-full">
         <div className="flex flex-col items-center text-center">
@@ -35,9 +39,26 @@ const TeamMemberCard = ({
             <h3 className="text-lg font-bold text-secondary mb-1">
                 {name}
             </h3>
-            <p className="text-sm text-primary font-medium">
+            <p className="text-sm text-primary font-medium mb-3">
                 {role}
             </p>
+            <div className="flex flex-col items-center gap-2">
+                {email && (
+                    <a href={`mailto:${email}`} className="text-xs text-gray-600 hover:underline">
+                        {email}
+                    </a>
+                )}
+                {scopus && (
+                    <a
+                        href={scopus}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded-lg shadow-sm"
+                    >
+                        View Scopus
+                    </a>
+                )}
+            </div>
         </div>
     </ContentCard>
 );
@@ -48,6 +69,7 @@ const AboutUsPage: React.FC = () => {
         esd: 'bg-blue-100 text-blue-800',
         ethno: 'bg-green-100 text-green-800',
         stem: 'bg-purple-100 text-purple-800',
+        critical: 'bg-yellow-100 text-yellow-800',
     };
 
     const teamMembers = [
@@ -75,6 +97,46 @@ const AboutUsPage: React.FC = () => {
             name: 'Rimbi Siara',
             role: 'System Request',
             imagePath: '/assets/about/rimbi.webp'
+        }
+    ];
+
+    const projectCoordination = [
+        {
+            name: 'Dr. Arika Indah K., S.Si., M.Pd',
+            role: 'Project Coordinator',
+            imagePath: '/assets/about/arika.webp',
+            email: 'arika.fkip@unej.ac.id',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57202194975'
+        },
+        {
+            name: 'Oktalia Juwita, S.Kom., M.MT.',
+            role: 'Project Coordinator (IT)',
+            imagePath: '/assets/about/okta.webp',
+            email: 'oktalia@unej.ac.id',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57194070441'
+        }
+    ];
+
+    const didacticSupport = [
+        {
+            name: 'Inge Wiliandani S. P., S.Pd., M.Pd',
+            role: 'Research Assistant',
+            imagePath: '/assets/about/inge.webp',
+            email: 'ingewiliandani@unej.ac.id',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57209220443'
+        },
+        {
+            name: 'Intan Wahyuna, S.Pd',
+            role: 'Teaching Assistant',
+            imagePath: '/assets/about/intan.webp',
+            email: 'intanwahyuna117@gmail.com',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=59380405400&origin=resultslist'
+        },
+        {
+            name: 'Muhammad Mayvanda Syahrun A.',
+            role: 'Research Assistant',
+            imagePath: '/assets/about/vanda.webp',
+            email: 'muhammadmayvanda05@gmail.com'
         }
     ];
 
@@ -117,9 +179,6 @@ const AboutUsPage: React.FC = () => {
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105"
                                     title="Lihat profil Scopus Dr. Dian Kurniati"
                                 >
-                                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0m3.28 16.85c-.29.41-.8.64-1.34.64-.96 0-1.73-.77-1.73-1.73s.77-1.73 1.73-1.73c.53 0 1.04.24 1.34.64l1.05-.75c-.58-.82-1.54-1.35-2.64-1.35-2.07 0-3.76 1.68-3.76 3.76s1.68 3.76 3.76 3.76c1.54 0 2.86-.91 3.45-2.23l-1.2-.86z"/>
-                                    </svg>
                                     View Scopus Profile
                                     <ExternalLink size={18} />
                                 </a>
@@ -145,17 +204,70 @@ const AboutUsPage: React.FC = () => {
                                     label="STEM"
                                     color={colors.stem}
                                 />
+                                <FocusBadge
+                                    icon={<Brain size={16} />}
+                                    label="Berpikir Kritis"
+                                    color={colors.critical}
+                                />
                             </div>
                         </div>
 
                         <div>
-                            <h3 className="text-xl font-bold text-secondary mb-3 text-left">{t('about.tentang')}</h3>
+                            <h3 className="text-xl font-bold text-secondary mb-3 text-left">Tentang</h3>
                             <p className="text-secondary/80 leading-relaxed text-left">
-                                {t('about.deskripsi')}
+                                Dr. Dian Kurniati menyelesaikan studi Pendidikan Matematika di Universitas Negeri Surabaya dan Universitas Negeri Malang. Sejak 2009 hingga sekarang, beliau menjadi dosen dan melakukan penelitian di Universitas Jember. Beliau berperan sebagai Project Lead untuk inisiatif ini dengan fokus pada penerapan pendidikan berkelanjutan dan berpikir kritis.
+                            </p>
+                            <p className="text-secondary/80 leading-relaxed text-left mt-3">
+                                Email: <a href="mailto:dian.kurniati@unej.ac.id" className="text-secondary/90 hover:underline">dian.kurniati@unej.ac.id</a>
                             </p>
                         </div>
                     </ContentCard>
 
+                    {/* Project Coordination Section */}
+                    <div className="mt-12 max-w-6xl mx-auto">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl md:text-3xl font-bold text-secondary mb-3">Project Coordination</h2>
+                            <p className="text-secondary/70 text-base max-w-3xl mx-auto">Koordinasi proyek dan manajemen kegiatan penelitian serta pengembangan platform.</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-6">
+                            {projectCoordination.map((member, index) => (
+                                <div key={index} className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+                                    <TeamMemberCard
+                                        name={member.name}
+                                        role={member.role}
+                                        imagePath={member.imagePath}
+                                        email={member.email}
+                                        scopus={member.scopus}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Didactic Support Section */}
+                    <div className="mt-12 max-w-6xl mx-auto">
+                        <div className="text-center mb-6">
+                            <h2 className="text-2xl md:text-3xl font-bold text-secondary mb-3">Didactic Support</h2>
+                            <p className="text-secondary/70 text-base max-w-3xl mx-auto">Dukungan pedagogis, asisten pengajaran, dan asisten penelitian untuk materi dan implementasi pembelajaran.</p>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-6">
+                            {didacticSupport.map((member, index) => (
+                                <div key={index} className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]">
+                                    <TeamMemberCard
+                                        name={member.name}
+                                        role={member.role}
+                                        imagePath={member.imagePath}
+                                        email={member.email}
+                                        scopus={member.scopus}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Developers Section */}
                     <div className="mt-16 max-w-6xl mx-auto">
                         <div className="text-center mb-8">
                             <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-3">
