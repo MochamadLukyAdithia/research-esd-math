@@ -101,7 +101,7 @@ export default function AuthLayout({
                 <div className="relative z-30 w-full h-full flex flex-col items-center justify-center text-center">
                     <div>
                         <motion.div
-                            className="mb-16"
+                            className="mb-6"
                             initial={{ y: -10 }}
                             animate={{ y: 10 }}
                             transition={{
@@ -112,21 +112,21 @@ export default function AuthLayout({
                             }}
                         >
                             <img
-                                src="/logo/logo.png"
-                                alt="Logo"
-                                width={110}
-                                height={110}
+                                src="/assets/logo.png"
+                                alt="ESD MathPath"
+                                width={300}
+                                height={300}
                                 className="relative object-contain drop-shadow-lg mx-auto"
                             />
                         </motion.div>
-                        <h2 className="text-3xl font-bold text-primary">
+                        {/* <h2 className="text-3xl font-bold text-primary">
                             ESD MathPath
-                        </h2>
+                        </h2> */}
                         <p className="text-background mt-4 text-md max-w-md mx-auto">
                             ESD MathPath adalah platform inovatif yang dirancang
                             untuk membantu siswa, guru, dan siapa saja yang
                             ingin belajar matematika dengan cara yang lebih
-                            interaktif. 
+                            interaktif.
                         </p>
                     </div>
                     {stats && (
