@@ -22,8 +22,8 @@ export default function Login({ stats, status, canResetPassword }: LoginProps) {
             <div className="md:hidden text-center mb-8 ">
                 <Link href="/">
                     <img
-                        src="/assets/auth/logo.png"
-                        alt="Logo"
+                        src="/assets/logo.png"
+                        alt="ESD MathPath"
                         width={80}
                         height={80}
                         className="relative object-contain drop-shadow-lg mx-auto"
