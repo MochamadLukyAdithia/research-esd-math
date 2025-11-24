@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\LeaderboardResource\Pages;
+namespace App\Filament\Resources\Leaderboards\Pages;
 
-use App\Filament\Resources\LeaderboardResource;
+use App\Filament\Resources\Leaderboards\LeaderboardResource;
 use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;

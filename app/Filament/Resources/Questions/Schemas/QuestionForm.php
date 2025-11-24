@@ -26,7 +26,8 @@ class QuestionForm
                 Textarea::make('question')
                     ->label('Pertanyaan')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->rows(12),
                 MapboxPicker::make('location')
                     ->label('Pilih Lokasi di Peta')
                     ->defaultLocation(-8.1733, 113.7031)

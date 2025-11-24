@@ -19,8 +19,6 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {});
-
 Route::get('/about-us', function () {
     return Inertia::render('About');
 })->name('about');
@@ -36,7 +34,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
 
+Route::middleware('auth', 'verified', 'role:user')->group(function () {
     Route::get('/portal', [PortalForUserController::class, 'index'])
         ->name('portal.index');
     Route::post('/portal/questions/{questionId}/toggle-favorite', [PortalForUserController::class, 'toggleFavorite'])
@@ -44,9 +44,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/portal/questions/{id}/detail', [PortalForUserController::class, 'getQuestionDetail'])
         ->name('portal.questions.detail');
     Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
-        ->name('portal.questions.checkAnswer');
-
- Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
         ->name('portal.questions.checkAnswer');
 });
 

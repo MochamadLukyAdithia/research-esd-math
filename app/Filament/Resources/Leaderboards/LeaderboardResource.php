@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\Leaderboards;
 
-use App\Filament\Resources\LeaderboardResource\Pages\ListLeaderboards;
+use App\Filament\Resources\Leaderboards\Pages\ListLeaderboards;
 use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
@@ -43,7 +43,7 @@ class LeaderboardResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListLeaderboards::route('/'),
+            'index' => ListLeaderBoards::route('/'),
         ];
     }
 
