@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+
 class PortalForUserController extends Controller
 {
     const MAX_ATTEMPTS_BEFORE_COOLDOWN = 3;
@@ -23,7 +24,7 @@ class PortalForUserController extends Controller
         $query = Question::with(['tags', 'favoritedBy', 'questionType', 'questionImages']);
 
         if (Auth::check()) {
-            $query->with(['favoritedBy' => function($q) {
+            $query->with(['favoritedBy' => function ($q) {
                 $q->where('users.id_user', Auth::id());
             }]);
         }
@@ -44,7 +45,8 @@ class PortalForUserController extends Controller
                 'latitude' => (float) $question->latitude,
                 'longitude' => (float) $question->longitude,
                 'question_image' => $question->question_image_url,
-                'question_images' => $question->questionImages->map(fn($img) =>
+                'question_images' => $question->questionImages->map(
+                    fn($img) =>
                     str_starts_with($img->image_path, 'http')
                         ? $img->image_path
                         : Storage::url($img->image_path)
@@ -76,7 +78,7 @@ class PortalForUserController extends Controller
             ->findOrFail($id);
 
         if (Auth::check()) {
-            $question->load(['favoritedBy' => function($q) {
+            $question->load(['favoritedBy' => function ($q) {
                 $q->where('users.id_user', Auth::id());
             }]);
         }
@@ -85,6 +87,7 @@ class PortalForUserController extends Controller
         $attemptInfo = null;
         $pointsEarned = null;
         $potentialPoints = null;
+        $attemptCount = 0;
 
         if (Auth::check()) {
             $userAnswer = UserAnswer::where('id_question', $id)
@@ -103,7 +106,13 @@ class PortalForUserController extends Controller
             } else if (!$userAnswer) {
                 $potentialPoints = $question->points;
             }
+
+            $attemptCount = UserAnswer::where('id_question', $id)
+                ->where('id_user', Auth::id())
+                ->count();
         }
+
+        // dd($attemptCount);
 
         $options = null;
         if ($question->questionType->question_type === 'pilihan_ganda') {
@@ -124,7 +133,8 @@ class PortalForUserController extends Controller
             'latitude' => (float) $question->latitude,
             'longitude' => (float) $question->longitude,
             'question_image' => $question->question_image_url,
-            'question_images' => $question->questionImages->map(fn($img) =>
+            'question_images' => $question->questionImages->map(
+                fn($img) =>
                 str_starts_with($img->image_path, 'http')
                     ? $img->image_path
                     : Storage::url($img->image_path)
@@ -143,7 +153,7 @@ class PortalForUserController extends Controller
                 'email' => $question->user->email,
                 'avatar' => $question->user->avatar ?? null,
             ],
-            'hints' => $question->hints->map(function($hint) {
+            'hints' => $question->hints->map(function ($hint) {
                 return [
                     'id_hint' => $hint->id_hint,
                     'image' => $hint->image,
@@ -158,6 +168,7 @@ class PortalForUserController extends Controller
             'attempt_info' => $userAnswer ? null : $attemptInfo,
             'points_earned' => $pointsEarned,
             'potential_points' => $userAnswer ? null : $potentialPoints,
+            'attempt_count' => $attemptCount,
         ]);
     }
 
@@ -229,7 +240,6 @@ class PortalForUserController extends Controller
                     'is_correct' => true,
                     'answered_at' => now(),
                 ]);
-
             });
 
             $this->clearAttempts($id, $userId);
@@ -241,9 +251,19 @@ class PortalForUserController extends Controller
                 'points_earned' => $question->points,
                 'bonus_message' => null,
             ]);
-
         } else {
             $attemptInfo = $this->incrementAttempt($id, $userId);
+
+            DB::transaction(function () use ($id, $userId, $answerText) {
+                UserAnswer::create([
+                    'id_question' => $id,
+                    'id_user' => $userId,
+                    'answer' => $answerText,
+                    'is_correct' => false,
+                    'answered_at' => now(),
+                ]);
+            });
+
             return response()->json([
                 'is_correct' => false,
                 'user_answer' => $answerText,

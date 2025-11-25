@@ -27,9 +27,6 @@ return new class extends Migration
             $table->index('id_question');
             $table->index('is_correct');
             $table->index('answered_at');
-            
-            // Unique constraint: user tidak bisa jawab 2x pertanyaan yang sama
-            $table->unique(['id_user', 'id_question']);
         });
 
         Schema::enableForeignKeyConstraints();
