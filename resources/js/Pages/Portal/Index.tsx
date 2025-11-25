@@ -269,7 +269,7 @@ export default function Index({ tasks: initialTasks, tags }: PageProps) {
       <Navbar user={auth.user} />
       <div className="flex flex-col h-screen bg-background pt-[72px]">
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          <div className={`w-full md:w-96 border-r border-gray-200 bg-background overflow-y-auto ${showMap ? 'hidden md:block' : 'block'}`}>
+          <div className={`w-full md:w-[500px] border-r border-gray-200 bg-background overflow-y-auto ${showMap ? 'hidden md:block' : 'block'}`}>
             {showDetailView ? (
                 <QuestionDetailSidebar
                   question={questionDetail}
