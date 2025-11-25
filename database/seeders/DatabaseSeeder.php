@@ -10,27 +10,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         User::factory()->create([
-            'name' => 'Richie Olajuwon Santoso',
-            'email' => 'richieolajuwons@gmail.com',
-            'password' => bcrypt('12345678'),
-            'role' => 'user'
-        ]);
-        User::factory()->create([
-            'name' => 'Lexandra Hansen',
-            'email' => 'lexandra@gmail.com',
-            'password' => bcrypt('12345678'),
+            'name' => 'Mochamad Luky Adithia',
+            'email' => 'mochamadlukyadithiawork@gmail.com',
+            'password' => bcrypt('MOCHluk2025$$'),
             'role' => 'user'
         ]);
         User::factory()->create([
             'name' => 'Admin User',
-            'email' => 'admin@gmail.com',
-            'password' => bcrypt('12345678'),
+            'email' => 'esdmathpath@gmail.com',
+            'password' => bcrypt('EsdMatch2025'),
             'role' => 'admin'
         ]);
         User::factory()->create([
             'name' => 'Admin Question',
-            'email' => 'adminquestion@gmail.com',
-            'password' => bcrypt('12345678'),
+            'email' => 'userquestion@gmail.com',
+            'password' => bcrypt('UserQuestion2025'),
             'role' => 'question_admin'
         ]);
 
@@ -39,10 +33,9 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TagSeeder::class,
             QuestionTypeSeeder::class,
-            QuestionSeeder::class,
-            QuestionImageSeeder::class,
-            NewsSeeder::class,
-            // QuestionRelationSeeder::class,
+            // QuestionSeeder::class,
+            // QuestionImageSeeder::class,
+            // NewsSeeder::class,
         ]);
     }
 }
