@@ -76,10 +76,10 @@ export default function Navbar({ user: propUser }: NavbarProps) {
                     onClick={closeAllMenus}
                 >
                     <img
-                        src="/assets/logo.png"
+                        src="/assets/logo-black.webp"
                         alt="Logo"
-                        width={60}
-                        height={60}
+                        width={40}
+                        height={40}
                         className="drop-shadow-lg"
                     />
 
