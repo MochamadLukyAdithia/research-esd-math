@@ -14,7 +14,7 @@
 
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website">
-        <meta property="og:title" content="ESD MathMap - Portal Pembelajaran Matematika Interaktif">
+        <meta property="og:title" content="ESD MathMap - Portfal Pembelajaran Matematika Interaktif">
         <meta property="og:description" content="Platform pembelajaran matematika interaktif dengan koleksi soal dan peta tugas. Temukan sumber belajar yang mendukung ESD dan pengajaran kontekstual.">
         <meta property="og:image" content="{{ asset('assets/logo.png') }}">
 
