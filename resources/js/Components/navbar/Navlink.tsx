@@ -36,11 +36,16 @@ export function NavigationLinks({ isMobile = false, onLinkClick, url }: Navigati
 
     const activeLinkClass = isMobile
         ? "bg-secondary/10 text-primary"
-        : "text-primary";
+        : "text-secondary";
+
+    const focusAndHoverMobile = "hover:bg-secondary/5 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-white";
+    const focusAndHoverDesktop = "focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-white";
 
     const inactiveLinkClass = isMobile
-        ? "text-primary-light hover:bg-secondary/5"
-        : "text-primary-light hover:text-primary";
+        ? `text-primary ${focusAndHoverMobile}`
+        : `text-secondary ${focusAndHoverDesktop}`;
+
+    const activeLinkFocus = "focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-white";
 
     return (
         <>
@@ -51,14 +56,17 @@ export function NavigationLinks({ isMobile = false, onLinkClick, url }: Navigati
                     onClick={onLinkClick}
                     className={clsx(
                         linkClass,
-                        isActive(link.href) ? activeLinkClass : inactiveLinkClass
+                        isActive(link.href) ? [activeLinkClass, activeLinkFocus] : inactiveLinkClass
                     )}
+                    aria-current={isActive(link.href) ? 'page' : undefined}
                 >
                     {t(link.translationKey)}
                     {!isMobile && (
                         <span className={clsx(
                             "absolute bottom-0 left-0 h-0.5 bg-secondary transition-all duration-300",
-                            isActive(link.href) ? "w-full" : "w-0 group-hover:w-full"
+                            isActive(link.href)
+                                ? "w-full"
+                                : "w-0 group-hover:w-full group-focus:w-full group-focus-visible:w-full"
                         )}></span>
                     )}
                 </Link>
