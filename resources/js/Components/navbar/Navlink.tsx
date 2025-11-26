@@ -35,12 +35,12 @@ export function NavigationLinks({ isMobile = false, onLinkClick, url }: Navigati
         : "relative px-1 py-2 text-sm font-medium transition-colors group";
 
     const activeLinkClass = isMobile
-        ? "bg-secondary/10 text-secondary"
-        : "text-secondary";
+        ? "bg-secondary/10 text-primary"
+        : "text-primary";
 
     const inactiveLinkClass = isMobile
-        ? "text-secondary-light hover:bg-secondary/5"
-        : "text-secondary-light hover:text-secondary";
+        ? "text-primary-light hover:bg-secondary/5"
+        : "text-primary-light hover:text-primary";
 
     return (
         <>
