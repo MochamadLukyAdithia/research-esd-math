@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('MOCHluk2025$$'),
             'role' => 'user'
         ]);
-        User::factory()->create([
+        User::factory()->create([   
             'name' => 'Admin User',
             'email' => 'esdmathpath@gmail.com',
             'password' => bcrypt('EsdMath2025'),
