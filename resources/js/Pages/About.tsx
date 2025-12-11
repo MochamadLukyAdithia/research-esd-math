@@ -1,6 +1,6 @@
 import React from 'react';
 import User from '@/Layouts/UserLayout';
-import { Globe2, Brain, Atom, ExternalLink } from 'lucide-react';
+import { Globe2, Brain, Atom, ExternalLink, TextSearch, MSquare } from 'lucide-react';
 import { useTranslation } from "react-i18next";
 
 const ContentCard = ({ children, className }: { children: React.ReactNode; className?: string }) => (
@@ -66,10 +66,12 @@ const TeamMemberCard = ({
 const AboutUsPage: React.FC = () => {
     const { t } = useTranslation();
     const colors = {
+        pembelajaran: 'bg-red-100 text-red-800',
         esd: 'bg-blue-100 text-blue-800',
         ethno: 'bg-green-100 text-green-800',
         stem: 'bg-purple-100 text-purple-800',
         critical: 'bg-yellow-100 text-yellow-800',
+        numerasi: 'bg-indigo-100 text-indigo-800'
     };
 
     const teamMembers = [
@@ -103,7 +105,7 @@ const AboutUsPage: React.FC = () => {
     const projectCoordination = [
         {
             name: 'Dr. Arika Indah K., S.Si., M.Pd',
-            role: 'Project Coordinator',
+            role: 'Project Coordinator (Jawa)',
             imagePath: '/assets/about/arika.webp',
             email: 'arika.fkip@unej.ac.id',
             scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57202194975'
@@ -114,6 +116,13 @@ const AboutUsPage: React.FC = () => {
             imagePath: '/assets/about/okta.webp',
             email: 'oktalia@unej.ac.id',
             scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57194070441'
+        },
+        {
+            name: 'Dr. Enditiyas Pratiwi, S.Si., M.Pd',
+            role: 'Project Coordinator (Kalimantan)',
+            imagePath: '/assets/about/endit.jpeg',
+            email: '',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57208338065'
         }
     ];
 
@@ -190,9 +199,19 @@ const AboutUsPage: React.FC = () => {
                             <h3 className="text-xl font-bold text-secondary mb-4 text-left">{t('about.fokus')}</h3>
                             <div className="flex flex-wrap justify-start gap-3">
                                 <FocusBadge
+                                    icon={<TextSearch size={16} />}
+                                    label="Pembelajaran Matematika"
+                                    color={colors.pembelajaran}
+                                />
+                                <FocusBadge
                                     icon={<Globe2 size={16} />}
-                                    label="ESD"
+                                    label="Literasi"
                                     color={colors.esd}
+                                />
+                                <FocusBadge
+                                    icon={<MSquare size={16} />}
+                                    label="Numerasi"
+                                    color={colors.numerasi}
                                 />
                                 <FocusBadge
                                     icon={<Brain size={16} />}

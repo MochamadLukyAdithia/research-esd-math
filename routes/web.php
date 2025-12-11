@@ -19,6 +19,12 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+
+Route::get('run-storage-link', function () {
+    Artisan::call('storage:link');
+    return "storage link successfully";
+});
+
 Route::get('/about-us', function () {
     return Inertia::render('About');
 })->name('about');
