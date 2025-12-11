@@ -95,7 +95,7 @@ const AboutUsPage: React.FC = () => {
         },
         {
             name: 'Rimbi Siara',
-            role: 'System Request',
+            role: 'System Analyst',
             imagePath: '/assets/about/rimbi.webp'
         }
     ];
