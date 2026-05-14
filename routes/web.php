@@ -3,26 +3,27 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Application;
-use App\Http\Middleware\RoleMiddleware;
+
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PortalForUserController;
+use App\Http\Controllers\LearningPathController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canLogin'       => Route::has('login'),
+        'canRegister'    => Route::has('register'),
         'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-        'user' => Auth::user(),
+        'phpVersion'     => PHP_VERSION,
+        'user'           => Auth::user(),
     ]);
 })->name('home');
 
-
-Route::get('run-storage-link', function () {
+Route::get('/run-storage-link', function () {
     Artisan::call('storage:link');
-    return "storage link successfully";
+    return 'storage link successfully';
 });
 
 Route::get('/about-us', function () {
@@ -36,21 +37,72 @@ Route::get('/tutorial', function () {
 Route::get('/news', [NewsController::class, 'index'])->name('news.index');
 Route::get('/news/{id}', [NewsController::class, 'show'])->name('news.show');
 
+
+/*
+|--------------------------------------------------------------------------
+| Profile (auth only)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
-Route::middleware('auth', 'verified', 'role:user')->group(function () {
-    Route::get('/portal', [PortalForUserController::class, 'index'])
-        ->name('portal.index');
-    Route::post('/portal/questions/{questionId}/toggle-favorite', [PortalForUserController::class, 'toggleFavorite'])
-        ->name('portal.questions.toggleFavorite');
-    Route::get('/portal/questions/{id}/detail', [PortalForUserController::class, 'getQuestionDetail'])
-        ->name('portal.questions.detail');
-    Route::post('/portal/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
-        ->name('portal.questions.checkAnswer');
+
+/*
+|--------------------------------------------------------------------------
+| Portal (user only)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
+    Route::prefix('portal')->name('portal.')->group(function () {
+        Route::get('/', [PortalForUserController::class, 'index'])->name('index');
+
+        Route::post('/questions/{questionId}/toggle-favorite', [PortalForUserController::class, 'toggleFavorite'])
+            ->name('questions.toggleFavorite');
+
+        Route::get('/questions/{id}/detail', [PortalForUserController::class, 'getQuestionDetail'])
+            ->name('questions.detail');
+
+        Route::post('/questions/{id}/check-answer', [PortalForUserController::class, 'checkAnswer'])
+            ->name('questions.checkAnswer');
+    });
 });
 
-require __DIR__ . '/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Learning Path
+|--------------------------------------------------------------------------
+| Public: view learning paths
+| Auth: start & progress
+|--------------------------------------------------------------------------
+*/
+Route::prefix('learning-path')->name('learning-path.')->group(function () {
+
+    // Public
+    Route::get('/', [LearningPathController::class, 'index'])->name('index');
+    Route::get('/{id}', [LearningPathController::class, 'show'])->name('show');
+
+    // Protected
+    Route::middleware('auth')->group(function () {
+        Route::post('/{id}/start', [LearningPathController::class, 'start'])->name('start');
+
+        Route::get('/{pathId}/module/{moduleId}', [LearningPathController::class, 'module'])->name('module');
+
+        Route::post('/{pathId}/module/{moduleId}/submit-answer', [LearningPathController::class, 'submitAnswer'])
+            ->name('submit-answer');
+
+        Route::post('/{pathId}/module/{moduleId}/complete-material', [LearningPathController::class, 'completeMaterial'])
+            ->name('complete-material');
+
+        Route::post('/{pathId}/module/{moduleId}/submit-reflection', [LearningPathController::class, 'submitReflection'])
+            ->name('submit-reflection');
+
+        Route::get('/{pathId}/completion', [LearningPathController::class, 'completion'])
+            ->name('completion');
+    });
+});
+
+require __DIR__.'/auth.php';

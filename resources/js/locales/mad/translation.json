@@ -2,7 +2,9 @@
   "nav": {
     "home": "Omma",
     "portal": "Portal",
+        "learningpath": "LearningPath",
     "tutorial": "Tutorial",
+
     "about": "Tentang Kita",
     "login": "Tamong",
     "register": "Daftar",

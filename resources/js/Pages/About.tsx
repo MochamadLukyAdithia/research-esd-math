@@ -123,6 +123,13 @@ const AboutUsPage: React.FC = () => {
             imagePath: '/assets/about/endit.jpeg',
             email: '',
             scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57208338065'
+        },
+        {
+            name: 'Dr. Kamariah, S.Pd.M.Pd',
+            role: 'Project Coordinator (Papua)',
+            imagePath: '/assets/about/kamariah.jpeg',
+            email: '',
+            scopus: 'https://www.scopus.com/authid/detail.uri?authorId=57224000307'
         }
     ];
 

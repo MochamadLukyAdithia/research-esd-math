@@ -71,7 +71,7 @@ class PortalForUserController extends Controller
             'tags' => $allTags,
         ]);
     }
-
+    
     public function getQuestionDetail($id)
     {
         $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionType', 'questionOptions', 'questionImages'])

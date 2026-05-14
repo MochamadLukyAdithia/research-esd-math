@@ -1,7 +1,8 @@
-{
+  {
   "nav": {
     "home": "Home",
     "portal": "Portal",
+    "learningpath": "LearningPath",
     "tutorial": "Tutorial",
     "about": "About Us",
     "news": "News",

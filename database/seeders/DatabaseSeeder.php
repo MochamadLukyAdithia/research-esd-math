@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             TagSeeder::class,
             QuestionTypeSeeder::class,
+            LearningPathSeeder::class,
             // QuestionSeeder::class,
             // QuestionImageSeeder::class,
             // NewsSeeder::class,
