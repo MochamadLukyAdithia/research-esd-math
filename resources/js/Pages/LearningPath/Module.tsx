@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { ArrowLeft, ArrowRight, CheckCircle, BookOpen, ClipboardList, Star, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, BookOpen, ClipboardList, Star, MessageSquare, Menu, X } from 'lucide-react';
 import Navbar from '@/Components/navbar/Navbar';
 import { User as Profile } from '@/types';
 import PreTestView from '@/Components/learningpath/PreTestView';
@@ -36,12 +36,11 @@ interface ModuleData {
     order_number: number;
     is_required: boolean;
     status: string;
-    // test fields
     questions?: Question[];
     already_submitted?: boolean;
-    // material fields
+    previous_score?: number | null;
+    previous_answers?: any[];
     materials?: Material[];
-    // reflection fields
     existing_reflection?: {
         understood_concepts: string | null;
         difficult_parts: string | null;
@@ -68,11 +67,19 @@ interface PageProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const MODULE_ICON: Record<string, React.ReactNode> = {
-    pre_test:   <ClipboardList size={16} />,
-    material:   <BookOpen size={16} />,
-    activity:   <Star size={16} />,
-    post_test:  <CheckCircle size={16} />,
-    reflection: <MessageSquare size={16} />,
+    pre_test:   <ClipboardList size={15} />,
+    material:   <BookOpen size={15} />,
+    activity:   <Star size={15} />,
+    post_test:  <CheckCircle size={15} />,
+    reflection: <MessageSquare size={15} />,
+};
+
+const MODULE_TYPE_LABEL: Record<string, string> = {
+    pre_test:   'Pre-Test',
+    material:   'Materi',
+    activity:   'Aktivitas',
+    post_test:  'Post-Test',
+    reflection: 'Refleksi',
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -81,8 +88,9 @@ export default function Module({ path, module, all_modules, progress, next_modul
     const { auth } = usePage().props as { auth: { user: Profile | null } };
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    // ✅ FIX: gunakan route name yang benar sesuai web.php
     const navigateModule = (mod: AdjacentModule) => {
-        router.visit(route('learning-path.module.show', {
+        router.visit(route('learningpath.module', {
             pathId:   path.id_learning_path,
             moduleId: mod.id_module,
         }));
@@ -90,11 +98,13 @@ export default function Module({ path, module, all_modules, progress, next_modul
 
     return (
         <>
-            <Head title={`${module.title} — ${path.title}`} />
+            <Head title={module.title} />
             <Navbar user={auth.user} />
 
-            <div className="flex h-screen bg-gray-50 pt-[72px]">
-                {/* Sidebar modul list */}
+            {/* ✅ Layout: sidebar hanya di luar area konten, tidak menumpuk */}
+            <div className="flex h-screen bg-gray-50 pt-[56px] sm:pt-[64px]">
+
+                {/* Sidebar — hanya tampil di lg+ secara statis, atau overlay mobile */}
                 <ModuleSidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
@@ -105,45 +115,55 @@ export default function Module({ path, module, all_modules, progress, next_modul
                     progress={progress}
                 />
 
-                {/* Main content */}
-                <div className="flex-1 flex flex-col overflow-hidden">
-                    {/* Top bar */}
-                    <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+                {/* Main content — full width di mobile, flex-1 di desktop */}
+                <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+
+                    {/* ── Top bar ── */}
+                    <div className="bg-white border-b border-gray-100 px-3 sm:px-5 py-4 mt-3 flex items-center gap-2 sm:gap-3 shrink-0">
+                        {/* Hamburger mobile */}
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                            className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                            aria-label="Buka daftar modul"
                         >
-                            <BookOpen size={18} className="text-gray-600" />
+                            <Menu size={18} className="text-gray-600" />
                         </button>
+
+                        {/* Back link — desktop only */}
                         <button
-                            onClick={() => router.visit(route('learning-path.show', path.id_learning_path))}
-                            className="hidden lg:flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
+                            onClick={() => router.visit(route('learningpath.show', path.id_learning_path))}
+                            className="hidden lg:flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors shrink-0"
                         >
-                            <ArrowLeft size={14} />
-                            {path.title}
+                            <ArrowLeft size={13} />
+                            <span className="max-w-[120px] truncate">{path.title}</span>
                         </button>
-                        <span className="text-gray-300 hidden lg:block">/</span>
-                        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
-                            {MODULE_ICON[module.type]}
-                            {module.title}
+                        <span className="text-gray-200 hidden lg:block">/</span>
+
+                        {/* Judul modul */}
+                        <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 min-w-0 flex-1">
+                            <span className="text-primary shrink-0">{MODULE_ICON[module.type]}</span>
+                            <span className="truncate">{module.title}</span>
+                            <span className="hidden sm:inline text-xs text-gray-400 font-normal shrink-0">
+                                · {MODULE_TYPE_LABEL[module.type]}
+                            </span>
                         </div>
 
-                        {/* Progress bar ringkas */}
+                        {/* Progress pill */}
                         {progress && (
-                            <div className="ml-auto flex items-center gap-2">
-                                <div className="w-24 bg-gray-100 rounded-full h-1.5 hidden sm:block">
+                            <div className="flex items-center gap-2 shrink-0">
+                                <div className="w-16 sm:w-24 bg-gray-100 rounded-full h-1.5 hidden xs:block">
                                     <div
-                                        className="bg-primary h-1.5 rounded-full transition-all"
+                                        className="bg-primary h-1.5 rounded-full transition-all duration-500"
                                         style={{ width: `${progress.progress_percentage}%` }}
                                     />
                                 </div>
-                                <span className="text-xs text-gray-400">{progress.progress_percentage}%</span>
+                                <span className="text-xs text-gray-400 font-medium">{progress.progress_percentage}%</span>
                             </div>
                         )}
                     </div>
 
-                    {/* Konten modul */}
-                    <div className="flex-1 overflow-y-auto">
+                    {/* ── Konten modul ── */}
+                    <div className="flex-1 overflow-y-auto" >
                         {(module.type === 'pre_test' || module.type === 'post_test') && (
                             <PreTestView
                                 pathId={path.id_learning_path}
@@ -152,7 +172,7 @@ export default function Module({ path, module, all_modules, progress, next_modul
                             />
                         )}
 
-                        {module.type === 'material' && (
+                        {(module.type === 'material' || module.type === 'activity') && (
                             <MaterialView
                                 pathId={path.id_learning_path}
                                 module={module}
@@ -169,23 +189,44 @@ export default function Module({ path, module, all_modules, progress, next_modul
                         )}
                     </div>
 
-                    {/* Bottom nav */}
-                    <div className="bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between">
+                    {/* ── Bottom nav ── */}
+                    <div className="bg-white border-t border-gray-100 px-3 sm:px-5 py-2.5 flex items-center justify-between shrink-0 safe-bottom">
                         <button
                             onClick={() => prev_module && navigateModule(prev_module)}
                             disabled={!prev_module}
-                            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1.5 rounded-lg hover:bg-gray-50 active:bg-gray-100"
                         >
-                            <ArrowLeft size={15} />
-                            {prev_module?.title ?? 'Sebelumnya'}
+                            <ArrowLeft size={14} />
+                            <span className="max-w-[100px] sm:max-w-[160px] truncate">
+                                {prev_module?.title ?? 'Sebelumnya'}
+                            </span>
                         </button>
+
+                        {/* Titik modul saat ini (mobile indicator) */}
+                        <div className="flex items-center gap-1">
+                            {all_modules.map((m) => (
+                                <div
+                                    key={m.id_module}
+                                    className={`rounded-full transition-all duration-300 ${
+                                        m.id_module === module.id_module
+                                            ? 'w-4 h-1.5 bg-primary'
+                                            : m.status === 'completed'
+                                                ? 'w-1.5 h-1.5 bg-green-400'
+                                                : 'w-1.5 h-1.5 bg-gray-200'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+
                         <button
                             onClick={() => next_module && navigateModule(next_module)}
                             disabled={!next_module}
-                            className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
+                            className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1.5 rounded-lg hover:bg-primary/5 active:bg-primary/10 font-medium"
                         >
-                            {next_module?.title ?? 'Berikutnya'}
-                            <ArrowRight size={15} />
+                            <span className="max-w-[100px] sm:max-w-[160px] truncate">
+                                {next_module?.title ?? 'Berikutnya'}
+                            </span>
+                            <ArrowRight size={14} />
                         </button>
                     </div>
                 </div>

@@ -18,12 +18,13 @@ class QuestionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn($query) => $query->where('is_learning_path_only', false))
             ->columns([
 
 
                 TextColumn::make('title')
                     ->label('Judul Soal')
-                    ->searchable()
+                    ->searchable()  
                     ->sortable()
                     ->limit(50),
 
@@ -52,13 +53,14 @@ class QuestionsTable
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->recordActions([   
                 ViewAction::make(),
                 EditAction::make()
                     ->hidden(fn() => NavigationHelper::isQuestionOnlyAdmin()),
                 DeleteAction::make()
                     ->hidden(fn() => NavigationHelper::isQuestionOnlyAdmin()),
             ])
+          
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()

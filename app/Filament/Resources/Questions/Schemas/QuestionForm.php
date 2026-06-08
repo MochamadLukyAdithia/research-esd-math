@@ -76,12 +76,12 @@ class QuestionForm
                     ->relationship('questionImages')
                     ->schema([
                         FileUpload::make('image_path')
-                            ->label('Upload Gambar')
-                            ->image()
-                            ->directory('questions')
-                            ->disk('public')
-                            ->maxFiles(1)
-                            ->required(),
+                                ->label('Upload Gambar')
+                                ->image()
+                                ->directory('questions')
+                                ->disk('public')
+                                ->maxFiles(1)
+                         ,
                     ])
                     ->columnSpanFull()
                     ->collapsible()

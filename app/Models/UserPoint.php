@@ -14,7 +14,9 @@ class UserPoint extends Model
     protected $fillable = [
         'id_user',
         'id_question',
-        'points_earned'
+        'points_earned',
+          'source',           // ← tambah ini
+    'id_learning_path', // ← tambah ini
     ];
 
     protected $casts = [

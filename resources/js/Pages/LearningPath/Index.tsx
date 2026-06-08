@@ -1,122 +1,133 @@
-import { useState, useMemo } from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { BookOpen, Clock, ChevronRight, GraduationCap, Filter, TrendingUp } from 'lucide-react';
+import { BookOpen, ChevronRight, Lock, CheckCircle, Play, Trophy } from 'lucide-react';
 import Navbar from '@/Components/navbar/Navbar';
 import { User as Profile } from '@/types';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export interface LearningPathProgress {
-    status: 'not_started' | 'in_progress' | 'completed';
-    progress_percentage: number;
-}
-
-export interface LearningPath {
-    id_learning_path: number;
-    title: string;
-    description: string;
+interface GradeData {
     grade: number;
-    category: string;
-    thumbnail: string | null;
-    estimated_minutes: number;
-    modules_count: number;
-    progress: LearningPathProgress | null;
+    label: string;
+    level: 'SMP' | 'SMA';
+    total_modules: number;
+    completed_modules: number;
+    in_progress: number;
+    progress_pct: number;
+    next_path_id: number | null;
+    topics: string[];
 }
 
 interface PageProps {
-    paths: LearningPath[];
+    gradeData: GradeData[];
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG = {
-    not_started: { label: 'Belum Dimulai', className: 'bg-gray-100 text-gray-600' },
-    in_progress:  { label: 'Sedang Berjalan', className: 'bg-blue-100 text-blue-700' },
-    completed:    { label: 'Selesai', className: 'bg-green-100 text-green-700' },
-} as const;
+const LEVEL_COLOR = {
+    SMP: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', bar: 'bg-blue-500', icon: 'text-blue-400' },
+    SMA: { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', bar: 'bg-purple-500', icon: 'text-purple-400' },
+};
 
-function formatDuration(minutes: number): string {
-    if (minutes < 60) return `${minutes} mnt`;
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return m > 0 ? `${h} jam ${m} mnt` : `${h} jam`;
-}
+// ─── Grade Card ───────────────────────────────────────────────────────────────
 
-// ─── PathCard ─────────────────────────────────────────────────────────────────
+function GradeCard({ data, isLoggedIn }: { data: GradeData; isLoggedIn: boolean }) {
+    const c = LEVEL_COLOR[data.level];
+    const isCompleted = data.completed_modules === data.total_modules && data.total_modules > 0;
+    const hasProgress = data.completed_modules > 0 || data.in_progress > 0;
 
-function PathCard({ path }: { path: LearningPath }) {
-    const status = path.progress?.status ?? 'not_started';
-    const badge  = STATUS_CONFIG[status];
+    const handleClick = () => {
+        router.visit(route('learningpath.grade', data.grade));
+    };
+
+    const handleContinue = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (data.next_path_id) {
+            router.visit(route('learningpath.show', data.next_path_id));
+        }
+    };
 
     return (
         <div
-            onClick={() => router.visit(route('learning-path.show', path.id_learning_path))}
-            className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-primary hover:shadow-md transition-all cursor-pointer flex flex-col"
+            onClick={handleClick}
+            className={`group relative bg-white border rounded-2xl overflow-hidden cursor-pointer hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 ${c.border}`}
         >
-            {/* Thumbnail */}
-            <div className="relative h-40 bg-gradient-to-br from-primary/10 to-primary/20 overflow-hidden shrink-0">
-                {path.thumbnail ? (
-                    <img
-                        src={path.thumbnail}
-                        alt={path.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                ) : (
-                    <div className="flex items-center justify-center h-full">
-                        <BookOpen size={40} className="text-primary/30" />
+            {/* Header warna */}
+            <div className={`${c.bg} px-6 py-5 relative`}>
+                {/* Badge level */}
+                <span className={`absolute top-4 right-4 text-xs font-semibold px-2.5 py-1 rounded-full ${c.badge}`}>
+                    {data.level}
+                </span>
+
+                <div className="flex items-end justify-between">
+                    <div>
+                        <p className="text-xs text-gray-400 font-medium mb-1">Matematika</p>
+                        <h2 className="text-2xl font-black text-gray-900">{data.label}</h2>
                     </div>
-                )}
-                <span className={`absolute top-3 left-3 text-xs font-medium px-2.5 py-1 rounded-full ${badge.className}`}>
-                    {badge.label}
-                </span>
-                <span className="absolute top-3 right-3 text-xs font-medium px-2.5 py-1 rounded-full bg-white/90 text-gray-700">
-                    Kelas {path.grade}
-                </span>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 flex flex-col flex-1">
-                <p className="text-xs text-primary font-medium mb-1">{path.category}</p>
-                <h3 className="font-semibold text-gray-900 text-sm leading-snug mb-1.5 line-clamp-2">
-                    {path.title}
-                </h3>
-                <p className="text-xs text-gray-500 line-clamp-2 mb-3 flex-1">{path.description}</p>
-
-                {/* Meta */}
-                <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
-                    <span className="flex items-center gap-1">
-                        <GraduationCap size={13} />
-                        {path.modules_count} modul
-                    </span>
-                    <span className="flex items-center gap-1">
-                        <Clock size={13} />
-                        {formatDuration(path.estimated_minutes)}
-                    </span>
+                    {isCompleted && (
+                        <Trophy size={28} className="text-yellow-500 mb-1" />
+                    )}
                 </div>
 
-                {/* Progress bar */}
-                {path.progress && path.progress.status !== 'not_started' && (
-                    <div className="mb-3">
-                        <div className="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Progress</span>
-                            <span>{path.progress.progress_percentage}%</span>
+                {/* Topik */}
+                {data.topics.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                        {data.topics.map(t => (
+                            <span key={t} className="text-[10px] bg-white/70 text-gray-600 px-2 py-0.5 rounded-full">
+                                {t}
+                            </span>
+                        ))}
+                        {data.topics.length < 3 ? null : (
+                            <span className="text-[10px] text-gray-400 self-center">& lainnya</span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Body */}
+            <div className="px-6 py-4">
+                {/* Info modul */}
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                    <BookOpen size={13} />
+                    <span>{data.total_modules} kb pembelajaran</span>
+                </div>
+
+                {/* Progress (hanya jika sudah login dan ada progress) */}
+                {isLoggedIn && hasProgress && (
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1.5">
+                            <span>{data.completed_modules} dari {data.total_modules} selesai</span>
+                            <span className="font-semibold">{data.progress_pct}%</span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-1.5">
                             <div
-                                className="bg-primary h-1.5 rounded-full transition-all"
-                                style={{ width: `${path.progress.progress_percentage}%` }}
+                                className={`h-1.5 rounded-full transition-all ${c.bar}`}
+                                style={{ width: `${data.progress_pct}%` }}
                             />
                         </div>
                     </div>
                 )}
 
                 {/* CTA */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-gray-100">
-                    <span className="text-xs font-medium text-primary">
-                        {status === 'not_started' ? 'Mulai Belajar' :
-                         status === 'in_progress'  ? 'Lanjutkan'    : 'Lihat Detail'}
+                <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold ${isCompleted ? 'text-green-600' : 'text-gray-700'}`}>
+                        {!isLoggedIn         ? 'Lihat Modul'    :
+                         isCompleted         ? '✓ Selesai'      :
+                         hasProgress         ? 'Lanjutkan'      : 'Mulai Belajar'}
                     </span>
-                    <ChevronRight size={15} className="text-primary group-hover:translate-x-1 transition-transform" />
+
+                    <div className="flex items-center gap-2">
+                        {/* Tombol lanjut cepat */}
+                        {isLoggedIn && !isCompleted && data.next_path_id && (
+                            <button
+                                onClick={handleContinue}
+                                className={`flex items-center gap-1 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${c.badge}`}
+                            >
+                                <Play size={11} />
+                                {hasProgress ? 'Lanjut' : 'Mulai'}
+                            </button>
+                        )}
+                        <ChevronRight size={16} className="text-gray-400 group-hover:text-gray-700 transition-colors" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -125,115 +136,87 @@ function PathCard({ path }: { path: LearningPath }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Index({ paths }: PageProps) {
+export default function Index({ gradeData }: PageProps) {
     const { auth } = usePage().props as { auth: { user: Profile | null } };
 
-    const [selectedGrade,    setSelectedGrade]    = useState<number | 'all'>('all');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [selectedStatus,   setSelectedStatus]   = useState<string>('all');
+    const smpGrades = gradeData.filter(g => g.level === 'SMP');
+    const smaGrades = gradeData.filter(g => g.level === 'SMA');
 
-    const grades     = [...new Set(paths.map(p => p.grade))].sort((a, b) => a - b);
-    const categories = [...new Set(paths.map(p => p.category))];
-
-    const filtered = useMemo(() => {
-        return paths.filter(p => {
-            const gradeOk    = selectedGrade    === 'all' || p.grade    === selectedGrade;
-            const categoryOk = selectedCategory === 'all' || p.category === selectedCategory;
-            const statusOk   = selectedStatus   === 'all' || (p.progress?.status ?? 'not_started') === selectedStatus;
-            return gradeOk && categoryOk && statusOk;
-        });
-    }, [paths, selectedGrade, selectedCategory, selectedStatus]);
-
-    const stats = {
-        total:      paths.length,
-        inProgress: paths.filter(p => p.progress?.status === 'in_progress').length,
-        completed:  paths.filter(p => p.progress?.status === 'completed').length,
-    };
+    const totalCompleted = gradeData.reduce((sum, g) => sum + g.completed_modules, 0);
+    const totalModules   = gradeData.reduce((sum, g) => sum + g.total_modules, 0);
 
     return (
         <>
             <Head title="Learning Path" />
             <Navbar user={auth.user} />
 
-            <div className="min-h-screen bg-gray-50 pt-[72px]">
-                {/* Header */}
+            <div className="min-h-screen bg-gray-50 pt-[72px] pb-16">
+                {/* ── Hero ── */}
                 <div className="bg-white border-b border-gray-200">
-                    <div className="max-w-6xl mx-auto px-4 py-8">
-                        <h1 className="text-2xl font-semibold text-gray-900 mb-1">Learning Path</h1>
-                        <p className="text-sm text-gray-500">
-                            Belajar matematika kontekstual dengan alur pembelajaran yang terstruktur
+                    <div className="max-w-5xl mx-auto px-4 py-10">
+                        <h1 className="text-3xl font-black text-gray-900 mb-2">Learning Path</h1>
+                        <p className="text-gray-500 text-sm max-w-lg">
+                            Belajar matematika kontekstual dengan alur terstruktur.
+                            Selesaikan modul secara berurutan untuk membuka modul berikutnya.
                         </p>
 
-                        {/* Stats (hanya jika login) */}
-                        {auth.user && (
-                            <div className="flex gap-8 mt-6">
-                                {[
-                                    { label: 'Total Path', value: stats.total, color: 'text-gray-900' },
-                                    { label: 'Sedang Berjalan', value: stats.inProgress, color: 'text-blue-600' },
-                                    { label: 'Selesai', value: stats.completed, color: 'text-green-600' },
-                                ].map(s => (
-                                    <div key={s.label}>
-                                        <p className={`text-2xl font-semibold ${s.color}`}>{s.value}</p>
-                                        <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
-                                    </div>
-                                ))}
+                        {/* Stats user */}
+                        {auth.user && totalModules > 0 && (
+                            <div className="flex items-center gap-6 mt-6">
+                                <div>
+                                    <p className="text-2xl font-black text-gray-900">{totalCompleted}</p>
+                                    <p className="text-xs text-gray-400">Modul selesai</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-gray-900">{totalModules}</p>
+                                    <p className="text-xs text-gray-400">Total modul</p>
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-black text-primary">
+                                        {Math.round((totalCompleted / totalModules) * 100)}%
+                                    </p>
+                                    <p className="text-xs text-gray-400">Progress keseluruhan</p>
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="max-w-6xl mx-auto px-4 py-6">
-                    {/* Filter */}
-                    <div className="flex flex-wrap gap-2 mb-6 items-center">
-                        <Filter size={14} className="text-gray-400" />
-
-                        <select
-                            value={selectedGrade}
-                            onChange={e => setSelectedGrade(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-primary"
-                        >
-                            <option value="all">Semua Kelas</option>
-                            {grades.map(g => <option key={g} value={g}>Kelas {g}</option>)}
-                        </select>
-
-                        <select
-                            value={selectedCategory}
-                            onChange={e => setSelectedCategory(e.target.value)}
-                            className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-primary"
-                        >
-                            <option value="all">Semua Kategori</option>
-                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-
-                        {auth.user && (
-                            <select
-                                value={selectedStatus}
-                                onChange={e => setSelectedStatus(e.target.value)}
-                                className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-700 focus:outline-none focus:border-primary"
-                            >
-                                <option value="all">Semua Status</option>
-                                <option value="not_started">Belum Dimulai</option>
-                                <option value="in_progress">Sedang Berjalan</option>
-                                <option value="completed">Selesai</option>
-                            </select>
-                        )}
-
-                        <span className="text-xs text-gray-400 ml-auto">
-                            {filtered.length} dari {paths.length} path
-                        </span>
-                    </div>
-
-                    {/* Grid */}
-                    {filtered.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {filtered.map(path => (
-                                <PathCard key={path.id_learning_path} path={path} />
-                            ))}
+                <div className="max-w-5xl mx-auto px-4 py-8 space-y-10">
+                    {/* SMP */}
+                    {smpGrades.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-5">
+                                <h2 className="text-lg font-bold text-gray-800">Sekolah Menengah Pertama</h2>
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full font-medium">SMP</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {smpGrades.map(g => (
+                                    <GradeCard key={g.grade} data={g} isLoggedIn={!!auth.user} />
+                                ))}
+                            </div>
                         </div>
-                    ) : (
+                    )}
+
+                    {/* SMA */}
+                    {smaGrades.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-5">
+                                <h2 className="text-lg font-bold text-gray-800">Sekolah Menengah Atas</h2>
+                                <span className="text-xs bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full font-medium">SMA</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {smaGrades.map(g => (
+                                    <GradeCard key={g.grade} data={g} isLoggedIn={!!auth.user} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {gradeData.length === 0 && (
                         <div className="text-center py-20">
-                            <TrendingUp size={40} className="mx-auto text-gray-200 mb-3" />
-                            <p className="text-gray-400 text-sm">Tidak ada learning path yang sesuai filter.</p>
+                            <BookOpen size={40} className="mx-auto text-gray-200 mb-3" />
+                            <p className="text-gray-400 text-sm">Belum ada learning path yang tersedia.</p>
                         </div>
                     )}
                 </div>

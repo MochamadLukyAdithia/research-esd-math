@@ -17,7 +17,7 @@ interface NavLink {
 const links: NavLink[] = [
     { href: "/", translationKey: "nav.home" },
     { href: "/portal", translationKey: "nav.portal" },
-    { href: "/learning-path", translationKey: "nav.learningpath" },
+    { href: "/learningpath", translationKey: "nav.learningpath" },
     { href: "/tutorial", translationKey: "nav.tutorial" },
     { href: "/about-us", translationKey: "nav.about" },
     { href: "/news", translationKey: "nav.news" },

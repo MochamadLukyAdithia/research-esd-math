@@ -41,14 +41,39 @@ class LearningMaterial extends Model
     // ─── Accessors ─────────────────────────────────
 
     /**
-     * Mengembalikan URL file (lokal atau eksternal).
+     * URL file yang siap dipakai di frontend.
+     * Mendukung path lokal (Storage) maupun URL eksternal (YouTube embed, Google Slides, dll).
      */
     public function getFileUrlAttribute(): ?string
     {
         if (!$this->file_path) return null;
 
-        return str_starts_with($this->file_path, 'http')
-            ? $this->file_path
-            : Storage::url($this->file_path);
+        if (str_starts_with($this->file_path, 'http')) {
+            return $this->file_path;
+        }
+
+        return Storage::url($this->file_path);
+    }
+
+    /**
+     * Cek apakah materi ini punya file yang diupload (bukan URL eksternal).
+     */
+    public function hasUploadedFile(): bool
+    {
+        return $this->file_path && !str_starts_with($this->file_path, 'http');
+    }
+
+    /**
+     * Label tipe konten untuk ditampilkan di UI.
+     */
+    public function getContentTypeLabelAttribute(): string
+    {
+        return match ($this->content_type) {
+            self::TYPE_SLIDE   => 'Slide / PPT',
+            self::TYPE_VIDEO   => 'Video',
+            self::TYPE_EXAMPLE => 'Contoh Soal',
+            self::TYPE_TEXT    => 'Teks / Penjelasan',
+            default            => $this->content_type,
+        };
     }
 }

@@ -28,7 +28,7 @@ export function AuthSection({ user }: { user: Profile | null }) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    console.log('Auth user:', user);
+    // console.log('Auth user:', user);
 
     if (user && user.name) {
         const isAdmin = user.role === 'admin' || user.role === 'question_admin';  

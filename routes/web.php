@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Foundation\Application;
-
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PortalForUserController;
@@ -79,29 +78,36 @@ Route::middleware(['auth', 'verified', 'role:user'])->group(function () {
 | Auth: start & progress
 |--------------------------------------------------------------------------
 */
-Route::prefix('learning-path')->name('learning-path.')->group(function () {
-
-    // Public
+ 
+Route::prefix('learningpath')->name('learningpath.')->group(function () {
+ 
+    // Index: tampil per kelas
     Route::get('/', [LearningPathController::class, 'index'])->name('index');
+ 
+    // Grade: daftar modul dalam satu kelas
+    Route::get('/kelas/{grade}', [LearningPathController::class, 'grade'])
+        ->name('grade')
+        ->where('grade', '[0-9]+');
+ 
+    // Detail modul (show stepper)
     Route::get('/{id}', [LearningPathController::class, 'show'])->name('show');
-
-    // Protected
+ 
+    // Protected: butuh login
     Route::middleware('auth')->group(function () {
         Route::post('/{id}/start', [LearningPathController::class, 'start'])->name('start');
-
-        Route::get('/{pathId}/module/{moduleId}', [LearningPathController::class, 'module'])->name('module');
-
-        Route::post('/{pathId}/module/{moduleId}/submit-answer', [LearningPathController::class, 'submitAnswer'])
-            ->name('submit-answer');
-
-        Route::post('/{pathId}/module/{moduleId}/complete-material', [LearningPathController::class, 'completeMaterial'])
-            ->name('complete-material');
-
-        Route::post('/{pathId}/module/{moduleId}/submit-reflection', [LearningPathController::class, 'submitReflection'])
-            ->name('submit-reflection');
-
-        Route::get('/{pathId}/completion', [LearningPathController::class, 'completion'])
-            ->name('completion');
+ 
+        Route::prefix('/{pathId}/module/{moduleId}')->name('module.')->group(function () {
+            Route::get('/',                  [LearningPathController::class, 'module'])->name('show');
+            Route::post('/submit-answer',    [LearningPathController::class, 'submitAnswer'])->name('submit-answer');
+            Route::post('/complete-material',[LearningPathController::class, 'completeMaterial'])->name('complete-material');
+            Route::post('/submit-reflection',[LearningPathController::class, 'submitReflection'])->name('submit-reflection');
+        });
+ 
+        // Alias lama yang dipakai di tsx (learningpath.module)
+        Route::get('/{pathId}/module/{moduleId}', [LearningPathController::class, 'module'])
+            ->name('module');
+ 
+        Route::get('/{pathId}/completion', [LearningPathController::class, 'completion'])->name('completion');
     });
 });
 

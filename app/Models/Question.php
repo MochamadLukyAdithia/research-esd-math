@@ -22,6 +22,7 @@ class Question extends Model
         'correct_answer',
         'grade',
         'points', // Tambahkan points ke fillable
+        'is_learning_path_only',
         'id_user',
         'id_question_type',
         'created_at',
@@ -33,6 +34,7 @@ class Question extends Model
         'longitude' => 'float',
         'latitude' => 'float',
         'grade' => 'integer',
+        'is_learning_path_only' => 'boolean',
         'points' => 'integer', // Cast untuk points
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -142,6 +144,10 @@ class Question extends Model
     public function getCorrectAnswersCount(): int
     {
         return $this->userAnswers()->where('is_correct', true)->count();
+    }
+        public function scopePortalOnly($query)
+    {
+        return $query->where('is_learning_path_only', false);
     }
 
     public function getAccuracyRate(): float

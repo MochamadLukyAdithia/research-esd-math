@@ -12,21 +12,29 @@ class LearningPath extends Model
 
     protected $primaryKey = 'id_learning_path';
 
-    protected $fillable = [
-        'title',
-        'description',
-        'grade',
-        'category',
-        'thumbnail',
-        'estimated_minutes',
-        'is_published',
-    ];
+   // app/Models/LearningPath.php
 
-    protected $casts = [
-        'is_published'      => 'boolean',
-        'grade'             => 'integer',
-        'estimated_minutes' => 'integer',
-    ];
+protected $fillable = [
+    'title',
+    'description',
+    'capaian_pembelajaran',   // ← baru
+    'kompetensi_dasar',       // ← baru
+    'metode_penilaian',       // ← baru (JSON)
+    'sumber_belajar',         // ← baru (JSON)
+    'grade',
+    'category',
+    'thumbnail',
+    'estimated_minutes',
+    'is_published',
+];
+
+protected $casts = [
+    'is_published'         => 'boolean',
+    'grade'                => 'integer',
+    'estimated_minutes'    => 'integer',
+    'metode_penilaian'     => 'array',   // ← auto JSON decode/encode
+    'sumber_belajar'       => 'array',   // ← auto JSON decode/encode
+];
 
     // ─── Relationships ─────────────────────────────
 

@@ -10,6 +10,32 @@ import './i18n';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// ─── 1. Import ────────────────────────────────────────────────────────────────
+// Tambahkan baris ini di atas file app.tsx yang sudah ada:
+ 
+import { initAutoSync } from '@/offline/sync';
+ 
+// ─── 2. Register Service Worker ───────────────────────────────────────────────
+// Tambahkan setelah semua import, sebelum createInertiaApp:
+ 
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js', { scope: '/' })
+            .then(reg => {
+                console.log('[SW] Registered:', reg.scope);
+            })
+            .catch(err => {
+                console.warn('[SW] Registration failed:', err);
+            });
+    });
+}
+ 
+// ─── 3. Init auto-sync ────────────────────────────────────────────────────────
+// Jalankan setelah SW terdaftar:
+initAutoSync();
+
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
