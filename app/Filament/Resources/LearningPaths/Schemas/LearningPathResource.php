@@ -14,6 +14,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
+use Illuminate\Support\Str;
 
 class LearningPathResource
 {
@@ -34,8 +35,8 @@ class LearningPathResource
                     ->searchable()
                     ->sortable()
                     ->weight('semibold')
-                    ->description(fn($record) => $record->description)
-                    ->limit(40),
+                    ->description(fn($record) => Str::limit($record->description, 50))
+                    ->words(50),
 
                 TextColumn::make('grade')
                     ->label('Kelas')
