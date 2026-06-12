@@ -16,7 +16,8 @@ class LearningPathsTable
         return $table
             ->columns([
                 TextColumn::make('title')
-                    ->searchable(),
+                    ->searchable()
+                    ->wordwrap(),
                 TextColumn::make('grade')
                     ->numeric()
                     ->sortable(),
