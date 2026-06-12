@@ -13,6 +13,7 @@ class QuestionOption extends Model
     protected $primaryKey = 'id_question_option';
 
     protected $fillable = [
+        'id_question',
         'option_text',
         'is_correct',
     ];
