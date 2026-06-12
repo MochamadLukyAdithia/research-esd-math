@@ -472,25 +472,28 @@ class ModulesRelationManager extends RelationManager
                                         ])
                                         ->live(),
 
-                                    FileUpload::make('new_file')
-                                        ->label('Upload File')
-                                        ->disk('public')
-                                        ->directory('learning-materials')
-                                        ->visibility('public')
-                                        ->maxFiles(1)
-                                        ->acceptedFileTypes([
-                                            'application/pdf',
-                                            'application/vnd.ms-powerpoint',
-                                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                            'video/mp4',
-                                            'video/webm',
-                                            'image/png',
-                                            'image/jpeg',
-                                            'image/webp',
-                                        ])
-                                        ->maxSize(51200)
-                                        ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Maks 50MB.')
-                                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
+                                 
+                                  FileUpload::make('new_file')
+                                    ->label('Upload File')
+                                    ->disk('public')
+                                    ->directory('learning-materials')
+                                    ->visibility('public')
+                                    ->maxFiles(1)
+                                    ->acceptedFileTypes([
+                                        'application/pdf',
+                                        'application/vnd.ms-powerpoint',
+                                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                        'video/mp4',
+                                        'video/webm',
+                                        'image/png',
+                                        'image/jpeg',
+                                        'image/webp',
+                                    ])
+                                    ->maxSize(10485760) 
+                                    
+                                    // Helper text disesuaikan agar user tahu limit barunya
+                                    ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Mendukung file besar hingga 10GB.')
+                                    ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
 
                                     TextInput::make('new_url')
                                         ->label('URL Eksternal')
