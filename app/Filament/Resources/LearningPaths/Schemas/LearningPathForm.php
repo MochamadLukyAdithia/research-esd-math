@@ -105,7 +105,7 @@ class LearningPathForm
             ->columnSpanFull(),
 
         Textarea::make('kompetensi_dasar')
-            ->label('Kompetensi Dasar')
+            ->label('Tujuan Pembelajaran')
             ->rows(3)
             ->placeholder('Contoh: 3.6 Menjelaskan persamaan dan pertidaksamaan linear satu variabel...')
             ->columnSpanFull(),
