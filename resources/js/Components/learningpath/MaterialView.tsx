@@ -55,60 +55,35 @@ const TYPE_CONFIG: Record<string, {
 };
 
 // ─── Deteksi & normalisasi URL embed ─────────────────────────────────────────
-//
-//  Dua jalur utama:
-//  A) LOCAL PATH  — file yang diupload ke storage Laravel
-//     Ciri: tidak diawali http/https, atau berisi 'learning-materials/'
-//     → Tambahkan prefix /storage/ dan serve langsung via browser
-//
-//  B) EXTERNAL URL — link dari internet
-//     YouTube  : youtube.com/watch?v=ID  →  youtube-nocookie.com/embed/ID
-//     youtu.be : youtu.be/ID             →  youtube-nocookie.com/embed/ID
-//     Vimeo    : vimeo.com/ID            →  player.vimeo.com/video/ID
-//     Canva    : canva.com/design/...    →  .../view?embed
-//     G-Drive  : drive.google.com/file   →  .../preview
-//     G-Slides : docs.google.com/presentation  →  .../embed
-//     G-Docs   : docs.google.com/document      →  .../preview
-//     PDF ext  : URL publik *.pdf        →  Google Docs Viewer
-//     Fallback : URL lain → langsung pakai apa adanya
 
 export type EmbedPlatform =
-    | 'local_pdf'       // file PDF upload lokal
-    | 'local_video'     // file video upload lokal (.mp4, .webm, dll)
-    | 'local_file'      // file lokal lainnya
+    | 'local_pdf'
+    | 'local_video'
+    | 'local_file'
     | 'youtube'
     | 'vimeo'
     | 'canva'
     | 'gdrive'
     | 'gslides'
     | 'gdocs'
-    | 'pdf'             // PDF dari URL publik eksternal
+    | 'pdf'
     | 'generic';
 
-// Cek apakah string adalah path lokal (bukan URL http/https penuh)
 function isLocalPath(url: string): boolean {
     if (!url) return false;
-    // Jika tidak diawali dengan http/https/ftp/// → pasti lokal
     if (!/^https?:\/\//i.test(url) && !url.startsWith('//')) return true;
-    // Atau jika URL berisi domain lokal (localhost / 127.x.x.x)
-    if (/https?:\/\/(localhost|127\.|0\.0\.0\.0)/i.test(url)) return false; // localhost tetap lewat iframe langsung
     return false;
 }
 
-// Konversi path lokal ke URL yang bisa diakses browser
-// Laravel menyimpan file di storage/app/public, diakses via /storage/
 function toStorageUrl(path: string): string {
-    // Jika sudah ada /storage/ prefix, jangan dobel
     if (path.startsWith('/storage/')) return path;
     if (path.startsWith('storage/'))  return '/' + path;
-    // Path mentah seperti "learning-materials/xxx.pdf" → "/storage/learning-materials/xxx.pdf"
     return '/storage/' + path.replace(/^\//, '');
 }
 
 export function detectPlatform(url: string): EmbedPlatform {
     if (!url) return 'generic';
 
-    // ── Cek lokal dulu ────────────────────────────────────────────────────────
     if (isLocalPath(url)) {
         const u = url.toLowerCase();
         if (u.endsWith('.pdf') || u.includes('.pdf?'))                         return 'local_pdf';
@@ -116,7 +91,6 @@ export function detectPlatform(url: string): EmbedPlatform {
         return 'local_file';
     }
 
-    // ── URL eksternal ─────────────────────────────────────────────────────────
     const u = url.toLowerCase();
     if (u.includes('youtube.com') || u.includes('youtu.be'))                  return 'youtube';
     if (u.includes('vimeo.com'))                                               return 'vimeo';
@@ -126,6 +100,30 @@ export function detectPlatform(url: string): EmbedPlatform {
     if (u.includes('drive.google.com'))                                        return 'gdrive';
     if (u.endsWith('.pdf') || u.includes('.pdf?'))                             return 'pdf';
     return 'generic';
+}
+
+// ─── Ekstrak Google Drive File ID dari semua format URL ───────────────────────
+//
+//  Format yang didukung:
+//  • https://drive.google.com/file/d/{ID}/view
+//  • https://drive.google.com/file/d/{ID}/edit
+//  • https://drive.google.com/file/d/{ID}/preview
+//  • https://drive.google.com/file/u/0/d/{ID}/view   ← format /u/N/
+//  • https://drive.google.com/file/u/0/d/{ID}/edit   ← format /u/N/ + edit
+//  • https://drive.google.com/open?id={ID}
+//  • https://drive.google.com/uc?id={ID}&export=view
+//  • https://drive.google.com/uc?export=view&id={ID}
+
+function extractGDriveFileId(url: string): string | null {
+    // Format /file/d/{ID}/ — dengan atau tanpa /u/N/ di antaranya
+    const fileMatch = url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/);
+    if (fileMatch) return fileMatch[1];
+
+    // Format ?id={ID} (open?id= atau uc?id=)
+    const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (idMatch) return idMatch[1];
+
+    return null;
 }
 
 export function normalizeEmbedUrl(url: string, type?: string): string {
@@ -186,31 +184,35 @@ export function normalizeEmbedUrl(url: string, type?: string): string {
     }
 
     // ── Google Drive ──────────────────────────────────────────────────────────
+    //  Selalu ekstrak File ID dan buat ulang URL preview yang bersih.
+    //  Ini menghilangkan /u/0/, /edit, /view, query params aneh, dsb.
+    //  URL preview publik: https://drive.google.com/file/d/{ID}/preview
+    //  tidak memerlukan login jika file sudah di-share "Anyone with the link".
     if (platform === 'gdrive') {
-        let normalized = url;
-        if (url.includes('/view')) {
-            normalized = url.replace('/view', '/preview');
-        } else if (url.includes('open?id=')) {
-            const idMatch = url.match(/[?&]id=([^&]+)/);
-            if (idMatch) {
-                normalized = `https://drive.google.com/file/d/${idMatch[1]}/preview`;
-            }
-        } else if (!url.includes('/preview')) {
-            normalized = url.replace(/\/$/, '') + '/preview';
+        const fileId = extractGDriveFileId(url);
+        if (fileId) {
+            // Format preview — bersih, tanpa /u/N/, tanpa /edit
+            return `https://drive.google.com/file/d/${fileId}/preview`;
         }
-        return normalized;
+        // Fallback: jika gagal ekstrak ID, coba patch manual
+        return url
+            .replace(/\/u\/\d+\//, '/')          // hapus /u/0/
+            .replace(/\/(edit|view)(\/.*)?$/, '/preview'); // ganti /edit atau /view → /preview
     }
 
     // ── Google Slides ─────────────────────────────────────────────────────────
     if (platform === 'gslides') {
         return url
+            .replace(/\/u\/\d+\//, '/')
             .replace(/\/(edit|pub|present)(\/.*)?(\?.*)?$/, '/embed$3')
             .replace(/\/embed(\?.*)?$/, '/embed?start=false&loop=false&delayms=3000');
     }
 
     // ── Google Docs ───────────────────────────────────────────────────────────
     if (platform === 'gdocs') {
-        return url.replace(/\/(edit|pub)(\/.*)?(\?.*)?$/, '/preview');
+        return url
+            .replace(/\/u\/\d+\//, '/')
+            .replace(/\/(edit|pub)(\/.*)?(\?.*)?$/, '/preview');
     }
 
     // ── PDF publik eksternal → Google Docs Viewer ─────────────────────────────
@@ -340,12 +342,6 @@ function TextViewer({ content, accent }: { content: string; accent: string }) {
                 className="flex-1 overflow-y-auto px-4 py-4"
                 style={{ scrollbarWidth: 'thin', scrollbarColor: '#374151 transparent', background: '#0d1b2e' }}
             >
-                {/*
-                 *  Override paksa warna teks dari rich-text editor (TinyMCE/Quill/dll)
-                 *  yang sering menyisipkan style="color:#000" atau color="black" inline.
-                 *  Kita pakai CSS custom property + :not untuk tidak menimpa elemen
-                 *  yang memang punya warna semantik (code, blockquote, badge, dll).
-                 */}
                 <style>{`
                     .text-viewer-content,
                     .text-viewer-content p,
@@ -445,6 +441,9 @@ function LoadingOverlay({ label, accent, icon }: { label: string; accent: string
 
 // ── Error Overlay ────────────────────────────────────────────────────────────
 function ErrorOverlay({ url, accent, label }: { url: string; accent: string; label: string }) {
+    // Untuk Google Drive, tampilkan pesan lebih spesifik
+    const isGDrive = detectPlatform(url) === 'gdrive';
+
     return (
         <div
             className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 px-6 text-center"
@@ -461,7 +460,9 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
                     Konten tidak dapat ditampilkan
                 </p>
                 <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {label} memblokir tampilan embed.
+                    {isGDrive
+                        ? 'Pastikan file Google Drive sudah di-share "Anyone with the link can view".'
+                        : `${label} memblokir tampilan embed.`}
                 </p>
             </div>
             <a
@@ -482,11 +483,11 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
     const [loaded,  setLoaded]  = useState(false);
     const [errored, setErrored] = useState(false);
 
-    const platform    = detectPlatform(url);
-    const embedSrc    = normalizeEmbedUrl(url, type);
+    const platform      = detectPlatform(url);
+    const embedSrc      = normalizeEmbedUrl(url, type);
     const platformLabel = PLATFORM_LABEL[platform];
-    const isLocal     = platform === 'local_pdf' || platform === 'local_video' || platform === 'local_file';
-    const isLocalVideo = platform === 'local_video';
+    const isLocal       = platform === 'local_pdf' || platform === 'local_video' || platform === 'local_file';
+    const isLocalVideo  = platform === 'local_video';
 
     useEffect(() => {
         setLoaded(false);
@@ -538,7 +539,6 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
                     allowFullScreen
                     onLoad={() => setLoaded(true)}
                     onError={() => setErrored(true)}
-                    // Sandbox TIDAK dipakai untuk file lokal agar PDF bisa render penuh
                     {...(!isLocal && {
                         sandbox: 'allow-scripts allow-same-origin allow-presentation allow-popups allow-forms',
                     })}
@@ -695,7 +695,7 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                         {current + 1} / {materials.length}
                     </span>
 
-                    {/* Fullscreen toggle — tampil untuk semua tipe konten */}
+                    {/* Fullscreen toggle */}
                     <button
                         onClick={() => setFullscreen(f => !f)}
                         className="p-1.5 rounded-lg transition-colors flex-shrink-0"
@@ -786,7 +786,6 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
 
                     {/* Tombol aksi */}
                     <div className="flex items-center gap-2">
-                        {/* Tombol prev / next kecil — tetap ada di mobile */}
                         <button
                             onClick={() => goTo(current - 1)}
                             disabled={current === 0}
@@ -872,7 +871,7 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                 </div>
             </div>
 
-            {/* Backdrop overlay saat fullscreen — klik untuk keluar */}
+            {/* Backdrop overlay saat fullscreen */}
             {fullscreen && (
                 <div
                     className="fixed inset-0 z-[39]"
