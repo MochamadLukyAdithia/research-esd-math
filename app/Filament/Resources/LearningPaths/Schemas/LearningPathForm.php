@@ -98,12 +98,7 @@ class LearningPathForm
     ->description('Informasi kurikulum yang ditampilkan di halaman program')
     ->icon('heroicon-o-academic-cap')
     ->schema([
-        Textarea::make('capaian_pembelajaran')
-            ->label('Capaian Pembelajaran')
-            ->rows(3)
-            ->placeholder('Contoh: Peserta didik mampu menyelesaikan persamaan linear satu variabel...')
-            ->columnSpanFull(),
-
+    
         Textarea::make('kompetensi_dasar')
             ->label('Tujuan Pembelajaran')
             ->rows(3)

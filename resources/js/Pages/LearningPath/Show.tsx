@@ -169,14 +169,11 @@ export default function Show({ path, modules, progress, sibling_modules = [] }: 
                     <div class="meta-item"><div class="label">Kelas / Tingkat</div><div class="value">Kelas ${path.grade}</div></div>
                     <div class="meta-item"><div class="label">Alokasi Waktu</div><div class="value">${path.estimated_minutes} Menit</div></div>
                     <div class="meta-item"><div class="label">Total KB</div><div class="value">${path.modules_count} Modul</div></div>
-                </div>
+                <div>
 
-                ${path.capaian_pembelajaran ? `
-                <div class="section">
-                    <div class="section-title">Capaian Pembelajaran</div>
-                    <p>${path.capaian_pembelajaran.replace(/\n/g, '<br/>')}</p>
-                </div>` : ''}
-
+                
+                .replace(/\n/g, '<br/>')}</p>
+                
                 ${path.kompetensi_dasar ? `
                 <div class="section">
                     <div class="section-title">Kompetensi Dasar</div>
@@ -449,19 +446,6 @@ export default function Show({ path, modules, progress, sibling_modules = [] }: 
                                             </div>
                                         ))}
                                     </div>
-
-                                    {/* ── 2. Capaian Pembelajaran ── */}
-                                    {path.capaian_pembelajaran && (
-                                        <div className="mb-6 p-5 bg-blue-50 border border-blue-100 rounded-2xl">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Star size={15} className="text-blue-600" />
-                                                <p className="text-sm font-bold text-blue-800">Capaian Pembelajaran</p>
-                                            </div>
-                                            <p className="text-sm text-blue-700 leading-relaxed whitespace-pre-line">
-                                                {path.capaian_pembelajaran}
-                                            </p>
-                                        </div>
-                                    )}
 
                                     {/* ── 3. Kompetensi Dasar ── */}
                                     {path.kompetensi_dasar && (
