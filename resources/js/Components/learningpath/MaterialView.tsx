@@ -439,41 +439,158 @@ function LoadingOverlay({ label, accent, icon }: { label: string; accent: string
     );
 }
 
+// ── Deteksi apakah URL Google Drive berasal dari mobile app (usp=drivesdk)
+// atau belum di-share publik — keduanya menghasilkan 403 Forbidden
+function isGDrivePrivateLink(url: string): boolean {
+    return url.includes('usp=drivesdk') || url.includes('usp=sharing');
+}
+
 // ── Error Overlay ────────────────────────────────────────────────────────────
 function ErrorOverlay({ url, accent, label }: { url: string; accent: string; label: string }) {
-    // Untuk Google Drive, tampilkan pesan lebih spesifik
-    const isGDrive = detectPlatform(url) === 'gdrive';
+    const platform  = detectPlatform(url);
+    const isGDrive  = platform === 'gdrive';
+    const isMobile  = isGDrivePrivateLink(url);
+
+    // Ekstrak file ID agar bisa buat link langsung ke sharing settings
+    const fileId    = isGDrive
+        ? url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/)?.[1] ?? null
+        : null;
+    const shareSettingsUrl = fileId
+        ? `https://drive.google.com/file/d/${fileId}/view`
+        : url;
 
     return (
         <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 px-6 text-center"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10 px-5 text-center overflow-y-auto py-6"
             style={{ background: '#0d1b2e' }}
         >
             <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}
             >
                 <AlertCircle size={28} />
             </div>
-            <div>
-                <p className="text-sm font-semibold text-white mb-1">
-                    Konten tidak dapat ditampilkan
+
+            {isGDrive ? (
+                /* ── Panduan khusus Google Drive ── */
+                <div className="w-full max-w-sm">
+                    <p className="text-sm font-semibold text-white mb-1">
+                        File Google Drive tidak bisa diakses
+                    </p>
+                    <p className="text-xs mb-4" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                        {isMobile
+                            ? 'Link ini dibuat dari Google Drive mobile app dan bersifat private.'
+                            : 'File belum di-share publik (403 Forbidden).'}
+                    </p>
+
+                    {/* Step-by-step fix */}
+                    <div
+                        className="rounded-xl p-3 mb-4 text-left"
+                        style={{ background: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.2)' }}
+                    >
+                        <p className="text-xs font-semibold mb-2" style={{ color: '#F5C518' }}>
+                            Cara fix (wajib dilakukan admin):
+                        </p>
+                        {[
+                            'Buka file di Google Drive',
+                            'Klik kanan → "Share" (atau ikon gembok)',
+                            'Klik "Change to anyone with the link"',
+                            'Pastikan role = "Viewer"',
+                            'Klik "Copy link" → paste ulang ke sistem',
+                        ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-2 mb-1">
+                                <span
+                                    className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0 mt-0.5"
+                                    style={{ background: 'rgba(245,197,24,0.25)', color: '#F5C518' }}
+                                >
+                                    {i + 1}
+                                </span>
+                                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>{step}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                        <a
+                            href={shareSettingsUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
+                            style={{ background: '#F5C518', color: '#1a1a2e' }}
+                        >
+                            <ExternalLink size={12} />
+                            Buka File
+                        </a>
+                        <a
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold"
+                            style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.12)' }}
+                        >
+                            <ExternalLink size={12} />
+                            URL Asli
+                        </a>
+                    </div>
+                </div>
+            ) : (
+                /* ── Error generik untuk platform lain ── */
+                <>
+                    <div>
+                        <p className="text-sm font-semibold text-white mb-1">
+                            Konten tidak dapat ditampilkan
+                        </p>
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            {label} memblokir tampilan embed.
+                        </p>
+                    </div>
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
+                        style={{ background: accent, color: '#1a1a2e' }}
+                    >
+                        <ExternalLink size={14} />
+                        Buka di tab baru
+                    </a>
+                </>
+            )}
+        </div>
+    );
+}
+
+// ── Warning banner untuk URL Google Drive yang terdeteksi private sebelum load ──
+function GDrivePrivateWarning({ url, accent }: { url: string; accent: string }) {
+    const fileId = url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/)?.[1] ?? null;
+    const openUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : url;
+
+    return (
+        <div
+            className="absolute top-3 left-3 right-3 z-20 flex items-start gap-2 rounded-xl px-3 py-2.5"
+            style={{
+                background: 'rgba(234,179,8,0.12)',
+                border: '1px solid rgba(234,179,8,0.35)',
+            }}
+        >
+            <AlertCircle size={14} className="flex-shrink-0 mt-0.5" style={{ color: '#eab308' }} />
+            <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold" style={{ color: '#fde047' }}>
+                    Link Google Drive private
                 </p>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {isGDrive
-                        ? 'Pastikan file Google Drive sudah di-share "Anyone with the link can view".'
-                        : `${label} memblokir tampilan embed.`}
+                <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                    File perlu di-share "Anyone with the link" agar bisa tampil.
                 </p>
             </div>
             <a
-                href={url}
+                href={openUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-                style={{ background: accent, color: '#1a1a2e' }}
+                className="flex-shrink-0 flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg"
+                style={{ background: 'rgba(234,179,8,0.2)', color: '#fde047' }}
             >
-                <ExternalLink size={14} />
-                Buka di tab baru
+                <ExternalLink size={10} />
+                Fix
             </a>
         </div>
     );
@@ -489,6 +606,9 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
     const isLocal       = platform === 'local_pdf' || platform === 'local_video' || platform === 'local_file';
     const isLocalVideo  = platform === 'local_video';
 
+    // Deteksi URL Google Drive private (usp=drivesdk) SEBELUM iframe gagal load
+    const showGDriveWarning = platform === 'gdrive' && isGDrivePrivateLink(url) && !loaded && !errored;
+
     useEffect(() => {
         setLoaded(false);
         setErrored(false);
@@ -498,6 +618,11 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
 
     return (
         <div className="relative h-full flex items-center justify-center" style={{ background: '#000' }}>
+
+            {/* Warning banner — muncul segera jika URL Google Drive terdeteksi private */}
+            {showGDriveWarning && (
+                <GDrivePrivateWarning url={url} accent={accent} />
+            )}
 
             {/* Loading */}
             {!loaded && !errored && (
