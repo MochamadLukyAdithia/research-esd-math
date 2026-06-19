@@ -49,24 +49,24 @@ const QUESTIONS: { key: keyof ExistingReflection; label: string }[] = [
 ];
 
 const ANSWER_OPTIONS: { value: AnswerValue; label: string; description: string; color: string }[] = [
-    // {
-    //     value: 'sudah_mampu',
-    //     label: 'Sudah Mampu',
-    //     description: 'Dapat melakukan dengan mandiri',
-    //     color: 'green',
-    // },
-    // {
-    //     value: 'cukup_mampu',
-    //     label: 'Cukup Mampu',
-    //     description: 'Dapat melakukan, tetapi masih perlu sedikit bantuan',
-    //     color: 'yellow',
-    // },
-    // {
-    //     value: 'perlu_dibimbing',
-    //     label: 'Perlu Dibimbing',
-    //     description: 'Masih membutuhkan banyak bantuan dari guru atau teman',
-    //     color: 'red',
-    // },
+    {
+        value: 'sudah_mampu',
+        label: 'Sudah Mampu',
+        description: 'Dapat melakukan dengan mandiri',
+        color: 'green',
+    },
+    {
+        value: 'cukup_mampu',
+        label: 'Cukup Mampu',
+        description: 'Dapat melakukan, tetapi masih perlu sedikit bantuan',
+        color: 'yellow',
+    },
+    {
+        value: 'perlu_dibimbing',
+        label: 'Perlu Dibimbing',
+        description: 'Masih membutuhkan banyak bantuan dari guru atau teman',
+        color: 'red',
+    },
 ];
 
 const ANSWER_LABEL: Record<string, string> = {
