@@ -100,6 +100,7 @@ class ModulesRelationManager extends RelationManager
                         'reflection' => 'Refleksi',
                         default      => $state,
                     })
+                    
                     ->color(fn($state) => match ($state) {
                         'pre_test'   => 'warning',
                         'material'   => 'info',
@@ -446,124 +447,296 @@ class ModulesRelationManager extends RelationManager
 
                         Notification::make()->title($msg)->success()->send();
                     }),
+// ── Kelola Materi (untuk modul tipe material) ─────────────────────
+Action::make('manage_materials')
+    ->label('Kelola Materi')
+    ->icon('heroicon-o-book-open')
+    ->color('info')
+    ->visible(fn($record) => $record->type === 'material')
+    ->slideOver()
+    ->form(function ($record) {
+        $materials = $record->materials()->orderBy('order_number')->get();
 
-                // ── Kelola Materi (untuk modul tipe material) ─────────────────
-                Action::make('manage_materials')
-                    ->label('Kelola Materi')
-                    ->icon('heroicon-o-book-open')
-                    ->color('info')
-                    ->visible(fn($record) => $record->type === 'material')
-                    ->slideOver()
-                    ->form(function ($record) {
-                        $materials = $record->materials()->orderBy('order_number')->get();
+        $contentTypeLabel = fn($type) => match($type) {
+            'slide'   => 'Slide / PPT',
+            'video'   => 'Video',
+            'example' => 'Contoh Soal',
+            'text'    => 'Teks / Penjelasan',
+            default   => $type,
+        };
 
-                        return [
-                            Section::make('Tambah Materi Baru')
-                                ->description('Isi form di bawah untuk menambahkan item materi ke modul ini.')
-                                ->schema([  
-                                    TextInput::make('new_title')
-                                        ->label('Judul Materi')
-                                        ->placeholder('Contoh: Slide Pengantar Aljabar')
-                                        ->maxLength(255),
+        return [
+            Section::make('Tambah Materi Baru')
+                ->description('Isi form di bawah untuk menambahkan item materi ke modul ini.')
+                ->schema([
+                    TextInput::make('new_title')
+                        ->label('Judul Materi')
+                        ->placeholder('Contoh: Slide Pengantar Aljabar')
+                        ->maxLength(255),
 
-                                    Select::make('new_content_type')
-                                        ->label('Tipe Konten')
-                                        ->native(false)
-                                        ->options([
-                                            'slide'   => 'Slide / PPT',
-                                            'video'   => 'Video',
-                                            'example' => 'Contoh Soal',
-                                            'text'    => 'Teks / Penjelasan',
-                                        ])
-                                        ->live(),
+                    Select::make('new_content_type')
+                        ->label('Tipe Konten')
+                        ->native(false)
+                        ->options([
+                            'slide'   => 'Slide / PPT',
+                            'video'   => 'Video',
+                            'example' => 'Contoh Soal',
+                            'text'    => 'Teks / Penjelasan',
+                        ])
+                        ->live(),
 
-                                 
-                                  FileUpload::make('new_file')
-                                    ->label('Upload File')
-                                    ->disk('public')
-                                    ->directory('learning-materials')
-                                    ->visibility('public')
-                                    ->maxFiles(1)
-                                    ->acceptedFileTypes([
-                                        'application/pdf',
-                                        'application/vnd.ms-powerpoint',
-                                        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                                        'video/mp4',
-                                        'video/webm',
-                                        'image/png',
-                                        'image/jpeg',
-                                        'image/webp',
-                                    ])
-                                    ->maxSize(10485760) 
-                                    
-                                    // Helper text disesuaikan agar user tahu limit barunya
-                                    ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Mendukung file besar hingga 10GB.')
-                                    ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
+                    FileUpload::make('new_file')
+                        ->label('Upload File')
+                        ->disk('public')
+                        ->directory('learning-materials')
+                        ->visibility('public')
+                        ->maxFiles(1)
+                        ->acceptedFileTypes([
+                            'application/pdf',
+                            'application/vnd.ms-powerpoint',
+                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                            'video/mp4',
+                            'video/webm',
+                            'image/png',
+                            'image/jpeg',
+                            'image/webp',
+                        ])
+                        ->maxSize(10485760)
+                        ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Mendukung file besar hingga 10GB.')
+                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
 
-                                    TextInput::make('new_url')
-                                        ->label('URL Eksternal')
-                                        ->url()
-                                        ->placeholder('https://...')
-                                        ->helperText('Contoh: URL embed YouTube atau Google Slides.')
-                                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
+                    TextInput::make('new_url')
+                        ->label('URL Eksternal')
+                        ->url()
+                        ->placeholder('https://...')
+                        ->helperText('Contoh: URL embed YouTube atau Google Slides.')
+                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
 
-                                    Textarea::make('new_content')
-                                        ->label('Konten')
-                                        ->rows(6)
-                                        ->placeholder('Tulis penjelasan materi atau contoh soal di sini...')
-                                        ->visible(fn($get) => in_array($get('new_content_type'), ['text', 'example'])),
+                    Textarea::make('new_content')
+                        ->label('Konten')
+                        ->rows(6)
+                        ->placeholder('Tulis penjelasan materi atau contoh soal di sini...')
+                        ->visible(fn($get) => in_array($get('new_content_type'), ['text', 'example'])),
 
-                                    TextInput::make('new_order')
-                                        ->label('Urutan')
-                                        ->numeric()
-                                        ->default($materials->count() + 1),
-                                ]),
+                    TextInput::make('new_order')
+                        ->label('Urutan')
+                        ->numeric()
+                        ->default($materials->count() + 1),
+                ]),
 
-                            Section::make('Materi yang Sudah Ada (' . $materials->count() . ' item)')
-                                ->description('Daftar materi yang sudah ditambahkan ke modul ini.')
-                                ->schema(
-                                    $materials->isEmpty()
-                                        ? [
-                                            Placeholder::make('empty')
-                                                ->label('')
-                                                ->content('Belum ada materi. Tambahkan menggunakan form di atas.'),
-                                          ]
-                                        : $materials->map(fn($m) =>
-                                            Placeholder::make('material_' . $m->id_material)
-                                                ->label("#{$m->order_number} · {$m->content_type_label}")
-                                                ->content($m->title)
-                                          )->toArray()
-                                )
-                                ->collapsible(),
-                        ];
-                    })
-                    ->action(function ($record, array $data) {
-                        if (empty($data['new_title']) || empty($data['new_content_type'])) {
-                            Notification::make()->title('Judul dan tipe konten wajib diisi')->warning()->send();
-                            return;
-                        }
+            // ── Daftar materi existing dengan tombol Edit & Hapus ──
+            Section::make('Materi yang Sudah Ada (' . $materials->count() . ' item)')
+                ->description('Klik Edit atau Hapus pada tiap item untuk mengelolanya.')
+                ->schema(
+                    $materials->isEmpty()
+                        ? [
+                            Placeholder::make('empty')
+                                ->label('')
+                                ->content('Belum ada materi. Tambahkan menggunakan form di atas.'),
+                          ]
+                        : $materials->map(fn($m) =>
+                            Placeholder::make('material_' . $m->id_material)
+                                ->label('')
+                                ->content(new HtmlString(
+                                    '<div class="flex items-center justify-between gap-3 py-1">'
+                                    . '<div class="flex-1">'
+                                    . '<span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">'
+                                    . "" . e($contentTypeLabel($m->content_type))
+                                    . '</span>'
+                                    . '<p class="text-sm font-medium text-gray-800 mt-0.5">' . e($m->title) . '</p>'
+                                    . '</div>'
+                               
+                                    . '</div>'
+                                ))
+                          )->toArray()
+                )
+                ->collapsible(),
+        ];
+    })
+    ->action(function ($record, array $data) {
+        if (empty($data['new_title']) || empty($data['new_content_type'])) {
+            Notification::make()->title('Judul dan tipe konten wajib diisi')->warning()->send();
+            return;
+        }
 
-                        $filePath = null;
+        $filePath = null;
+        if (!empty($data['new_file'])) {
+            $filePath = is_array($data['new_file'])
+                ? collect($data['new_file'])->first()
+                : $data['new_file'];
+        } elseif (!empty($data['new_url'])) {
+            $filePath = $data['new_url'];
+        }
 
-                        if (!empty($data['new_file'])) {
-                            $filePath = is_array($data['new_file'])
-                                ? collect($data['new_file'])->first()
-                                : $data['new_file'];
-                        } elseif (!empty($data['new_url'])) {
-                            $filePath = $data['new_url'];
-                        }
+        LearningMaterial::create([
+            'id_module'    => $record->id_module,
+            'title'        => $data['new_title'],
+            'content_type' => $data['new_content_type'],
+            'content'      => $data['new_content'] ?? null,
+            'file_path'    => $filePath,
+            'order_number' => $data['new_order'] ?? ($record->materials()->count() + 1),
+        ]);
 
-                        LearningMaterial::create([
-                            'id_module'    => $record->id_module,
-                            'title'        => $data['new_title'],
-                            'content_type' => $data['new_content_type'],
-                            'content'      => $data['new_content'] ?? null,
-                            'file_path'    => $filePath,
-                            'order_number' => $data['new_order'] ?? ($record->materials()->count() + 1),
-                        ]);
+        Notification::make()->title('Materi berhasil ditambahkan')->success()->send();
+    }),
 
-                        Notification::make()->title('Materi berhasil ditambahkan')->success()->send();
-                    }),
+// ── Edit Material (action terpisah di baris tabel) ────────────────
+Action::make('edit_material')
+    ->label('Edit Materi')
+    ->icon('heroicon-o-pencil-square')
+    ->color('primary')
+    ->visible(fn($record) => $record->type === 'material')
+    ->slideOver()
+    ->form(function ($record) {
+        // Ambil materi pertama sebagai default, user pilih dari select
+        $materials = $record->materials()->orderBy('order_number')->get();
+
+        if ($materials->isEmpty()) {
+            return [
+                Placeholder::make('no_material')
+                    ->label('')
+                    ->content('Belum ada materi untuk diedit.'),
+            ];
+        }
+
+        return [
+           Select::make('material_id')
+    ->label('Pilih Materi yang Diedit')
+    ->native(false)
+    ->required()
+    ->live()
+    ->options(
+        $materials->mapWithKeys(fn($m) => [
+            $m->id_material => "#{$m->order_number} · {$m->title}"
+        ])
+    )
+    ->afterStateUpdated(function ($state, $set) {
+        if (!$state) return;
+
+        $m = LearningMaterial::find($state);
+        if (!$m) return;
+
+        $set('edit_title', $m->title);
+        $set('edit_content_type', $m->content_type);
+        $set('edit_content', $m->content);
+        $set('edit_order', $m->order_number);
+        $set('edit_url',
+            $m->file_path && !str_starts_with($m->file_path, 'learning-materials/')
+                ? $m->file_path
+                : null
+        );
+    }),
+            TextInput::make('edit_title')
+                ->label('Judul Materi')
+                ->required()
+                ->maxLength(255)
+                ->visible(fn($get) => (bool) $get('material_id')),
+
+            Select::make('edit_content_type')
+                ->label('Tipe Konten')
+                ->native(false)
+                ->required()
+                ->live()
+                ->options([
+                    'slide'   => 'Slide / PPT',
+                    'video'   => 'Video',
+                    'example' => 'Contoh Soal',
+                    'text'    => 'Teks / Penjelasan',
+                ])
+                ->visible(fn($get) => (bool) $get('material_id')),
+
+            TextInput::make('edit_url')
+                ->label('URL Eksternal')
+                ->url()
+                ->placeholder('https://...')
+                ->helperText('Kosongkan jika tidak berubah.')
+                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['slide', 'video'])),
+
+            Textarea::make('edit_content')
+                ->label('Konten')
+                ->rows(5)
+                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['text', 'example'])),
+
+            TextInput::make('edit_order')
+                ->label('Urutan')
+                ->numeric()
+                ->visible(fn($get) => (bool) $get('material_id')),
+        ];
+    })
+    ->action(function ($record, array $data) {
+        $material = LearningMaterial::find($data['material_id'] ?? null);
+
+        if (!$material) {
+            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
+            return;
+        }
+
+        $updateData = [
+            'title'        => $data['edit_title'],
+            'content_type' => $data['edit_content_type'],
+            'content'      => $data['edit_content'] ?? null,
+            'order_number' => $data['edit_order'] ?? $material->order_number,
+        ];
+
+        if (!empty($data['edit_url'])) {
+            $updateData['file_path'] = $data['edit_url'];
+        }
+
+        $material->update($updateData);
+
+        Notification::make()->title('Materi berhasil diperbarui')->success()->send();
+    }),
+
+// ── Hapus Material (action terpisah di baris tabel) ───────────────
+Action::make('delete_material')
+    ->label('Hapus Materi')
+    ->icon('heroicon-o-trash')
+    ->color('danger')
+    ->visible(fn($record) => $record->type === 'material')
+    ->requiresConfirmation()
+    ->modalHeading('Hapus Materi')
+    ->modalDescription(fn($record) => 'Pilih materi yang ingin dihapus dari modul "' . $record->title . '".')
+    ->form(function ($record) {
+        $materials = $record->materials()->orderBy('order_number')->get();
+
+        if ($materials->isEmpty()) {
+            return [
+                Placeholder::make('no_material')
+                    ->label('')
+                    ->content('Tidak ada materi untuk dihapus.'),
+            ];
+        }
+
+        return [
+            Select::make('material_id')
+                ->label('Pilih Materi yang Dihapus')
+                ->native(false)
+                ->required()
+                ->options(
+                    $materials->mapWithKeys(fn($m) => [
+                        $m->id_material => "#{$m->order_number} · {$m->title}"
+                    ])
+                ),
+        ];
+    })
+    ->action(function ($record, array $data) {
+        $material = LearningMaterial::find($data['material_id'] ?? null);
+
+        if (!$material) {
+            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
+            return;
+        }
+
+        $title = $material->title;
+        $material->delete();
+
+        // Re-order sisa materi
+        $record->materials()->orderBy('order_number')->each(function ($m, $i) {
+            $m->update(['order_number' => $i + 1]);
+        });
+
+        Notification::make()->title("Materi \"{$title}\" berhasil dihapus")->success()->send();
+    }),
 
                 // ── Edit Modul ─────────────────────────────────────────────────
                 Action::make('edit_module')
