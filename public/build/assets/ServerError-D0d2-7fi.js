@@ -1,1 +1,0 @@
-import{j as e}from"./app-DwO1eRsY.js";/* empty css            */function s(){return e.jsxs("div",{className:"flex flex-col items-center justify-center min-h-screen",children:[e.jsx("h1",{className:"text-6xl font-bold text-red-600",children:"500"}),e.jsx("p",{className:"mt-4 text-gray-600",children:"Server Error"})]})}export{s as default};
