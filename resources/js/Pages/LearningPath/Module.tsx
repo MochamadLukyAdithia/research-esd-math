@@ -6,6 +6,7 @@ import { User as Profile } from '@/types';
 import PreTestView from '@/Components/learningpath/PreTestView';
 import MaterialView from '@/Components/learningpath/MaterialView';
 import ReflectionView from '@/Components/learningpath/ReflectionView';
+import type { AnswerValue } from '@/Components/learningpath/ReflectionView'; // ← tambah ini
 import ModuleSidebar from '@/Components/learningpath/ModuleSidebar';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,12 +42,12 @@ interface ModuleData {
     previous_score?: number | null;
     previous_answers?: any[];
     materials?: Material[];
-    existing_reflection?: {
-        understood_concepts: string | null;
-        difficult_parts: string | null;
-        most_helpful_activity: string | null;
-        rating: number | null;
-    } | null;
+  existing_reflection?: {
+    q1_platform_usage: AnswerValue | null;
+    q2_data_comprehension: AnswerValue | null;
+    q3_math_application: AnswerValue | null;
+    q4_reasoning: AnswerValue | null;
+} | null;
 }
 
 interface AdjacentModule {

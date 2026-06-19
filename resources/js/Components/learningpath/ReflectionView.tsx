@@ -5,7 +5,7 @@ import axios from 'axios';
 
 // ── Tipe data ─────────────────────────────────────────────────────────────────
 
-type AnswerValue = 'sudah_mampu' | 'cukup_mampu' | 'perlu_dibimbing' | '';
+export type AnswerValue = 'sudah_mampu' | 'cukup_mampu' | 'perlu_dibimbing' | '';
 
 interface ExistingReflection {
     q1_platform_usage:     AnswerValue | null;

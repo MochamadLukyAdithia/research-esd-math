@@ -1,1 +1,0 @@
-import{j as e}from"./app--EttODkU.js";/* empty css            */function a(){return e.jsxs("div",{className:"flex flex-col items-center justify-center min-h-screen",children:[e.jsx("h1",{className:"text-6xl font-bold text-red-600",children:"404"}),e.jsx("p",{className:"mt-4 text-gray-600",children:"Halaman tidak ditemukan"})]})}export{a as default};
