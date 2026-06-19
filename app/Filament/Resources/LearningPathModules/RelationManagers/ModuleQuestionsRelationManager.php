@@ -25,14 +25,37 @@ use Filament\Tables\Table;
 
 class ModuleQuestionsRelationManager extends RelationManager
 {
-    // Menggunakan relasi BelongsToMany 'questions' di model LearningPathModule
     protected static string $relationship = 'questions';
 
     protected static ?string $title = 'Daftar Soal';
 
     protected static ?string $label = 'Soal';
 
-    // ─── Form (digunakan saat Edit soal dari dalam modul) ──────────────────
+    // ─── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Mapping tipe soal ke label Indonesia.
+     * Digunakan di beberapa tempat agar konsisten.
+     */
+    private static function questionTypeLabel(string $type): string
+    {
+        return match ($type) {
+            'pilihan_ganda'          => 'Pilihan Ganda',
+            'pilihan_ganda_kompleks' => 'Pilihan Ganda Kompleks',
+            'isian'                  => 'Isian',
+            default                  => $type,
+        };
+    }
+
+    /**
+     * Tipe soal yang menggunakan Repeater opsi jawaban.
+     */
+    private static function isChoiceType(string $type): bool
+    {
+        return in_array($type, ['pilihan_ganda', 'pilihan_ganda_kompleks']);
+    }
+
+    // ─── Form (digunakan saat Edit soal dari dalam modul) ──────────────────────
 
     public function form(Schema $schema): Schema
     {
@@ -73,11 +96,7 @@ class ModuleQuestionsRelationManager extends RelationManager
                         ->options(
                             QuestionType::pluck('question_type', 'id_question_type')
                                 ->mapWithKeys(fn($type, $id) => [
-                                    $id => match ($type) {
-                                        'pilihan_ganda' => 'Pilihan Ganda',
-                                        'isian'         => 'Isian',
-                                        default         => $type,
-                                    }
+                                    $id => self::questionTypeLabel($type),
                                 ])
                         ),
                 ]),
@@ -103,14 +122,14 @@ class ModuleQuestionsRelationManager extends RelationManager
             ])->collapsible()->collapsed(),
 
             Section::make('Jawaban')->schema([
-                // Untuk isian
+                // Hanya untuk isian
                 TextInput::make('correct_answer')
                     ->label('Jawaban Benar')
                     ->placeholder('Teks, angka, atau /regex/')
                     ->helperText('Untuk soal isian. Bisa berupa teks, angka, atau pola regex (/pattern/).')
                     ->visible(fn($get) => QuestionType::find($get('id_question_type'))?->question_type === 'isian'),
 
-                // Untuk pilihan ganda
+                // Untuk pilihan_ganda dan pilihan_ganda_kompleks
                 Repeater::make('questionOptions')
                     ->label('Pilihan Jawaban')
                     ->relationship('questionOptions')
@@ -131,7 +150,15 @@ class ModuleQuestionsRelationManager extends RelationManager
                     ->reorderable()
                     ->collapsible()
                     ->itemLabel(fn($state) => ($state['option_text'] ?? 'Pilihan Baru') . ($state['is_correct'] ? ' ✓' : ''))
-                    ->visible(fn($get) => QuestionType::find($get('id_question_type'))?->question_type === 'pilihan_ganda')
+                    // Tampil untuk kedua tipe choice
+                    ->visible(fn($get) => self::isChoiceType(
+                        QuestionType::find($get('id_question_type'))?->question_type ?? ''
+                    ))
+                    ->helperText(fn($get) =>
+                        QuestionType::find($get('id_question_type'))?->question_type === 'pilihan_ganda_kompleks'
+                            ? 'Pilihan ganda kompleks: tandai semua opsi yang benar (lebih dari satu diperbolehkan).'
+                            : null
+                    )
                     ->columnSpanFull(),
             ]),
 
@@ -159,7 +186,7 @@ class ModuleQuestionsRelationManager extends RelationManager
         ]);
     }
 
-    // ─── Table ─────────────────────────────────────────────────────────────
+    // ─── Table ─────────────────────────────────────────────────────────────────
 
     public function table(Table $table): Table
     {
@@ -195,15 +222,12 @@ class ModuleQuestionsRelationManager extends RelationManager
                 TextColumn::make('questionType.question_type')
                     ->label('Jenis')
                     ->badge()
-                    ->formatStateUsing(fn($state) => match ($state) {
-                        'pilihan_ganda' => 'Pilihan Ganda',
-                        'isian'         => 'Isian',
-                        default         => $state,
-                    })
+                    ->formatStateUsing(fn($state) => self::questionTypeLabel($state))
                     ->color(fn($state) => match ($state) {
-                        'pilihan_ganda' => 'info',
-                        'isian'         => 'warning',
-                        default         => 'gray',
+                        'pilihan_ganda'          => 'info',
+                        'pilihan_ganda_kompleks' => 'success',
+                        'isian'                  => 'warning',
+                        default                  => 'gray',
                     }),
 
                 TextColumn::make('points')
@@ -221,14 +245,14 @@ class ModuleQuestionsRelationManager extends RelationManager
                     ->color('gray'),
             ])
             ->headerActions([
-                // Pilih soal dari yang sudah ada
+                // ── Pilih soal dari yang sudah ada ─────────────────────────────
                 Action::make('attach_existing')
                     ->label('Tambah dari Soal yang Ada')
                     ->icon('heroicon-o-magnifying-glass')
                     ->color('gray')
                     ->form(function () {
-                        $grade        = $this->getOwnerRecord()->learningPath->grade;
-                        $existingIds  = $this->getOwnerRecord()->moduleQuestions()->pluck('id_question')->toArray();
+                        $grade       = $this->getOwnerRecord()->learningPath->grade;
+                        $existingIds = $this->getOwnerRecord()->moduleQuestions()->pluck('id_question')->toArray();
 
                         return [
                             Select::make('question_ids')
@@ -241,7 +265,8 @@ class ModuleQuestionsRelationManager extends RelationManager
                                         ->get()
                                         ->mapWithKeys(fn($q) => [
                                             $q->id_question =>
-                                                "[{$q->questionType?->question_type}] {$q->title} — {$q->points} poin"
+                                                '[' . self::questionTypeLabel($q->questionType?->question_type ?? '') . '] '
+                                                . $q->title . ' — ' . $q->points . ' poin',
                                         ])
                                 )
                                 ->default($existingIds)
@@ -249,11 +274,10 @@ class ModuleQuestionsRelationManager extends RelationManager
                         ];
                     })
                     ->action(function (array $data) {
-                        $module       = $this->getOwnerRecord();
-                        $currentMax   = $module->moduleQuestions()->max('order_number') ?? 0;
-
-                        $existingIds  = $module->moduleQuestions()->pluck('id_question')->toArray();
-                        $newIds       = array_diff($data['question_ids'] ?? [], $existingIds);
+                        $module      = $this->getOwnerRecord();
+                        $currentMax  = $module->moduleQuestions()->max('order_number') ?? 0;
+                        $existingIds = $module->moduleQuestions()->pluck('id_question')->toArray();
+                        $newIds      = array_diff($data['question_ids'] ?? [], $existingIds);
 
                         foreach ($newIds as $i => $questionId) {
                             ModuleQuestion::create([
@@ -268,7 +292,7 @@ class ModuleQuestionsRelationManager extends RelationManager
                             ->success()->send();
                     }),
 
-                // Buat soal baru langsung
+                // ── Buat soal baru langsung ─────────────────────────────────────
                 Action::make('create_question')
                     ->label('Buat Soal Baru')
                     ->icon('heroicon-o-plus')
@@ -303,8 +327,9 @@ class ModuleQuestionsRelationManager extends RelationManager
                                     ->native(false)
                                     ->live()
                                     ->options([
-                                        'pilihan_ganda' => 'Pilihan Ganda',
-                                        'isian'         => 'Isian',
+                                        'pilihan_ganda'          => 'Pilihan Ganda',
+                                        'pilihan_ganda_kompleks' => 'Pilihan Ganda Kompleks',
+                                        'isian'                  => 'Isian',
                                     ]),
                             ]),
                         ]),
@@ -333,7 +358,13 @@ class ModuleQuestionsRelationManager extends RelationManager
                                 ->reorderable()
                                 ->collapsible()
                                 ->itemLabel(fn($state) => ($state['option_text'] ?? 'Pilihan') . ($state['is_correct'] ? ' ✓' : ''))
-                                ->visible(fn($get) => $get('question_type') === 'pilihan_ganda'),
+                                // Tampil untuk kedua tipe choice
+                                ->visible(fn($get) => self::isChoiceType($get('question_type') ?? ''))
+                                ->helperText(fn($get) =>
+                                    $get('question_type') === 'pilihan_ganda_kompleks'
+                                        ? 'Pilihan ganda kompleks: tandai semua opsi yang benar (lebih dari satu diperbolehkan).'
+                                        : null
+                                ),
                         ]),
 
                         Section::make('Gambar Soal (opsional)')->schema([
@@ -362,12 +393,10 @@ class ModuleQuestionsRelationManager extends RelationManager
                         $module = $this->getOwnerRecord();
                         $grade  = $module->learningPath->grade;
 
-                        // Ambil atau buat QuestionType
                         $questionType = QuestionType::firstOrCreate(
                             ['question_type' => $data['question_type']]
                         );
 
-                        // Buat soal baru
                         $question = \App\Models\Question::create([
                             'title'            => $data['title'],
                             'question'         => $data['question'],
@@ -381,7 +410,7 @@ class ModuleQuestionsRelationManager extends RelationManager
                             'latitude'         => $data['latitude'] ?? 0,
                         ]);
 
-                        // Simpan pilihan ganda
+                        // Simpan pilihan (berlaku untuk PG dan PGK)
                         foreach ($data['options'] ?? [] as $opt) {
                             $question->questionOptions()->create([
                                 'option_text' => $opt['option_text'],
@@ -417,7 +446,7 @@ class ModuleQuestionsRelationManager extends RelationManager
                     ->icon('heroicon-o-arrow-up')
                     ->color('gray')
                     ->action(function ($record) {
-                        $module = $this->getOwnerRecord();
+                        $module  = $this->getOwnerRecord();
                         $current = ModuleQuestion::where('id_module', $module->id_module)
                             ->where('id_question', $record->id_question)->first();
                         $prev = ModuleQuestion::where('id_module', $module->id_module)
@@ -436,7 +465,7 @@ class ModuleQuestionsRelationManager extends RelationManager
                     ->icon('heroicon-o-arrow-down')
                     ->color('gray')
                     ->action(function ($record) {
-                        $module = $this->getOwnerRecord();
+                        $module  = $this->getOwnerRecord();
                         $current = ModuleQuestion::where('id_module', $module->id_module)
                             ->where('id_question', $record->id_question)->first();
                         $next = ModuleQuestion::where('id_module', $module->id_module)
@@ -450,7 +479,6 @@ class ModuleQuestionsRelationManager extends RelationManager
                         }
                     }),
 
-                // Lepas soal dari modul (bukan hapus soal-nya)
                 Action::make('detach')
                     ->label('')
                     ->icon('heroicon-o-x-mark')

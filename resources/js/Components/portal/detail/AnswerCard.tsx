@@ -19,7 +19,7 @@ interface QuestionOption {
 
 interface AnswerCardProps {
   questionId: number;
-  questionType: 'pilihan_ganda' | 'isian';
+  questionType: 'pilihan_ganda'| 'pilihan_ganda_kompleks' | 'isian';
   options?: QuestionOption[] | null;
     userAnswer?: {
     answer: string;

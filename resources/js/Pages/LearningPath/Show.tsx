@@ -452,7 +452,7 @@ export default function Show({ path, modules, progress, sibling_modules = [] }: 
                                         <div className="mb-6 p-5 bg-purple-50 border border-purple-100 rounded-2xl">
                                             <div className="flex items-center gap-2 mb-2">
                                                 <ClipboardList size={15} className="text-purple-600" />
-                                                <p className="text-sm font-bold text-purple-800">Kompetensi Dasar</p>
+                                                <p className="text-sm font-bold text-purple-800">Tujuan Pembelajaran</p>
                                             </div>
                                             <p className="text-sm text-purple-700 leading-relaxed whitespace-pre-line">
                                                 {path.kompetensi_dasar}

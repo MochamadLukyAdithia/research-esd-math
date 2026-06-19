@@ -27,22 +27,20 @@ class LearningPathController extends Controller
 
     public function index()
     {
-        // Ambil semua grade yang punya learning path published
         $grades = LearningPath::published()
             ->distinct()
             ->orderBy('grade')
             ->pluck('grade');
 
-        // Per grade: hitung modul, hitung progress user
         $gradeData = $grades->map(function ($grade) {
             $paths = LearningPath::published()
                 ->where('grade', $grade)
                 ->orderBy('order_number')
                 ->get();
 
-            $totalModules     = $paths->count();
-            $completedModules = 0;
-            $inProgressModules= 0;
+            $totalModules      = $paths->count();
+            $completedModules  = 0;
+            $inProgressModules = 0;
 
             if (Auth::check()) {
                 foreach ($paths as $path) {
@@ -55,7 +53,6 @@ class LearningPathController extends Controller
                 }
             }
 
-            // Modul pertama yang belum selesai (untuk tombol "Lanjut")
             $nextPath = null;
             if (Auth::check()) {
                 foreach ($paths as $path) {
@@ -79,7 +76,6 @@ class LearningPathController extends Controller
                 'progress_pct'      => $totalModules > 0
                     ? round(($completedModules / $totalModules) * 100) : 0,
                 'next_path_id'      => $nextPath,
-                // Preview kategori topik
                 'topics'            => $paths->pluck('category')->unique()->take(3)->values(),
             ];
         });
@@ -90,7 +86,7 @@ class LearningPathController extends Controller
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  GRADE PAGE — Daftar modul dalam satu kelas
+    //  GRADE PAGE
     // ═══════════════════════════════════════════════════════════════════════
 
     public function grade(int $grade)
@@ -114,7 +110,6 @@ class LearningPathController extends Controller
                     ->where('id_learning_path', $path->id_learning_path)
                     ->first();
 
-                // Kunci jika modul sebelumnya belum selesai
                 if ($index > 0) {
                     $prevPath     = $paths[$index - 1];
                     $prevProgress = UserLearningPathProgress::where('id_user', Auth::id())
@@ -124,7 +119,6 @@ class LearningPathController extends Controller
                 }
             }
 
-            // Ambil steps modul (pre_test, KB1, KB2, dst, post_test, reflection)
             $steps = LearningPathModule::where('id_learning_path', $path->id_learning_path)
                 ->orderBy('order_number')
                 ->get()
@@ -164,14 +158,13 @@ class LearningPathController extends Controller
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  SHOW — Detail modul sebelum mulai (tampil stepper alur belajar)
+    //  SHOW
     // ═══════════════════════════════════════════════════════════════════════
 
     public function show(int $id)
     {
         $path = LearningPath::published()->findOrFail($id);
 
-        // Ambil semua steps dengan status per user
         $steps = LearningPathModule::where('id_learning_path', $id)
             ->orderBy('order_number')
             ->get()
@@ -200,7 +193,6 @@ class LearningPathController extends Controller
                 ->first();
         }
 
-        // Modul lain dalam kelas yang sama (untuk navigasi antar modul)
         $siblingModules = LearningPath::published()
             ->where('grade', $path->grade)
             ->where('id_learning_path', '!=', $id)
@@ -209,23 +201,23 @@ class LearningPathController extends Controller
 
         return Inertia::render('LearningPath/Show', [
             'path' => [
-                'id_learning_path'  => $path->id_learning_path,
-                'title'             => $path->title,
-                'description'       => $path->description,
-                'grade'             => $path->grade,
-                'grade_label'       => $this->gradeLabel($path->grade),
-                'category'          => $path->category,
-                'thumbnail'         => $path->thumbnail ? Storage::url($path->thumbnail) : null,
-                'estimated_minutes' => $path->estimated_minutes,
+                'id_learning_path'     => $path->id_learning_path,
+                'title'                => $path->title,
+                'description'          => $path->description,
+                'grade'                => $path->grade,
+                'grade_label'          => $this->gradeLabel($path->grade),
+                'category'             => $path->category,
+                'thumbnail'            => $path->thumbnail ? Storage::url($path->thumbnail) : null,
+                'estimated_minutes'    => $path->estimated_minutes,
                 'capaian_pembelajaran' => $path->capaian_pembelajaran,
                 'kompetensi_dasar'     => $path->kompetensi_dasar,
                 'metode_penilaian'     => $path->metode_penilaian,
                 'sumber_belajar'       => $path->sumber_belajar,
-                'order_number'      => $path->order_number,
-                 'modules_count'     => LearningPathModule::where('id_learning_path', $path->id_learning_path)->count(), // ← tambah ini
+                'order_number'         => $path->order_number,
+                'modules_count'        => LearningPathModule::where('id_learning_path', $path->id_learning_path)->count(),
             ],
-            'modules'    => $steps,
-            'progress' => $progress ? [
+            'modules'         => $steps,
+            'progress'        => $progress ? [
                 'status'              => $progress->status,
                 'progress_percentage' => $progress->progress_percentage,
                 'pre_test_score'      => $progress->pre_test_score,
@@ -236,14 +228,13 @@ class LearningPathController extends Controller
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  START — Mulai learning path
+    //  START
     // ═══════════════════════════════════════════════════════════════════════
 
     public function start(int $id)
     {
         $path = LearningPath::published()->findOrFail($id);
 
-        // Cek apakah modul sebelumnya sudah selesai
         $prevPath = LearningPath::published()
             ->where('grade', $path->grade)
             ->where('order_number', '<', $path->order_number)
@@ -262,7 +253,7 @@ class LearningPathController extends Controller
             }
         }
 
-        $progress = UserLearningPathProgress::firstOrCreate(
+        UserLearningPathProgress::firstOrCreate(
             ['id_user' => Auth::id(), 'id_learning_path' => $id],
             [
                 'status'              => 'in_progress',
@@ -281,7 +272,7 @@ class LearningPathController extends Controller
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    //  MODULE — Tampilkan halaman modul (pre_test/material/post_test/reflection)
+    //  MODULE
     // ═══════════════════════════════════════════════════════════════════════
 
     public function module(int $pathId, int $moduleId)
@@ -289,7 +280,6 @@ class LearningPathController extends Controller
         $path   = LearningPath::published()->findOrFail($pathId);
         $module = LearningPathModule::where('id_learning_path', $pathId)->findOrFail($moduleId);
 
-        // Guard: modul sebelumnya harus selesai
         $this->guardModuleAccess($pathId, $module);
 
         UserModuleProgress::firstOrCreate(
@@ -297,7 +287,6 @@ class LearningPathController extends Controller
             ['status' => 'in_progress']
         );
 
-        // Semua steps untuk sidebar
         $allModules = LearningPathModule::where('id_learning_path', $pathId)
             ->orderBy('order_number')
             ->get()
@@ -338,9 +327,9 @@ class LearningPathController extends Controller
     {
         $request->validate(['answers' => 'required|array']);
 
-        $module    = LearningPathModule::where('id_learning_path', $pathId)->findOrFail($moduleId);
-        $userId    = Auth::id();
-        $mqList    = ModuleQuestion::where('id_module', $moduleId)
+        $module = LearningPathModule::where('id_learning_path', $pathId)->findOrFail($moduleId);
+        $userId = Auth::id();
+        $mqList = ModuleQuestion::where('id_module', $moduleId)
             ->with(['question.questionOptions', 'question.questionType'])
             ->orderBy('order_number')
             ->get();
@@ -349,55 +338,54 @@ class LearningPathController extends Controller
         $maxPoints   = 0;
         $results     = [];
 
-        // ✅ Tambah $module dan $pathId ke use()
-DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &$totalPoints, &$maxPoints, &$results) {
-    foreach ($mqList as $mq) {
-        $question  = $mq->question;
-        $submitted = $request->answers[$question->id_question] ?? null;
-        if ($submitted === null) continue;
+        DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &$totalPoints, &$maxPoints, &$results) {
+            foreach ($mqList as $mq) {
+                $question  = $mq->question;
+                $submitted = $request->answers[$question->id_question] ?? null;
+                if ($submitted === null) continue;
 
-        $maxPoints += $question->points;
-        [$isCorrect, $answerText] = $this->resolveAnswer($question, $submitted);
+                $maxPoints += $question->points;
+                [$isCorrect, $answerText] = $this->resolveAnswer($question, $submitted);
 
-        UserAnswer::create([
-            'id_question' => $question->id_question,
-            'id_user'     => $userId,
-            'answer'      => $answerText,
-            'is_correct'  => $isCorrect,
-            'answered_at' => now(),
-        ]);
-
-        if ($isCorrect) {
-            $alreadyPointed = UserPoint::where('id_user', $userId)
-                ->where('id_question', $question->id_question)
-                ->where('source', $module->type)
-                ->exists();
-
-            if (!$alreadyPointed) {
-                UserPoint::create([
-                    'id_user'          => $userId,
-                    'id_question'      => $question->id_question,
-                    'points_earned'    => $question->points,
-                    'source'           => $module->type,
-                    'id_learning_path' => $pathId,
+                UserAnswer::create([
+                    'id_question' => $question->id_question,
+                    'id_user'     => $userId,
+                    'answer'      => $answerText,
+                    'is_correct'  => $isCorrect,
+                    'answered_at' => now(),
                 ]);
-                $totalPoints += $question->points;
-            }
-        }
 
-        $results[] = [
-            'id_question'    => $question->id_question,
-            'is_correct'     => $isCorrect,
-            'answer'         => $answerText,
-            'correct_answer' => $question->correct_answer,
-            'options'        => $question->questionOptions->map(fn($o) => [
-                'id_question_option' => $o->id_question_option,
-                'option_text'        => $o->option_text,
-                'is_correct'         => $o->is_correct,
-            ]),
-        ];
-    }
-});
+                if ($isCorrect) {
+                    $alreadyPointed = UserPoint::where('id_user', $userId)
+                        ->where('id_question', $question->id_question)
+                        ->where('source', $module->type)
+                        ->exists();
+
+                    if (!$alreadyPointed) {
+                        UserPoint::create([
+                            'id_user'          => $userId,
+                            'id_question'      => $question->id_question,
+                            'points_earned'    => $question->points,
+                            'source'           => $module->type,
+                            'id_learning_path' => $pathId,
+                        ]);
+                        $totalPoints += $question->points;
+                    }
+                }
+
+                $results[] = [
+                    'id_question'    => $question->id_question,
+                    'is_correct'     => $isCorrect,
+                    'answer'         => $answerText,
+                    'correct_answer' => $question->correct_answer,
+                    'options'        => $question->questionOptions->map(fn($o) => [
+                        'id_question_option' => $o->id_question_option,
+                        'option_text'        => $o->option_text,
+                        'is_correct'         => $o->is_correct,
+                    ]),
+                ];
+            }
+        });
 
         $score = $maxPoints > 0 ? round(($totalPoints / $maxPoints) * 100) : 0;
 
@@ -412,11 +400,11 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
         $this->completeModule($pathId, $moduleId, $userId);
 
         return response()->json([
-            'score'       => $score,
-            'total_points'=> $totalPoints,
-            'max_points'  => $maxPoints,
-            'results'     => $results,
-            'next_module' => $this->getAdjacentModule($pathId, $module->order_number, 'next'),
+            'score'        => $score,
+            'total_points' => $totalPoints,
+            'max_points'   => $maxPoints,
+            'results'      => $results,
+            'next_module'  => $this->getAdjacentModule($pathId, $module->order_number, 'next'),
         ]);
     }
 
@@ -481,7 +469,6 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
         $progress = UserLearningPathProgress::where('id_user', $userId)
             ->where('id_learning_path', $pathId)->firstOrFail();
 
-        // Cek apakah ada modul berikutnya dalam kelas
         $nextModuleInGrade = LearningPath::published()
             ->where('grade', $path->grade)
             ->where('order_number', '>', $path->order_number)
@@ -512,8 +499,8 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
                 'started_at'          => $progress->started_at?->toIso8601String(),
                 'completed_at'        => $progress->completed_at?->toIso8601String(),
             ],
-            'total_points'       => $this->getPathTotalPoints($pathId, $userId),
-            'badges'             => $badges,
+            'total_points'         => $this->getPathTotalPoints($pathId, $userId),
+            'badges'               => $badges,
             'next_module_in_grade' => $nextModuleInGrade ? [
                 'id_learning_path' => $nextModuleInGrade->id_learning_path,
                 'title'            => $nextModuleInGrade->title,
@@ -558,92 +545,88 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
 
     private function getTestContent(LearningPathModule $module): array
     {
-        $userId    = Auth::id();
- 
-        // ── Bangun daftar soal ─────────────────────────────────────────────────
+        $userId = Auth::id();
+
         $questions = ModuleQuestion::where('id_module', $module->id_module)
             ->with(['question.questionType', 'question.questionOptions', 'question.questionImages'])
             ->orderBy('order_number')
             ->get()
             ->map(function ($mq) {
-                $q = $mq->question;
+                $q    = $mq->question;
+                $type = $q->questionType->question_type;
+
+                // ✅ FIX: kirim options untuk pilihan_ganda DAN pilihan_ganda_kompleks
                 $options = null;
-                if ($q->questionType->question_type === 'pilihan_ganda') {
+                if (in_array($type, ['pilihan_ganda', 'pilihan_ganda_kompleks'])) {
                     $options = $q->questionOptions->map(fn($opt) => [
                         'id_question_option' => $opt->id_question_option,
                         'option_text'        => $opt->option_text,
                     ])->shuffle()->values();
                 }
+
                 return [
-                    'id_question'     => $q->id_question,
-                    'title'           => $q->title,
-                    'question'        => $q->question,
-                    'question_type'   => $q->questionType->question_type,
-                    'points'          => $q->points,
+                    'id_question'    => $q->id_question,
+                    'title'          => $q->title,
+                    'question'       => $q->question,
+                    'question_type'  => $type,
+                    'points'         => $q->points,
                     'question_images' => $q->questionImages->map(
                         fn($img) => str_starts_with($img->image_path, 'http')
                             ? $img->image_path : Storage::url($img->image_path)
                     )->toArray(),
-                    'options'          => $options,
-                    'correct_answer'   => $q->correct_answer, // ← dibutuhkan untuk review
+                    'options'        => $options,
+                    'correct_answer' => $q->correct_answer,
                 ];
             });
- 
-        // ── Cek apakah sudah pernah dikerjakan ────────────────────────────────
+
         $alreadySubmitted = $userId
             ? UserModuleProgress::where('id_user', $userId)
                 ->where('id_module', $module->id_module)
                 ->where('status', 'completed')
                 ->exists()
             : false;
- 
-        // ── Ambil jawaban & skor sebelumnya jika sudah dikerjakan ──────────────
+
         $previousScore   = null;
         $previousAnswers = [];
- 
+
         if ($alreadySubmitted && $userId) {
-            // Ambil jawaban user untuk soal-soal di modul ini
             $questionIds = $questions->pluck('id_question')->toArray();
- 
+
             $userAnswers = UserAnswer::where('id_user', $userId)
                 ->whereIn('id_question', $questionIds)
-                ->orderBy('answered_at', 'desc') // ambil jawaban terbaru per soal
+                ->orderBy('answered_at', 'desc')
                 ->get()
-                ->unique('id_question'); // deduplicate per soal
- 
+                ->unique('id_question');
+
             $totalPoints = 0;
             $maxPoints   = 0;
- 
+
             foreach ($questions as $q) {
                 $ua = $userAnswers->firstWhere('id_question', $q['id_question']);
                 if (!$ua) continue;
- 
-                $maxPoints   += $q['points'];
-                $isCorrect    = (bool) $ua->is_correct;
+
+                $maxPoints += $q['points'];
+                $isCorrect  = (bool) $ua->is_correct;
                 if ($isCorrect) $totalPoints += $q['points'];
- 
-                // Resolve jawaban benar (teks) untuk pilihan ganda
-                $correctAnswerText = $q['correct_answer'] ?? '';
- 
+
                 $previousAnswers[] = [
                     'id_question'    => $q['id_question'],
                     'is_correct'     => $isCorrect,
                     'answer'         => $ua->answer,
-                    'correct_answer' => $correctAnswerText,
+                    'correct_answer' => $q['correct_answer'] ?? '',
                 ];
             }
- 
+
             $previousScore = $maxPoints > 0
                 ? round(($totalPoints / $maxPoints) * 100)
                 : 0;
- 
-            // Ambil skor dari path progress jika ada (lebih akurat)
+
             $pathProgress = UserLearningPathProgress::where('id_user', $userId)
                 ->where('id_learning_path', $module->id_learning_path)
                 ->first();
- 
+
             if ($pathProgress) {
-                if ($module->type === 'pre_test'  && $pathProgress->pre_test_score  !== null) {
+                if ($module->type === 'pre_test' && $pathProgress->pre_test_score !== null) {
                     $previousScore = $pathProgress->pre_test_score;
                 }
                 if ($module->type === 'post_test' && $pathProgress->post_test_score !== null) {
@@ -651,23 +634,22 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
                 }
             }
         }
- 
-        // Hapus correct_answer dari questions sebelum dikirim ke frontend
-        // (agar tidak terlihat sebelum submit; review akan pakai previous_answers)
+
         $questionsForFrontend = $questions->map(function ($q) use ($alreadySubmitted) {
             if (!$alreadySubmitted) {
                 unset($q['correct_answer']);
             }
             return $q;
         });
- 
+
         return [
-            'questions'        => $questionsForFrontend,
-            'already_submitted'=> $alreadySubmitted,
-            'previous_score'   => $previousScore,
-            'previous_answers' => $previousAnswers,
+            'questions'         => $questionsForFrontend,
+            'already_submitted' => $alreadySubmitted,
+            'previous_score'    => $previousScore,
+            'previous_answers'  => $previousAnswers,
         ];
     }
+
     private function getMaterialContent(LearningPathModule $module): array
     {
         $materials = LearningMaterial::where('id_module', $module->id_module)
@@ -712,7 +694,7 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
 
     private function getAdjacentModule(int $pathId, int $currentOrder, string $direction): ?array
     {
-        $query = LearningPathModule::where('id_learning_path', $pathId);
+        $query  = LearningPathModule::where('id_learning_path', $pathId);
         $module = $direction === 'next'
             ? $query->where('order_number', '>', $currentOrder)->orderBy('order_number')->first()
             : $query->where('order_number', '<', $currentOrder)->orderByDesc('order_number')->first();
@@ -726,11 +708,11 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
             ['status' => 'completed', 'completed_at' => now(), 'is_synced' => true]
         );
 
-        $moduleIds        = LearningPathModule::where('id_learning_path', $pathId)->pluck('id_module');
-        $total            = $moduleIds->count();
-        $completed        = UserModuleProgress::where('id_user', $userId)
+        $moduleIds = LearningPathModule::where('id_learning_path', $pathId)->pluck('id_module');
+        $total     = $moduleIds->count();
+        $completed = UserModuleProgress::where('id_user', $userId)
             ->whereIn('id_module', $moduleIds)->where('status', 'completed')->count();
-        $pct              = $total > 0 ? round(($completed / $total) * 100) : 0;
+        $pct       = $total > 0 ? round(($completed / $total) * 100) : 0;
 
         UserLearningPathProgress::updateOrCreate(
             ['id_user' => $userId, 'id_learning_path' => $pathId],
@@ -748,12 +730,12 @@ DB::transaction(function () use ($mqList, $request, $userId, $module, $pathId, &
             ->update(['status' => 'completed', 'completed_at' => now()]);
     }
 
-private function getPathTotalPoints(int $pathId, int $userId): int
-{
-    return (int) UserPoint::where('id_user', $userId)
-        ->where('id_learning_path', $pathId)
-        ->sum('points_earned');
-}
+    private function getPathTotalPoints(int $pathId, int $userId): int
+    {
+        return (int) UserPoint::where('id_user', $userId)
+            ->where('id_learning_path', $pathId)
+            ->sum('points_earned');
+    }
 
     private function checkAndAwardBadges(int $userId, int $pathId): array
     {
@@ -767,7 +749,7 @@ private function getPathTotalPoints(int $pathId, int $userId): int
                     ->where('id_learning_path', $pathId)->where('post_test_score', '>=', $badge->criteria_value)->exists(),
                 'perfect_score' => UserLearningPathProgress::where('id_user', $userId)
                     ->where('id_learning_path', $pathId)->where('post_test_score', 100)->exists(),
-                default => false,
+                default         => false,
             };
             if ($earned) {
                 UserBadge::create(['id_user' => $userId, 'id_badge' => $badge->id_badge, 'earned_at' => now()]);
@@ -789,15 +771,68 @@ private function getPathTotalPoints(int $pathId, int $userId): int
         if (!$done) abort(403, 'Selesaikan langkah sebelumnya terlebih dahulu.');
     }
 
+    /**
+     * Resolve jawaban dan teks tampilan untuk semua tipe soal.
+     *
+     * Mengembalikan [bool $isCorrect, string $answerText]
+     */
     private function resolveAnswer($question, $submitted): array
     {
-        if ($question->questionType->question_type === 'pilihan_ganda') {
-            $option = $question->questionOptions()->where('id_question_option', $submitted)->first();
-            if ($option) return [$option->is_correct, $option->option_text];
-            return [false, $submitted];
+        $type = $question->questionType->question_type;
+
+        // ── Pilihan ganda biasa (1 jawaban) ──────────────────────────────────
+        if ($type === 'pilihan_ganda') {
+            $option = $question->questionOptions
+                ->where('id_question_option', (int) $submitted)
+                ->first();
+
+            if ($option) {
+                return [(bool) $option->is_correct, $option->option_text];
+            }
+            return [false, (string) $submitted];
         }
-        $isCorrect = strtolower(preg_replace('/\s+/', ' ', trim($submitted)))
-            === strtolower(preg_replace('/\s+/', ' ', trim($question->correct_answer ?? '')));
-        return [$isCorrect, $submitted];
+
+        // ── Pilihan ganda kompleks (array id, exact match) ────────────────────
+        if ($type === 'pilihan_ganda_kompleks') {
+            // $submitted bisa berupa array langsung atau JSON string (dari offline queue)
+            $submittedIds = is_array($submitted)
+                ? $submitted
+                : json_decode($submitted, true) ?? [];
+
+            $submittedIds = array_map('intval', $submittedIds);
+            sort($submittedIds);
+
+            $correctIds = $question->questionOptions
+                ->filter(fn($opt) => (bool) $opt->is_correct)
+                ->pluck('id_question_option')
+                ->map(fn($id) => (int) $id)
+                ->sort()
+                ->values()
+                ->toArray();
+
+            $isCorrect = $submittedIds === $correctIds;
+
+            // Teks jawaban: gabung option_text yang dipilih user
+            $selectedTexts = $question->questionOptions
+                ->whereIn('id_question_option', $submittedIds)
+                ->pluck('option_text')
+                ->join(', ');
+
+            return [$isCorrect, $selectedTexts ?: json_encode($submittedIds)];
+        }
+
+        // ── Isian (teks / angka / regex) ──────────────────────────────────────
+        $correctAnswer = trim(strtolower($question->correct_answer ?? ''));
+        $userAnswer    = trim(strtolower((string) $submitted));
+
+        if (is_numeric($correctAnswer)) {
+            $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
+        } else {
+            $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
+        }
+
+        $isCorrect = preg_match($pattern, $userAnswer) === 1;
+
+        return [$isCorrect, (string) $submitted];
     }
 }

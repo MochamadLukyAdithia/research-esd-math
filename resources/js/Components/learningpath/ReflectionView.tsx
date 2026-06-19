@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
-import { Star, Send, CheckCircle, Trophy, Award, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Send, CheckCircle, Trophy, Award, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
+// ── Tipe data ─────────────────────────────────────────────────────────────────
+
+type AnswerValue = 'sudah_mampu' | 'cukup_mampu' | 'perlu_dibimbing' | '';
+
 interface ExistingReflection {
-    understood_concepts:   string | null;
-    difficult_parts:       string | null;
-    most_helpful_activity: string | null;
-    rating:                number | null;
+    q1_platform_usage:     AnswerValue | null;
+    q2_data_comprehension: AnswerValue | null;
+    q3_math_application:   AnswerValue | null;
+    q4_reasoning:          AnswerValue | null;
 }
 
 interface Props {
@@ -19,14 +23,133 @@ interface Props {
     nextModule: { id_module: number; title: string } | null;
 }
 
-const UNDERSTOOD_OPTIONS = ['Konsep dasar', 'Rumus dan penerapan', 'Contoh kontekstual', 'Semua materi'];
-const DIFFICULT_OPTIONS   = ['Tidak ada', 'Soal cerita', 'Perhitungan', 'Pemahaman konsep'];
-const HELPFUL_OPTIONS     = ['Slide materi', 'Video', 'Contoh soal', 'Aktivitas peta'];
+// ── Konfigurasi pertanyaan (sesuai dokumen form refleksi diri ESDMathPath) ───
 
-const STAR_LABEL = ['', 'Kurang', 'Cukup', 'Baik', 'Bagus', 'Luar Biasa'];
+const QUESTIONS: { key: keyof ExistingReflection; label: string }[] = [
+    {
+        key: 'q1_platform_usage',
+        label:
+            'Saya dapat menggunakan platform ESDMathPath dengan baik untuk membaca materi, mengikuti aktivitas, dan mengerjakan tugas matematika.',
+    },
+    {
+        key: 'q2_data_comprehension',
+        label:
+            'Saya dapat memahami informasi, data, gambar, tabel, atau grafik yang tersedia dalam platform ESDMathPath.',
+    },
+    {
+        key: 'q3_math_application',
+        label:
+            'Saya dapat menggunakan konsep matematika untuk menyelesaikan masalah yang berkaitan dengan kehidupan sehari-hari dan isu keberlanjutan.',
+    },
+    {
+        key: 'q4_reasoning',
+        label:
+            'Saya dapat menjelaskan alasan atau langkah penyelesaian matematika berdasarkan data atau informasi yang saya peroleh dari platform ESDMathPath.',
+    },
+];
 
-// ── Komponen tampilan refleksi read-only ──────────────────────────────────────
-function ReflectionReadOnly({ data, nextModule, pathId }: {
+const ANSWER_OPTIONS: { value: AnswerValue; label: string; description: string; color: string }[] = [
+    // {
+    //     value: 'sudah_mampu',
+    //     label: 'Sudah Mampu',
+    //     description: 'Dapat melakukan dengan mandiri',
+    //     color: 'green',
+    // },
+    // {
+    //     value: 'cukup_mampu',
+    //     label: 'Cukup Mampu',
+    //     description: 'Dapat melakukan, tetapi masih perlu sedikit bantuan',
+    //     color: 'yellow',
+    // },
+    // {
+    //     value: 'perlu_dibimbing',
+    //     label: 'Perlu Dibimbing',
+    //     description: 'Masih membutuhkan banyak bantuan dari guru atau teman',
+    //     color: 'red',
+    // },
+];
+
+const ANSWER_LABEL: Record<string, string> = {
+    sudah_mampu:    'Sudah Mampu',
+    cukup_mampu:    'Cukup Mampu',
+    perlu_dibimbing:'Perlu Dibimbing',
+};
+
+// Warna per pilihan jawaban
+const COLOR_MAP: Record<string, { border: string; bg: string; text: string; dot: string }> = {
+    green:  { border: 'border-green-500',  bg: 'bg-green-50',  text: 'text-green-700',  dot: 'bg-green-500'  },
+    yellow: { border: 'border-yellow-500', bg: 'bg-yellow-50', text: 'text-yellow-700', dot: 'bg-yellow-500' },
+    red:    { border: 'border-red-400',    bg: 'bg-red-50',    text: 'text-red-700',    dot: 'bg-red-400'    },
+};
+
+// ── Sub-komponen ──────────────────────────────────────────────────────────────
+
+/** Satu baris pertanyaan dengan 3 tombol pilihan */
+function QuestionRow({
+    no,
+    label,
+    value,
+    onChange,
+}: {
+    no: number;
+    label: string;
+    value: AnswerValue;
+    onChange: (v: AnswerValue) => void;
+}) {
+    return (
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            {/* Teks pertanyaan */}
+            <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/60">
+                <p className="text-sm text-gray-700 leading-snug">
+                    <span className="font-semibold text-gray-400 mr-1">{no}.</span>
+                    {label}
+                </p>
+            </div>
+
+            {/* Pilihan jawaban */}
+            <div className="grid grid-cols-3 divide-x divide-gray-100">
+                {ANSWER_OPTIONS.map((opt) => {
+                    const c = COLOR_MAP[opt.color];
+                    const selected = value === opt.value;
+                    return (
+                        <button
+                            key={opt.value}
+                            onClick={() => onChange(opt.value)}
+                            className={`flex flex-col items-center gap-1 px-2 py-3 text-center transition-all active:scale-95
+                                ${selected
+                                    ? `${c.bg} ${c.border} border-t-2`
+                                    : 'hover:bg-gray-50 border-t-2 border-transparent'
+                                }`}
+                        >
+                            {/* Indikator dot */}
+                            <span
+                                className={`w-3 h-3 rounded-full border-2 transition-all ${
+                                    selected
+                                        ? `${c.dot} border-transparent`
+                                        : 'border-gray-300 bg-white'
+                                }`}
+                            />
+                            <span
+                                className={`text-xs font-semibold leading-tight ${
+                                    selected ? c.text : 'text-gray-500'
+                                }`}
+                            >
+                                {opt.label}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+/** Tampilan read-only saat refleksi sudah diisi */
+function ReflectionReadOnly({
+    data,
+    nextModule,
+    pathId,
+}: {
     data: ExistingReflection;
     nextModule: Props['nextModule'];
     pathId: number;
@@ -43,30 +166,10 @@ function ReflectionReadOnly({ data, nextModule, pathId }: {
                     <p className="text-xs text-gray-400">Kamu sudah mengisi refleksi untuk modul ini.</p>
                 </div>
 
-                {/* Rating bintang */}
-                {data.rating !== null && (
-                    <div className="px-6 py-4 border-b border-gray-100 text-center">
-                        <p className="text-xs text-gray-400 mb-2">Rating yang kamu berikan</p>
-                        <div className="flex justify-center gap-1 mb-1">
-                            {[1,2,3,4,5].map(v => (
-                                <Star key={v} size={22}
-                                    className={v <= (data.rating ?? 0)
-                                        ? 'text-yellow-400 fill-yellow-400'
-                                        : 'text-gray-200 fill-gray-100'
-                                    }
-                                />
-                            ))}
-                        </div>
-                        <span className="text-xs font-semibold text-yellow-600">
-                            {STAR_LABEL[data.rating ?? 0]}
-                        </span>
-                    </div>
-                )}
-
-                {/* Toggle detail jawaban */}
+                {/* Toggle detail */}
                 <div className="px-6 py-3 border-b border-gray-100">
                     <button
-                        onClick={() => setShowDetail(v => !v)}
+                        onClick={() => setShowDetail((v) => !v)}
                         className="w-full flex items-center justify-center gap-2 text-sm text-primary font-medium hover:text-primary/80 transition-colors py-1"
                     >
                         {showDetail ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -74,21 +177,35 @@ function ReflectionReadOnly({ data, nextModule, pathId }: {
                     </button>
                 </div>
 
-                {/* Detail refleksi */}
+                {/* Detail jawaban */}
                 {showDetail && (
-                    <div className="px-6 py-4 space-y-3 border-b border-gray-100 bg-gray-50/50">
-                        <ReflectionItem
-                            label="Yang sudah dipahami"
-                            value={data.understood_concepts}
-                        />
-                        <ReflectionItem
-                            label="Bagian yang masih sulit"
-                            value={data.difficult_parts}
-                        />
-                        <ReflectionItem
-                            label="Aktivitas yang paling membantu"
-                            value={data.most_helpful_activity}
-                        />
+                    <div className="px-6 py-4 space-y-2 border-b border-gray-100 bg-gray-50/50">
+                        {QUESTIONS.map((q, i) => {
+                            const raw = data[q.key];
+                            const opt = ANSWER_OPTIONS.find((o) => o.value === raw);
+                            const c = opt ? COLOR_MAP[opt.color] : null;
+                            return (
+                                <div
+                                    key={q.key}
+                                    className="rounded-xl border border-gray-200 bg-white px-4 py-3"
+                                >
+                                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                                        Pertanyaan {i + 1}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mb-2 leading-snug">{q.label}</p>
+                                    {raw && c ? (
+                                        <span
+                                            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${c.bg} ${c.text}`}
+                                        >
+                                            <span className={`w-2 h-2 rounded-full ${c.dot}`} />
+                                            {ANSWER_LABEL[raw]}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">—</span>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 
@@ -96,7 +213,14 @@ function ReflectionReadOnly({ data, nextModule, pathId }: {
                 <div className="px-6 py-4">
                     {nextModule ? (
                         <button
-                            onClick={() => router.visit(route('learningpath.module', { pathId, moduleId: nextModule.id_module }))}
+                            onClick={() =>
+                                router.visit(
+                                    route('learningpath.module', {
+                                        pathId,
+                                        moduleId: nextModule.id_module,
+                                    })
+                                )
+                            }
                             className="w-full py-3 bg-primary text-white rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
                         >
                             Lanjut: {nextModule.title} <ArrowRight size={16} />
@@ -115,24 +239,18 @@ function ReflectionReadOnly({ data, nextModule, pathId }: {
     );
 }
 
-function ReflectionItem({ label, value }: { label: string; value: string | null }) {
-    return (
-        <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-            <p className="text-sm text-gray-700 font-medium">{value || '—'}</p>
-        </div>
-    );
-}
-
 // ── Main Component ────────────────────────────────────────────────────────────
+
 export default function ReflectionView({ pathId, module, nextModule }: Props) {
     const existing = module.existing_reflection;
 
-    const [understood, setUnderstood] = useState(existing?.understood_concepts   ?? '');
-    const [difficult,  setDifficult]  = useState(existing?.difficult_parts       ?? '');
-    const [helpful,    setHelpful]    = useState(existing?.most_helpful_activity ?? '');
-    const [rating,     setRating]     = useState(existing?.rating ?? 0);
-    const [hoveredStar, setHoveredStar] = useState(0);
+    const [answers, setAnswers] = useState<Record<keyof ExistingReflection, AnswerValue>>({
+        q1_platform_usage:     (existing?.q1_platform_usage     ?? '') as AnswerValue,
+        q2_data_comprehension: (existing?.q2_data_comprehension ?? '') as AnswerValue,
+        q3_math_application:   (existing?.q3_math_application   ?? '') as AnswerValue,
+        q4_reasoning:          (existing?.q4_reasoning           ?? '') as AnswerValue,
+    });
+
     const [submitting, setSubmitting]  = useState(false);
     const [submitted,  setSubmitted]   = useState(!!existing);
     const [showAnim,   setShowAnim]    = useState(false);
@@ -140,29 +258,33 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
     const [totalPoints, setTotalPoints] = useState<number | null>(null);
     const [newBadges,   setNewBadges]   = useState<{ name: string; image_path: string }[]>([]);
 
-    // Sudah ada refleksi sebelumnya → tampilkan read-only
+    // Sudah mengisi sebelumnya → tampilkan read-only
     if (submitted && totalPoints === null && existing) {
         return (
             <ReflectionReadOnly
-                data={{
-                    understood_concepts:   understood || existing.understood_concepts,
-                    difficult_parts:       difficult  || existing.difficult_parts,
-                    most_helpful_activity: helpful    || existing.most_helpful_activity,
-                    rating:                rating     || existing.rating,
-                }}
+                data={answers as unknown as ExistingReflection}
                 nextModule={nextModule}
                 pathId={pathId}
             />
         );
     }
 
+    const handleChange = (key: keyof ExistingReflection) => (val: AnswerValue) => {
+        setAnswers((prev) => ({ ...prev, [key]: val }));
+    };
+
+    const canSubmit = QUESTIONS.every((q) => !!answers[q.key]);
+
     const handleSubmit = async () => {
-        if (submitting) return;
+        if (submitting || !canSubmit) return;
         setSubmitting(true);
         try {
             const { data } = await axios.post(
-                route('learningpath.module.submit-reflection', { pathId, moduleId: module.id_module }),
-                { understood_concepts: understood, difficult_parts: difficult, most_helpful_activity: helpful, rating }
+                route('learningpath.module.submit-reflection', {
+                    pathId,
+                    moduleId: module.id_module,
+                }),
+                answers
             );
             setTotalPoints(data.total_points);
             setNewBadges(data.new_badges ?? []);
@@ -179,20 +301,19 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
         }
     };
 
-    // ── Baru saja submit — tampilkan animasi poin & badge ─────────────────────
+    // ── Baru saja submit — animasi poin & badge ───────────────────────────────
     if (submitted && totalPoints !== null) {
         return (
             <div className="max-w-lg mx-auto px-4 py-10">
                 <div
                     className="bg-white rounded-2xl border border-yellow-200 shadow-sm overflow-hidden"
                     style={{
-                        opacity:   showAnim ? 1 : 0,
-                        transform: showAnim ? 'translateY(0)' : 'translateY(16px)',
+                        opacity:    showAnim ? 1 : 0,
+                        transform:  showAnim ? 'translateY(0)' : 'translateY(16px)',
                         transition: 'all 0.5s ease',
                     }}
                 >
                     <div className="bg-gradient-to-br from-yellow-50 to-orange-50 px-8 pt-8 pb-6 text-center">
-                        <div className="absolute -top-0 -right-0 w-32 h-32 bg-white/10 rounded-full pointer-events-none" />
                         <div
                             className="w-20 h-20 rounded-full bg-yellow-100 border-4 border-yellow-300 flex items-center justify-center mx-auto mb-4"
                             style={{ animation: showAnim ? 'bounceIn 0.6s ease 0.2s both' : 'none' }}
@@ -205,7 +326,9 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
 
                     {totalPoints > 0 && (
                         <div className="px-8 py-6 text-center border-b border-gray-100">
-                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Total Poin Terkumpul</p>
+                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
+                                Total Poin Terkumpul
+                            </p>
                             <div
                                 className="text-5xl font-black text-yellow-500"
                                 style={{ animation: showAnim ? 'countUp 0.7s ease 0.4s both' : 'none' }}
@@ -214,7 +337,9 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
                             </div>
                             <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-full">
                                 <span className="text-base">⭐</span>
-                                <span className="text-sm font-semibold text-yellow-700">poin dikumpulkan di learning path ini</span>
+                                <span className="text-sm font-semibold text-yellow-700">
+                                    poin dikumpulkan di learning path ini
+                                </span>
                             </div>
                         </div>
                     )}
@@ -226,11 +351,25 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
                             </p>
                             <div className="flex flex-wrap justify-center gap-4">
                                 {newBadges.map((b, idx) => (
-                                    <div key={b.name} className="flex flex-col items-center gap-1"
-                                        style={{ animation: showAnim ? `starPop 0.4s ease ${0.6 + idx * 0.1}s both` : 'none' }}
+                                    <div
+                                        key={b.name}
+                                        className="flex flex-col items-center gap-1"
+                                        style={{
+                                            animation: showAnim
+                                                ? `starPop 0.4s ease ${0.6 + idx * 0.1}s both`
+                                                : 'none',
+                                        }}
                                     >
-                                        {b.image_path && <img src={b.image_path} alt={b.name} className="w-14 h-14 object-contain" />}
-                                        <span className="text-xs text-gray-600 font-medium text-center max-w-[80px]">{b.name}</span>
+                                        {b.image_path && (
+                                            <img
+                                                src={b.image_path}
+                                                alt={b.name}
+                                                className="w-14 h-14 object-contain"
+                                            />
+                                        )}
+                                        <span className="text-xs text-gray-600 font-medium text-center max-w-[80px]">
+                                            {b.name}
+                                        </span>
                                     </div>
                                 ))}
                             </div>
@@ -263,47 +402,49 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── Form refleksi (belum pernah mengisi) ──────────────────────────────────
-    const canSubmit = !!understood && !!difficult && !!helpful && rating > 0;
-
+    // ── Form refleksi ─────────────────────────────────────────────────────────
     return (
         <div className="max-w-xl mx-auto px-4 py-8">
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+                {/* Judul */}
                 <div>
-                    <h2 className="text-base font-semibold text-gray-900 mb-1">Refleksi Pembelajaran</h2>
-                    <p className="text-xs text-gray-400">Pilih opsi yang paling sesuai dengan pengalamanmu.</p>
+                    <h2 className="text-base font-semibold text-gray-900 mb-0.5">Refleksi Diri Siswa</h2>
+                    <p className="text-xs text-gray-400">
+                        Pilih jawaban yang paling sesuai dengan kemampuanmu saat ini.
+                    </p>
                 </div>
 
-                <SurveyGroup label="Apa yang sudah kamu pahami?" options={UNDERSTOOD_OPTIONS} value={understood} onChange={setUnderstood} />
-                <SurveyGroup label="Bagian mana yang masih sulit?" options={DIFFICULT_OPTIONS} value={difficult} onChange={setDifficult} />
-                <SurveyGroup label="Aktivitas yang paling membantu pemahamanmu?" options={HELPFUL_OPTIONS} value={helpful} onChange={setHelpful} />
-
-                {/* Rating bintang */}
-                <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Kesan pembelajaran kontekstual ini</p>
-                    <div className="flex gap-2">
-                        {[1, 2, 3, 4, 5].map(v => (
-                            <button
-                                key={v}
-                                onClick={() => setRating(v)}
-                                onMouseEnter={() => setHoveredStar(v)}
-                                onMouseLeave={() => setHoveredStar(0)}
-                                className="transition-transform hover:scale-110 active:scale-95"
-                            >
-                                <Star size={30}
-                                    className={v <= (hoveredStar || rating)
-                                        ? 'text-yellow-400 fill-yellow-400'
-                                        : 'text-gray-200 fill-gray-100'
-                                    }
-                                />
-                            </button>
-                        ))}
-                        {rating > 0 && (
-                            <span className="text-xs text-gray-400 self-center ml-1">{STAR_LABEL[rating]}</span>
-                        )}
-                    </div>
+                {/* Keterangan pilihan */}
+                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 space-y-1.5">
+                    {ANSWER_OPTIONS.map((opt) => {
+                        const c = COLOR_MAP[opt.color];
+                        return (
+                            <div key={opt.value} className="flex items-start gap-2">
+                                <span className={`mt-0.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                                <p className="text-xs text-gray-600">
+                                    <span className={`font-semibold ${c.text}`}>{opt.label}</span>
+                                    {': '}
+                                    {opt.description}.
+                                </p>
+                            </div>
+                        );
+                    })}
                 </div>
 
+                {/* Daftar pertanyaan */}
+                <div className="space-y-3">
+                    {QUESTIONS.map((q, i) => (
+                        <QuestionRow
+                            key={q.key}
+                            no={i + 1}
+                            label={q.label}
+                            value={answers[q.key]}
+                            onChange={handleChange(q.key)}
+                        />
+                    ))}
+                </div>
+
+                {/* Tombol kirim */}
                 <button
                     onClick={handleSubmit}
                     disabled={submitting || !canSubmit}
@@ -315,37 +456,9 @@ export default function ReflectionView({ pathId, module, nextModule }: Props) {
 
                 {!canSubmit && (
                     <p className="text-xs text-center text-gray-400">
-                        Lengkapi semua pilihan dan beri rating untuk melanjutkan.
+                        Jawab semua pertanyaan untuk dapat mengirim refleksi.
                     </p>
                 )}
-            </div>
-        </div>
-    );
-}
-
-function SurveyGroup({ label, options, value, onChange }: {
-    label: string;
-    options: string[];
-    value: string;
-    onChange: (v: string) => void;
-}) {
-    return (
-        <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
-            <div className="flex flex-wrap gap-2">
-                {options.map(opt => (
-                    <button
-                        key={opt}
-                        onClick={() => onChange(opt)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all active:scale-95 ${
-                            value === opt
-                                ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                                : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                    >
-                        {opt}
-                    </button>
-                ))}
             </div>
         </div>
     );

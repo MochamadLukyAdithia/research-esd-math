@@ -26,7 +26,7 @@ interface QuestionDetail {
   answer_history?: AnswerHistoryItem[];
   title: string;
   question: string;
-  question_type: 'pilihan_ganda' | 'isian';
+  question_type: 'pilihan_ganda'| 'pilihan_ganda_kompleks' | 'isian';
   location_name: string;
   latitude: number;
   longitude: number;
@@ -67,7 +67,7 @@ user_answer?: {
 }
 
 interface QuestionDetailSidebarProps {
-  question: QuestionDetail | null;
+  question?: QuestionDetail | null;
   isLoading: boolean;
   onBack: () => void;
   onToggleFavorite: (questionId: number) => void;

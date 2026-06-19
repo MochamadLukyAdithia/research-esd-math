@@ -26,7 +26,7 @@ class QuestionController extends Controller
 
         if (Auth::check()) {
             $userId = Auth::id();
-            $questions = $questions->map(function($question) use ($userId) {
+            $questions = $questions->map(function ($question) use ($userId) {
                 $userAnswer = UserAnswer::where('id_question', $question->id_question)
                     ->where('id_user', $userId)
                     ->where('is_correct', true)
@@ -40,96 +40,96 @@ class QuestionController extends Controller
         return response()->json($questions);
     }
 
-public function getQuestionDetail($id)
-{
-    $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType', 'questionImages'])
-        ->findOrFail($id);
+    public function getQuestionDetail($id)
+    {
+        $question = Question::with(['tags', 'user', 'favoritedBy', 'hints', 'questionOptions', 'questionType', 'questionImages'])
+            ->findOrFail($id);
 
-    if (Auth::check()) {
-        $question->load(['favoritedBy' => function ($q) {
-            $q->where('users.id_user', Auth::id());
-        }]);
+        if (Auth::check()) {
+            $question->load(['favoritedBy' => function ($q) {
+                $q->where('users.id_user', Auth::id());
+            }]);
+        }
+
+        $userAnswer = null;
+        $attemptInfo = null;
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            $userAnswer = UserAnswer::where('id_question', $id)
+                ->where('id_user', $userId)
+                ->where('is_correct', true)
+                ->first();
+
+            $attemptInfo = $this->getAttemptInfo($id);
+
+            $question->load(['userPoints' => function ($query) use ($userId) {
+                $query->where('id_user', $userId)
+                    ->latest()
+                    ->limit(1);
+            }]);
+        }
+
+        $questionType = $question->questionType->question_type;
+
+        $options = null;
+        // Tampilkan options untuk pilihan_ganda dan pilihan_ganda_kompleks
+        if (in_array($questionType, ['pilihan_ganda', 'pilihan_ganda_kompleks'])) {
+            $options = $question->questionOptions->map(function ($opt) {
+                return [
+                    'id_question_option' => $opt->id_question_option,
+                    'option_text'        => $opt->option_text,
+                    'is_correct'         => $opt->is_correct,
+                ];
+            })->shuffle()->values();
+        }
+
+        return response()->json([
+            'id_question'     => $question->id_question,
+            'title'           => $question->title,
+            'question'        => $question->question,
+            'question_type'   => $questionType,
+            'location_name'   => $question->location_name,
+            'latitude'        => (float) $question->latitude,
+            'longitude'       => (float) $question->longitude,
+            'question_image'  => $question->question_image_url ?? null,
+            'question_images' => $question->questionImages->map(fn($img) =>
+                str_starts_with($img->image_path, 'http')
+                    ? $img->image_path
+                    : Storage::url($img->image_path)
+            )->toArray() ?? [],
+            'grade'           => $question->grade,
+            'tags'            => $question->tags,
+            'options'         => $options,
+            'is_favorite'     => Auth::check()
+                ? $question->favoritedBy->isNotEmpty()
+                : false,
+            'is_answered'     => $userAnswer ? true : false,
+            'created_at'      => $question->created_at->toIso8601String(),
+            'creator'         => [
+                'name'   => $question->user->name,
+                'email'  => $question->user->email,
+                'avatar' => $question->user->avatar ?? null,
+            ],
+            'hints' => $question->hints->map(fn($hint) => [
+                'id_hint'          => $hint->id_hint,
+                'image'            => $hint->image,
+                'hint_description' => $hint->hint_description,
+            ]),
+            'user_answer' => $userAnswer ? [
+                'answer'       => $userAnswer->answer,
+                'is_correct'   => true,
+                'answered_at'  => $userAnswer->answered_at->toIso8601String(),
+                'points_earned' => $question->userPoints->first()->points_earned ?? 0,
+            ] : null,
+            'attempt_info' => $attemptInfo,
+        ]);
     }
-
-    $userAnswer = null;
-    $attemptInfo = null;
-
-    if (Auth::check()) {
-        $userId = Auth::id();
-
-        $userAnswer = UserAnswer::where('id_question', $id)
-            ->where('id_user', $userId)
-            ->where('is_correct', true)
-            ->first();
-
-        $attemptInfo = $this->getAttemptInfo($id);
-
-        $question->load(['userPoints' => function ($query) use ($userId) {
-            $query->where('id_user', $userId)
-                ->latest()
-                ->limit(1);
-        }]);
-
-    }
-
-    $options = null;
-    if ($question->questionType->question_type === 'pilihan_ganda') {
-        $options = $question->questionOptions->map(function ($opt) {
-            return [
-                'id_question_option' => $opt->id_question_option,
-                'option_text' => $opt->option_text,
-                'is_correct' => $opt->is_correct,
-            ];
-        })->shuffle()->values();
-    }
-
-    return response()->json([
-        'id_question' => $question->id_question,
-        'title' => $question->title,
-        'question' => $question->question,
-        'question_type' => $question->questionType->question_type,
-        'location_name' => $question->location_name,
-        'latitude' => (float) $question->latitude,
-        'longitude' => (float) $question->longitude,
-        'question_image' => $question->question_image_url ?? null,
-        'question_images' => $question->questionImages->map(fn($img) =>
-            str_starts_with($img->image_path, 'http')
-                ? $img->image_path
-                : Storage::url($img->image_path)
-        )->toArray() ?? [],
-        'grade' => $question->grade,
-        'tags' => $question->tags,
-        'options' => $options,
-        'is_favorite' => Auth::check()
-            ? $question->favoritedBy->isNotEmpty()
-            : false,
-        'is_answered' => $userAnswer ? true : false,
-        'created_at' => $question->created_at->toIso8601String(),
-        'creator' => [
-            'name' => $question->user->name,
-            'email' => $question->user->email,
-            'avatar' => $question->user->avatar ?? null,
-        ],
-        'hints' => $question->hints->map(fn($hint) => [
-            'id_hint' => $hint->id_hint,
-            'image' => $hint->image,
-            'hint_description' => $hint->hint_description,
-        ]),
-
-        'user_answer' => $userAnswer ? [
-            'answer' => $userAnswer->answer,
-            'is_correct' => true,
-            'answered_at' => $userAnswer->answered_at->toIso8601String(),
-            'points_earned' => $question->userPoints->first()->points_earned ?? 0,
-        ] : null,
-
-        'attempt_info' => $attemptInfo,
-    ]);
-}
-
 
     public function checkAnswer(Request $request, $id)
     {
+        // Validasi fleksibel: bisa string (isian/PG) atau array (PGK)
         $request->validate([
             'answer' => 'required',
         ]);
@@ -140,8 +140,8 @@ public function getQuestionDetail($id)
             ], 401);
         }
 
-        $userId = Auth::id();
-        $question = Question::with('questionOptions')->findOrFail($id);
+        $userId   = Auth::id();
+        $question = Question::with(['questionOptions', 'questionType'])->findOrFail($id);
 
         // Cek apakah sudah pernah benar
         $existingCorrectAnswer = UserAnswer::where('id_question', $id)
@@ -152,9 +152,9 @@ public function getQuestionDetail($id)
         if ($existingCorrectAnswer) {
             return response()->json([
                 'already_answered' => true,
-                'is_correct' => true,
-                'user_answer' => $existingCorrectAnswer->answer,
-                'message' => 'Anda sudah menjawab soal ini dengan benar!',
+                'is_correct'       => true,
+                'user_answer'      => $existingCorrectAnswer->answer,
+                'message'          => 'Anda sudah menjawab soal ini dengan benar!',
             ]);
         }
 
@@ -162,139 +162,158 @@ public function getQuestionDetail($id)
         $cooldownCheck = $this->checkCooldown($id, $userId);
         if ($cooldownCheck['is_cooldown']) {
             return response()->json([
-                'is_cooldown' => true,
+                'is_cooldown'       => true,
                 'cooldown_remaining' => $cooldownCheck['remaining_seconds'],
-                'message' => $cooldownCheck['message'],
+                'message'           => $cooldownCheck['message'],
             ], 429);
         }
 
         /*
-     |----------------------------------------------------------
-     | LOGIKA VALIDASI JAWABAN
-     |----------------------------------------------------------
-     | Multiple choice = bandingkan dengan table question_options
-     | Essay = bandingkan dengan field correct_answer di table questions
-     */
+         |----------------------------------------------------------
+         | LOGIKA VALIDASI JAWABAN
+         |----------------------------------------------------------
+         | isian                 → cocokkan teks/regex dengan correct_answer
+         | pilihan_ganda         → satu id option yang is_correct = true
+         | pilihan_ganda_kompleks → array of id options, harus exact match
+         |                          semua yang is_correct = true
+         */
 
-        $isCorrect = false;
+        $questionType = $question->questionType->question_type;
+        $isCorrect    = false;
 
-        // Jika soal punya correct_answer = berarti mode isian
-        if ($question->correct_answer !== null) {
-            $correctAnswer = trim(strtolower($question->correct_answer));
-            $userAnswer = trim(strtolower($request->answer));
+        if ($questionType === 'isian') {
+            // ── Mode isian ─────────────────────────────────────────────
+            $correctAnswer = trim(strtolower($question->correct_answer ?? ''));
+            $userAnswer    = trim(strtolower((string) $request->answer));
 
-            // Jika correct_answer berupa angka, buat regex toleran terhadap variasi (200, 200.0, 200,0, dst)
             if (is_numeric($correctAnswer)) {
-                // Buat pola regex agar mendeteksi:
-                // - angka yang sama (200)
-                // - dengan variasi titik atau koma (200.0, 200,0)
-                // - diikuti opsional spasi dan satuan (meter, m, dll)
                 $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
             } else {
-                // Untuk teks biasa, cocokkan kata atau frasa secara longgar
                 $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
             }
 
             $isCorrect = preg_match($pattern, $userAnswer) === 1;
-        } else {
-            // Multiple choice
-            $selectedOption = $question->options()
-                ->where('id_question_option', $request->answer)
+
+        } elseif ($questionType === 'pilihan_ganda') {
+            // ── Pilihan ganda biasa (1 jawaban benar) ──────────────────
+            $selectedOption = $question->questionOptions
+                ->where('id_question_option', (int) $request->answer)
                 ->first();
 
-            if ($selectedOption && $selectedOption->is_correct) {
-                $isCorrect = true;
+            $isCorrect = $selectedOption && (bool) $selectedOption->is_correct;
+
+        } elseif ($questionType === 'pilihan_ganda_kompleks') {
+            // ── Pilihan ganda kompleks (≥1 jawaban benar, exact match) ─
+            $submittedIds = $request->answer;
+
+            // Pastikan selalu array
+            if (!is_array($submittedIds)) {
+                $submittedIds = [$submittedIds];
             }
+
+            $submittedIds = array_map('intval', $submittedIds);
+
+            // Ambil semua id yang seharusnya benar dari DB
+            $correctIds = $question->questionOptions
+                ->filter(fn($opt) => (bool) $opt->is_correct)
+                ->pluck('id_question_option')
+                ->map(fn($id) => (int) $id)
+                ->sort()
+                ->values()
+                ->toArray();
+
+            sort($submittedIds);
+
+            // Harus exact match: tidak boleh kurang dan tidak boleh lebih
+            $isCorrect = $submittedIds === $correctIds;
         }
 
-
+        // ── Simpan hasil ────────────────────────────────────────────────────
         if ($isCorrect) {
-            // Simpan jawaban hanya jika benar
+            // Serialisasi jawaban: array → JSON string, lainnya tetap string
+            $answerToStore = is_array($request->answer)
+                ? json_encode($request->answer)
+                : $request->answer;
+
             UserAnswer::create([
                 'id_question' => $id,
-                'id_user' => $userId,
-                'answer' => $request->answer,
-                'is_correct' => true,
+                'id_user'     => $userId,
+                'answer'      => $answerToStore,
+                'is_correct'  => true,
                 'answered_at' => now(),
             ]);
 
-            // Clear attempt setelah benar
             $this->clearAttempts($id, $userId);
 
             return response()->json([
-                'is_correct' => true,
+                'is_correct'  => true,
                 'user_answer' => $request->answer,
-                'message' => 'Selamat! Jawaban Anda benar! ',
+                'message'     => 'Selamat! Jawaban Anda benar!',
             ]);
         }
 
-        // jika salah
+        // Jika salah
         $attemptInfo = $this->incrementAttempt($id, $userId);
 
         return response()->json([
-            'is_correct' => false,
-            'user_answer' => $request->answer,
-            'message' => 'Jawaban salah. Silakan coba lagi!',
+            'is_correct'        => false,
+            'user_answer'       => $request->answer,
+            'message'           => 'Jawaban salah. Silakan coba lagi!',
             'attempts_remaining' => $attemptInfo['attempts_remaining'],
-            'total_attempts' => $attemptInfo['total_attempts'],
-            'is_cooldown' => $attemptInfo['is_cooldown'],
+            'total_attempts'    => $attemptInfo['total_attempts'],
+            'is_cooldown'       => $attemptInfo['is_cooldown'],
             'cooldown_remaining' => $attemptInfo['cooldown_remaining'] ?? null,
         ]);
     }
 
     private function clearAttempts($questionId, $userId)
     {
-        $attemptKey = "attempts:q{$questionId}:u{$userId}";
-        $cooldownKey = "cooldown:q{$questionId}:u{$userId}";
-
-        Cache::forget($attemptKey);
-        Cache::forget($cooldownKey);
+        Cache::forget("attempts:q{$questionId}:u{$userId}");
+        Cache::forget("cooldown:q{$questionId}:u{$userId}");
     }
 
     private function incrementAttempt($questionId, $userId)
     {
         $attemptKey = "attempts:q{$questionId}:u{$userId}";
-        $attempts = Cache::get($attemptKey, 0) + 1;
+        $attempts   = Cache::get($attemptKey, 0) + 1;
 
         Cache::put($attemptKey, $attempts, self::ATTEMPT_RESET_DURATION);
 
         $attemptsRemaining = self::MAX_ATTEMPTS_BEFORE_COOLDOWN - $attempts;
 
         if ($attempts >= self::MAX_ATTEMPTS_BEFORE_COOLDOWN) {
-            $cooldownKey = "cooldown:q{$questionId}:u{$userId}";
+            $cooldownKey   = "cooldown:q{$questionId}:u{$userId}";
             $cooldownUntil = time() + self::COOLDOWN_DURATION;
             Cache::put($cooldownKey, $cooldownUntil, self::COOLDOWN_DURATION);
-
             Cache::forget($attemptKey);
 
             return [
-                'total_attempts' => $attempts,
+                'total_attempts'     => $attempts,
                 'attempts_remaining' => 0,
-                'is_cooldown' => true,
+                'is_cooldown'        => true,
                 'cooldown_remaining' => self::COOLDOWN_DURATION,
             ];
         }
 
         return [
-            'total_attempts' => $attempts,
+            'total_attempts'     => $attempts,
             'attempts_remaining' => max(0, $attemptsRemaining),
-            'is_cooldown' => false,
+            'is_cooldown'        => false,
         ];
     }
 
     private function checkCooldown($questionId, $userId)
     {
-        $cooldownKey = "cooldown:q{$questionId}:u{$userId}";
-        $cooldownUntil = Cache::get($cooldownKey);
+        $cooldownUntil = Cache::get("cooldown:q{$questionId}:u{$userId}");
 
         if ($cooldownUntil) {
             $remaining = $cooldownUntil - time();
             if ($remaining > 0) {
                 $minutes = ceil($remaining / 60);
                 return [
-                    'is_cooldown' => true,
+                    'is_cooldown'      => true,
                     'remaining_seconds' => $remaining,
-                    'message' => "Anda harus menunggu {$minutes} menit sebelum mencoba lagi.",
+                    'message'          => "Anda harus menunggu {$minutes} menit sebelum mencoba lagi.",
                 ];
             }
         }
@@ -304,27 +323,22 @@ public function getQuestionDetail($id)
 
     private function getAttemptInfo($questionId)
     {
-        if (!Auth::check()) {
-            return null;
-        }
+        if (!Auth::check()) return null;
 
-        $userId = Auth::id();
-        $attemptKey = "attempts:q{$questionId}:u{$userId}";
-        $cooldownKey = "cooldown:q{$questionId}:u{$userId}";
-
-        $attempts = Cache::get($attemptKey, 0);
-        $cooldownUntil = Cache::get($cooldownKey);
+        $userId       = Auth::id();
+        $attempts     = Cache::get("attempts:q{$questionId}:u{$userId}", 0);
+        $cooldownUntil = Cache::get("cooldown:q{$questionId}:u{$userId}");
 
         $info = [
-            'total_attempts' => $attempts,
-            'max_attempts' => self::MAX_ATTEMPTS_BEFORE_COOLDOWN,
+            'total_attempts'     => $attempts,
+            'max_attempts'       => self::MAX_ATTEMPTS_BEFORE_COOLDOWN,
             'attempts_remaining' => max(0, self::MAX_ATTEMPTS_BEFORE_COOLDOWN - $attempts),
         ];
 
         if ($cooldownUntil) {
             $remaining = $cooldownUntil - time();
             if ($remaining > 0) {
-                $info['is_cooldown'] = true;
+                $info['is_cooldown']       = true;
                 $info['cooldown_remaining'] = $remaining;
             }
         }

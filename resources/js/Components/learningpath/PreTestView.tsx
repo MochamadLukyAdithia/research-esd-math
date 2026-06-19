@@ -30,7 +30,20 @@ interface Props {
     nextModule: AdjacentModule | null;
 }
 
-// ─── Score display ─────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/**
+ * Untuk pilihan_ganda_kompleks, jawaban disimpan sebagai string[]
+ * (array of id_question_option sebagai string).
+ * Untuk pilihan_ganda dan isian, disimpan sebagai string biasa.
+ */
+type AnswerValue = string | string[];
+
+function isCompleks(q: Question) {
+    return q.question_type === 'pilihan_ganda_kompleks';
+}
+
+// ─── Score display ───────────────────────────────────────────────────────────
 
 function ScoreRing({ score }: { score: number }) {
     const color = score >= 70 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-500';
@@ -43,13 +56,13 @@ function ScoreRing({ score }: { score: number }) {
     );
 }
 
-// ─── Component ─────────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function PreTestView({ pathId, module, nextModule }: Props) {
     const questions = module.questions ?? [];
     const { isOnline, sendOrQueue } = useOffline();
 
-    const [answers,      setAnswers]      = useState<Record<number, string>>({});
+    const [answers,      setAnswers]      = useState<Record<number, AnswerValue>>({});
     const [currentIndex, setCurrentIndex] = useState(0);
     const [submitted,    setSubmitted]    = useState(module.already_submitted ?? false);
     const [results,      setResults]      = useState<AnswerResult[]>(module.previous_answers ?? []);
@@ -61,8 +74,31 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
     const answeredCount   = Object.keys(answers).length;
     const allAnswered     = answeredCount === questions.length;
 
-    const handleAnswer = (questionId: number, value: string) => {
+    // ── Handlers ─────────────────────────────────────────────────────────────
+
+    /** Pilihan ganda biasa & isian: simpan satu nilai */
+    const handleSingleAnswer = (questionId: number, value: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: value }));
+    };
+
+    /**
+     * Pilihan ganda kompleks: toggle item dalam array.
+     * Jika optionId sudah ada → hapus, jika belum → tambahkan.
+     */
+    const handleMultiAnswer = (questionId: number, optionId: string) => {
+        setAnswers(prev => {
+            const current = (prev[questionId] as string[] | undefined) ?? [];
+            const updated = current.includes(optionId)
+                ? current.filter(id => id !== optionId)
+                : [...current, optionId];
+
+            // Hapus entry jika array kosong (agar answeredCount akurat)
+            if (updated.length === 0) {
+                const { [questionId]: _, ...rest } = prev;
+                return rest;
+            }
+            return { ...prev, [questionId]: updated };
+        });
     };
 
     const handleSubmit = async () => {
@@ -99,7 +135,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     const testLabel = module.type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
 
-    // ── 1. Queued offline ──────────────────────────────────────────────────
+    // ── 1. Queued offline ─────────────────────────────────────────────────────
     if (submitted && wasQueued) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8">
@@ -126,7 +162,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 2. Hasil submit (online, score ada) ───────────────────────────────
+    // ── 2. Hasil submit (online, score ada) ───────────────────────────────────
     if (submitted && score !== null) {
         const correctCount = results.filter(r => r.is_correct).length;
         const totalCount   = results.length || questions.length;
@@ -198,7 +234,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 3. Sudah pernah submit, tapi score null (belum ada data review) ───
+    // ── 3. Sudah pernah submit, tapi score null ───────────────────────────────
     if (submitted && score === null) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8 text-center">
@@ -221,7 +257,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     if (!currentQuestion) return null;
 
-    // ── 4. Form soal ──────────────────────────────────────────────────────
+    // ── 4. Form soal ──────────────────────────────────────────────────────────
     return (
         <div className="max-w-lg mx-auto px-3 sm:px-4 py-4 sm:py-8">
             {/* Banner offline */}
@@ -249,7 +285,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                             className={`shrink-0 transition-all rounded-full ${
                                 i === currentIndex
                                     ? 'w-6 h-2 bg-primary'
-                                    : answers[q.id_question]
+                                    : answers[q.id_question] !== undefined
                                         ? 'w-2 h-2 bg-primary/60'
                                         : 'w-2 h-2 bg-gray-200'
                             }`}
@@ -278,7 +314,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     {currentQuestion.question}
                 </p>
 
-                {/* Pilihan ganda */}
+                {/* ── Pilihan ganda biasa (1 jawaban) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda' && currentQuestion.options && (
                     <div className="space-y-2">
                         {currentQuestion.options.map(opt => {
@@ -286,7 +322,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                             return (
                                 <button
                                     key={opt.id_question_option}
-                                    onClick={() => handleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+                                    onClick={() => handleSingleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
                                     className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] ${
                                         isSelected
                                             ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
@@ -300,12 +336,60 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     </div>
                 )}
 
-                {/* Isian */}
+                {/* ── Pilihan ganda kompleks (bisa pilih lebih dari 1) ── */}
+                {currentQuestion.question_type === 'pilihan_ganda_kompleks' && currentQuestion.options && (
+                    <div className="space-y-2">
+                        {/* Label petunjuk */}
+                        <p className="text-[11px] text-primary bg-primary/8 rounded-lg px-3 py-1.5 mb-3 font-medium">
+                            Pilih semua jawaban yang benar (bisa lebih dari satu)
+                        </p>
+                        {currentQuestion.options.map(opt => {
+                            const selectedArr = (answers[currentQuestion.id_question] as string[] | undefined) ?? [];
+                            const isSelected  = selectedArr.includes(String(opt.id_question_option));
+                            return (
+                                <button
+                                    key={opt.id_question_option}
+                                    onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+                                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-center gap-3 ${
+                                        isSelected
+                                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
+                                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
+                                    }`}
+                                >
+                                    {/* Checkbox visual */}
+                                    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
+                                        isSelected
+                                            ? 'bg-primary border-primary'
+                                            : 'border-gray-300 bg-white'
+                                    }`}>
+                                        {isSelected && (
+                                            <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-white">
+                                                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                                            </svg>
+                                        )}
+                                    </span>
+                                    {opt.option_text}
+                                </button>
+                            );
+                        })}
+                        {/* Counter pilihan terpilih */}
+                        {(() => {
+                            const count = ((answers[currentQuestion.id_question] as string[] | undefined) ?? []).length;
+                            return count > 0 ? (
+                                <p className="text-[11px] text-gray-400 text-right pt-1">
+                                    {count} pilihan dipilih
+                                </p>
+                            ) : null;
+                        })()}
+                    </div>
+                )}
+
+                {/* ── Isian ── */}
                 {currentQuestion.question_type === 'isian' && (
                     <input
                         type="text"
-                        value={answers[currentQuestion.id_question] ?? ''}
-                        onChange={e => handleAnswer(currentQuestion.id_question, e.target.value)}
+                        value={(answers[currentQuestion.id_question] as string) ?? ''}
+                        onChange={e => handleSingleAnswer(currentQuestion.id_question, e.target.value)}
                         placeholder="Ketik jawabanmu..."
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                     />

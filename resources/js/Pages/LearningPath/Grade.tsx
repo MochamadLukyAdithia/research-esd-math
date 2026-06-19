@@ -118,14 +118,21 @@ function ModuleCard({ mod, index, isLoggedIn }: { mod: LearningModule; index: nu
             </div>
 
             <div className="p-5 pt-4 pl-12">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                        <p className="text-[10px] text-primary font-semibold mb-0.5">{mod.category}</p>
-                        <h3 className="text-sm font-bold text-gray-900 leading-snug">{mod.title}</h3>
-                    </div>
-                    {isLocked && <Lock size={14} className="text-gray-300 shrink-0 mt-0.5" />}
-                </div>
+              {/* Header */}
+<div className="flex items-start justify-between gap-2 mb-2">
+    <div className="min-w-0 w-full flex flex-col items-center justify-center"> 
+        <img 
+            src={`${mod.thumbnail}`} 
+            alt="" 
+            className="max-w-xs h-auto object-cover rounded-lg mb-2" 
+        />
+        <div className="w-full text-left"> 
+            <p className="text-[10px] text-primary font-semibold mb-0.5">{mod.category}</p>
+            <h3 className="text-sm font-bold text-gray-900 leading-snug">{mod.title}</h3>
+        </div>
+    </div>
+    {isLocked && <Lock size={14} className="text-gray-300 shrink-0 mt-0.5" />}
+</div>
 
                 <p className="text-xs text-gray-500 line-clamp-2 mb-3">{mod.description}</p>
 

@@ -305,17 +305,20 @@ class ModulesRelationManager extends RelationManager
                                     TextInput::make('new_title')
                                         ->label('Judul / Ringkasan Soal')
                                         ->maxLength(255)
+                                        ->required()
                                         ->placeholder('Contoh: Hitung luas taman berbentuk trapesium'),
 
                                     Textarea::make('new_question')
                                         ->label('Teks Soal')
                                         ->rows(4)
+                                        ->required()
                                         ->placeholder('Tulis soal lengkap di sini...'),
 
                                     Grid::make(2)->schema([
                                         Select::make('new_question_type_id')
                                             ->label('Tipe Soal')
                                             ->native(false)
+                                            ->required()
                                             ->options(
                                                 QuestionType::all()->pluck('question_type', 'id_question_type')
                                             )
@@ -325,6 +328,8 @@ class ModulesRelationManager extends RelationManager
                                         TextInput::make('new_points')
                                             ->label('Poin')
                                             ->numeric()
+                                            ->helperText('Jumlah poin yang didapat jika jawaban benar.')
+                                            ->required()
                                             ->minValue(0)
                                             ->default(10),
                                     ]),
@@ -455,7 +460,7 @@ class ModulesRelationManager extends RelationManager
                         return [
                             Section::make('Tambah Materi Baru')
                                 ->description('Isi form di bawah untuk menambahkan item materi ke modul ini.')
-                                ->schema([
+                                ->schema([  
                                     TextInput::make('new_title')
                                         ->label('Judul Materi')
                                         ->placeholder('Contoh: Slide Pengantar Aljabar')

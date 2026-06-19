@@ -8,13 +8,13 @@ import MaterialView from '@/Components/learningpath/MaterialView';
 import ReflectionView from '@/Components/learningpath/ReflectionView';
 import ModuleSidebar from '@/Components/learningpath/ModuleSidebar';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Question {
     id_question: number;
     title: string;
     question: string;
-    question_type: 'pilihan_ganda' | 'isian';
+    question_type: 'pilihan_ganda' | 'pilihan_ganda_kompleks' | 'isian';
     points: number;
     question_images: string[];
     options?: { id_question_option: number; option_text: string }[] | null;
@@ -88,7 +88,6 @@ export default function Module({ path, module, all_modules, progress, next_modul
     const { auth } = usePage().props as { auth: { user: Profile | null } };
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    // ✅ FIX: gunakan route name yang benar sesuai web.php
     const navigateModule = (mod: AdjacentModule) => {
         router.visit(route('learningpath.module', {
             pathId:   path.id_learning_path,
@@ -101,10 +100,9 @@ export default function Module({ path, module, all_modules, progress, next_modul
             <Head title={module.title} />
             <Navbar user={auth.user} />
 
-            {/* ✅ Layout: sidebar hanya di luar area konten, tidak menumpuk */}
             <div className="flex h-screen bg-gray-50 pt-[56px] sm:pt-[64px]">
 
-                {/* Sidebar — hanya tampil di lg+ secara statis, atau overlay mobile */}
+                {/* Sidebar */}
                 <ModuleSidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
@@ -115,12 +113,11 @@ export default function Module({ path, module, all_modules, progress, next_modul
                     progress={progress}
                 />
 
-                {/* Main content — full width di mobile, flex-1 di desktop */}
+                {/* Main content */}
                 <div className="flex-1 flex flex-col overflow-hidden min-w-0">
 
                     {/* ── Top bar ── */}
                     <div className="bg-white border-b border-gray-100 px-3 sm:px-5 py-4 mt-3 flex items-center gap-2 sm:gap-3 shrink-0">
-                        {/* Hamburger mobile */}
                         <button
                             onClick={() => setSidebarOpen(true)}
                             className="lg:hidden p-1.5 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
@@ -129,7 +126,6 @@ export default function Module({ path, module, all_modules, progress, next_modul
                             <Menu size={18} className="text-gray-600" />
                         </button>
 
-                        {/* Back link — desktop only */}
                         <button
                             onClick={() => router.visit(route('learningpath.show', path.id_learning_path))}
                             className="hidden lg:flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors shrink-0"
@@ -139,7 +135,6 @@ export default function Module({ path, module, all_modules, progress, next_modul
                         </button>
                         <span className="text-gray-200 hidden lg:block">/</span>
 
-                        {/* Judul modul */}
                         <div className="flex items-center gap-1.5 text-sm font-semibold text-gray-800 min-w-0 flex-1">
                             <span className="text-primary shrink-0">{MODULE_ICON[module.type]}</span>
                             <span className="truncate">{module.title}</span>
@@ -148,7 +143,6 @@ export default function Module({ path, module, all_modules, progress, next_modul
                             </span>
                         </div>
 
-                        {/* Progress pill */}
                         {progress && (
                             <div className="flex items-center gap-2 shrink-0">
                                 <div className="w-16 sm:w-24 bg-gray-100 rounded-full h-1.5 hidden xs:block">
@@ -163,7 +157,7 @@ export default function Module({ path, module, all_modules, progress, next_modul
                     </div>
 
                     {/* ── Konten modul ── */}
-                    <div className="flex-1 overflow-y-auto" >
+                    <div className="flex-1 overflow-y-auto">
                         {(module.type === 'pre_test' || module.type === 'post_test') && (
                             <PreTestView
                                 pathId={path.id_learning_path}
@@ -202,7 +196,6 @@ export default function Module({ path, module, all_modules, progress, next_modul
                             </span>
                         </button>
 
-                        {/* Titik modul saat ini (mobile indicator) */}
                         <div className="flex items-center gap-1">
                             {all_modules.map((m) => (
                                 <div
