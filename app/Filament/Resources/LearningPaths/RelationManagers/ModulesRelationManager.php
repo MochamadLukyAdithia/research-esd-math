@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LearningPaths\RelationManagers;
 use App\Models\LearningMaterial;
 use App\Models\ModuleQuestion;
 use App\Models\Question;
+use App\Models\QuestionImage;
 use App\Models\QuestionOption;
 use App\Models\QuestionType;
 use Filament\Actions\Action;
@@ -25,6 +26,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 
 class ModulesRelationManager extends RelationManager
@@ -240,7 +242,7 @@ class ModulesRelationManager extends RelationManager
             );
         }
 
-        $questions = Question::with('questionOptions')
+        $questions = Question::with(['questionOptions', 'questionImages'])
             ->whereIn('id_question', $ids)
             ->orderByRaw('FIELD(id_question, ' . implode(',', $ids) . ')')
             ->get();
@@ -262,6 +264,15 @@ class ModulesRelationManager extends RelationManager
 
             // Teks soal
             $html .= '<p class="mt-1 text-gray-600">' . e($q->question) . '</p>';
+
+            // Gambar soal (jika ada, bisa lebih dari satu)
+            if ($q->questionImages->isNotEmpty()) {
+                $html .= '<div class="flex flex-wrap gap-2 mt-2">';
+                foreach ($q->questionImages as $img) {
+                    $html .= '<img src="' . e(Storage::url($img->image_path)) . '" alt="" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />';
+                }
+                $html .= '</div>';
+            }
 
             // Opsi jawaban (pilihan ganda)
             if ($q->questionOptions->isNotEmpty()) {
@@ -303,6 +314,20 @@ class ModulesRelationManager extends RelationManager
                                 ->collapsible()
                                 ->collapsed(true)
                                 ->schema([
+                                    FileUpload::make('new_question_images')
+                                        ->label('Gambar Soal')
+                                        ->image()
+                                        ->multiple()
+                                        ->reorderable()
+                                        ->disk('public')
+                                        ->directory('questions')
+                                        ->visibility('public')
+                                        ->maxFiles(5)
+                                        ->maxSize(5120)
+                                        ->imagePreviewHeight('150')
+                                        ->helperText('Opsional, bisa lebih dari satu gambar. Format JPG, PNG, atau WEBP, maks 5MB per gambar.')
+                                        ->columnSpanFull(),
+
                                     TextInput::make('new_title')
                                         ->label('Judul / Ringkasan Soal')
                                         ->maxLength(255)
@@ -400,6 +425,16 @@ class ModulesRelationManager extends RelationManager
                                 'longitude'             => null,
                                 'latitude'              => null,
                             ]);
+
+                            // Simpan gambar soal (jika ada) ke tabel question_images
+                            if (!empty($data['new_question_images'])) {
+                                foreach ($data['new_question_images'] as $imagePath) {
+                                    QuestionImage::create([
+                                        'question_id' => $question->id_question,
+                                        'image_path'  => $imagePath,
+                                    ]);
+                                }
+                            }
 
                             // Simpan opsi jika tipe soal adalah pilihan ganda
                             $typeName = strtolower(
