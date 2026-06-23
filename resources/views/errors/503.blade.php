@@ -65,10 +65,10 @@
 @endsection
 
 @section('content')
-<div class="error-badge">
+<!-- <div class="error-badge">
     <span class="dot"></span>
     PEMELIHARAAN
-</div>
+</div> -->
 
 <div class="error-code" data-code="503">503</div>
 
@@ -110,7 +110,7 @@
         <span class="maint-check-icon active">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </span>
-        Pembaruan Fitur Baru ←
+        Pembaruan Fitur 
     </li>
     <li>
         <span class="maint-check-icon todo">

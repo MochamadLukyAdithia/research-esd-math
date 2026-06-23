@@ -39,10 +39,10 @@
 @endsection
 
 @section('content')
-<div class="error-badge">
+<!-- <div class="error-badge">
     <span class="dot"></span>
     ERROR 429
-</div>
+</div> -->
 
 <div class="error-code" data-code="429">429</div>
 

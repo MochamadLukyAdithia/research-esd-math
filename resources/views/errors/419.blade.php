@@ -3,10 +3,10 @@
 @section('title', '419 – Sesi Kedaluwarsa')
 
 @section('content')
-<div class="error-badge">
+<!-- <div class="error-badge">
     <span class="dot"></span>
     ERROR 419
-</div>
+</div> -->
 
 <div class="error-code" data-code="419">419</div>
 
