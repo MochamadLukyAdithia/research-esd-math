@@ -277,17 +277,29 @@ class ModulesRelationManager extends RelationManager
             // Opsi jawaban (pilihan ganda)
             if ($q->questionOptions->isNotEmpty()) {
                 $html .= '<ul class="mt-2 space-y-1">';
-                foreach ($q->questionOptions as $opt) {
-                    $icon  = $opt->is_correct
-                        ? '✅'
-                        : '<span class="text-gray-400">○</span>';
+    // Ganti bagian render opsi dalam foreach $q->questionOptions
+foreach ($q->questionOptions as $opt) {
+    $icon  = $opt->is_correct
+        ? '✅'
+        : '<span class="text-gray-400">○</span>';
 
-                    $style = $opt->is_correct
-                        ? 'text-green-700 font-medium'
-                        : 'text-gray-600';
+    $style = $opt->is_correct
+        ? 'text-green-700 font-medium'
+        : 'text-gray-600';
 
-                    $html .= "<li class='flex gap-1.5 {$style}'>{$icon} " . e($opt->option_text) . '</li>';
-                }
+    $html .= "<li class='flex items-center gap-1.5 {$style}'>{$icon}";
+
+    if (!empty($opt->option_image)) {
+        // Opsi bergambar
+        $html .= '<img src="' . e(Storage::url($opt->option_image)) 
+               . '" alt="" class="h-16 w-16 object-cover rounded border border-gray-200 ml-1" />';
+    } else {
+        // Opsi teks biasa
+        $html .= e($opt->option_text);
+    }
+
+    $html .= '</li>';
+}
                 $html .= '</ul>';
             }
 
@@ -361,34 +373,61 @@ class ModulesRelationManager extends RelationManager
                                     ]),
 
                                     // ── Pilihan Ganda: tampil jika nama tipe mengandung kata kunci MC ──
-                                    Repeater::make('new_options')
-                                        ->label('Pilihan Jawaban')
-                                        ->schema([
-                                            TextInput::make('option_text')
-                                                ->label('Teks Opsi')
-                                                ->required()
-                                                ->placeholder('Tulis pilihan jawaban...'),
+                                   Repeater::make('new_options')
+    ->label('Pilihan Jawaban')
+    ->schema([
+        // ── Toggle tipe konten opsi ──────────────────────────
+        Select::make('option_type')
+            ->label('Tipe Opsi')
+            ->native(false)
+            ->options([
+                'text'  => 'Teks',
+                'image' => 'Gambar',
+            ])
+            ->default('text')
+            ->live()
+            ->required(),
 
-                                            Toggle::make('is_correct')
-                                                ->label('Kunci')
-                                                ->default(false),
-                                        ])
-                                        ->columns(2)
-                                        ->minItems(2)
-                                        ->maxItems(6)
-                                        ->defaultItems(4)
-                                        ->addActionLabel('+ Tambah Opsi')
-                                        ->reorderable(false)
-                                        ->visible(function ($get) {
-                                            $id = $get('new_question_type_id');
-                                            if (!$id) return false;
-                                            $name = strtolower(QuestionType::find($id)?->question_type ?? '');
-                                            return str_contains($name, 'pilihan')
-                                                || str_contains($name, 'ganda')
-                                                || str_contains($name, 'multiple')
-                                                || str_contains($name, 'pg');
-                                        }),
+        // ── Input teks (tampil jika tipe = text) ─────────────
+        TextInput::make('option_text')
+            ->label('Teks Opsi')
+            ->placeholder('Tulis pilihan jawaban...')
+            ->visible(fn($get) => ($get('option_type') ?? 'text') === 'text')
+            ->requiredIf('option_type', 'text'),
 
+        // ── Upload gambar (tampil jika tipe = image) ──────────
+        FileUpload::make('option_image')
+            ->label('Gambar Opsi')
+            ->image()
+            ->disk('public')
+            ->directory('question-options')
+            ->visibility('public')
+            ->maxSize(2048)
+            ->imagePreviewHeight('120')
+            ->helperText('Format JPG, PNG, atau WEBP. Maks 2MB.')
+            ->visible(fn($get) => ($get('option_type') ?? 'text') === 'image')
+            ->requiredIf('option_type', 'image'),
+
+        // ── Kunci jawaban ─────────────────────────────────────
+        Toggle::make('is_correct')
+            ->label('Kunci Jawaban')
+            ->default(false),
+    ])
+    ->columns(2)
+    ->minItems(2)
+    ->maxItems(6)
+    ->defaultItems(4)
+    ->addActionLabel('+ Tambah Opsi')
+    ->reorderable(false)
+    ->visible(function ($get) {
+        $id = $get('new_question_type_id');
+        if (!$id) return false;
+        $name = strtolower(QuestionType::find($id)?->question_type ?? '');
+        return str_contains($name, 'pilihan')
+            || str_contains($name, 'ganda')
+            || str_contains($name, 'multiple')
+            || str_contains($name, 'pg');
+    }),
                                     // ── Isian / Essay: tampil jika nama tipe mengandung kata kunci essay ──
                                     Textarea::make('new_correct_answer')
                                         ->label('Kunci Jawaban')
@@ -446,14 +485,19 @@ class ModulesRelationManager extends RelationManager
                                 || str_contains($typeName, 'pg');
 
                             if ($isMultipleChoice && !empty($data['new_options'])) {
-                                foreach ($data['new_options'] as $opt) {
-                                    QuestionOption::create([
-                                        'id_question' => $question->id_question,
-                                        'option_text' => $opt['option_text'],
-                                        'is_correct'  => $opt['is_correct'] ?? false,
-                                    ]);
-                                }
-                            }
+    foreach ($data['new_options'] as $opt) {
+        $optionType  = $opt['option_type'] ?? 'text';
+        $optionText  = $optionType === 'text'  ? ($opt['option_text']  ?? null) : null;
+        $optionImage = $optionType === 'image' ? ($opt['option_image'] ?? null) : null;
+
+        QuestionOption::create([
+            'id_question'  => $question->id_question,
+            'option_text'  => $optionText,
+            'option_image' => $optionImage, // kolom baru di tabel question_options
+            'is_correct'   => $opt['is_correct'] ?? false,
+        ]);
+    }
+}
 
                             $newQuestionId = $question->id_question;
                         }

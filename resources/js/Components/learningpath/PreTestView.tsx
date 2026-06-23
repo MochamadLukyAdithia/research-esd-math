@@ -42,7 +42,50 @@ type AnswerValue = string | string[];
 function isCompleks(q: Question) {
     return q.question_type === 'pilihan_ganda_kompleks';
 }
+// Tambahkan interface kecil ini di atas OptionContent
+interface QuestionOption {
+    id_question_option: number;
+    option_text:        string | null;
+    option_image?:      string | null;
+}
 
+// PreTestView.tsx — OptionContent, src-nya langsung pakai nilai dari backend
+function OptionContent({ opt }: { opt: QuestionOption }) {
+    if (opt.option_image) {
+        return (
+            <img
+                src={opt.option_image}  // ← tidak perlu /storage/ prefix lagi
+                alt={opt.option_text ?? 'Opsi'}
+                className="max-h-28 max-w-full object-contain rounded-lg"
+            />
+        );
+    }
+    return <span>{opt.option_text}</span>;
+}
+
+
+/** Render teks jawaban — jika diawali __img__ tampilkan sebagai gambar */
+function AnswerContent({ text }: { text: string }) {
+    // Bisa berisi beberapa jawaban (PGK) dipisah |||
+    const parts = text.split('|||');
+
+    return (
+        <span className="flex flex-wrap gap-2 items-center">
+            {parts.map((part, i) =>
+                part.startsWith('__img__') ? (
+                    <img
+                        key={i}
+                        src={part.replace('__img__', '')}
+                        alt="Jawaban"
+                        className="h-16 w-16 object-cover rounded-lg border border-gray-200"
+                    />
+                ) : (
+                    <span key={i}>{part}</span>
+                )
+            )}
+        </span>
+    );
+}
 // ─── Score display ───────────────────────────────────────────────────────────
 
 function ScoreRing({ score }: { score: number }) {
@@ -203,13 +246,15 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-gray-700 text-xs leading-relaxed">{r.answer}</p>
-                                        {!r.is_correct && r.correct_answer && (
-                                            <p className="text-green-700 text-xs mt-1 flex items-center gap-1">
-                                                <CheckCircle size={10} />
-                                                {r.correct_answer}
-                                            </p>
-                                        )}
+                                        <div className="text-gray-700 text-xs leading-relaxed">
+                                                <AnswerContent text={r.answer} />
+                                            </div>
+                                            {!r.is_correct && r.correct_answer && (
+                                                   <div className="text-green-700 text-xs mt-1 flex items-center gap-2">
+                                                    <CheckCircle size={10} className="shrink-0" />
+                                                    <AnswerContent text={r.correct_answer} />
+                                                </div>
+                                            )}
                                     </div>
                                     {r.is_correct
                                         ? <CheckCircle size={15} className="text-green-500 shrink-0 mt-0.5" />
@@ -316,25 +361,26 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
                 {/* ── Pilihan ganda biasa (1 jawaban) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda' && currentQuestion.options && (
-                    <div className="space-y-2">
-                        {currentQuestion.options.map(opt => {
-                            const isSelected = answers[currentQuestion.id_question] === String(opt.id_question_option);
-                            return (
-                                <button
-                                    key={opt.id_question_option}
-                                    onClick={() => handleSingleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
-                                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] ${
-                                        isSelected
-                                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
-                                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
-                                    }`}
-                                >
-                                    {opt.option_text}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
+    <div className="space-y-2">
+        {currentQuestion.options.map(opt => {
+            const isSelected = answers[currentQuestion.id_question] === String(opt.id_question_option);
+            return (
+                <button
+                    key={opt.id_question_option}
+                    onClick={() => handleSingleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] ${
+                        isSelected
+                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
+                    }`}
+                >
+                    {/* ← ganti opt.option_text dengan ini */}
+                    <OptionContent opt={opt} />
+                </button>
+            );
+        })}
+    </div>
+)}
 
                 {/* ── Pilihan ganda kompleks (bisa pilih lebih dari 1) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda_kompleks' && currentQuestion.options && (
@@ -348,28 +394,27 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                             const isSelected  = selectedArr.includes(String(opt.id_question_option));
                             return (
                                 <button
-                                    key={opt.id_question_option}
-                                    onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
-                                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-center gap-3 ${
-                                        isSelected
-                                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
-                                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
-                                    }`}
-                                >
-                                    {/* Checkbox visual */}
-                                    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
-                                        isSelected
-                                            ? 'bg-primary border-primary'
-                                            : 'border-gray-300 bg-white'
-                                    }`}>
-                                        {isSelected && (
-                                            <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-white">
-                                                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                        )}
-                                    </span>
-                                    {opt.option_text}
-                                </button>
+    key={opt.id_question_option}
+    onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-center gap-3 ${
+        isSelected
+            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
+            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
+    }`}
+>
+    {/* Checkbox visual */}
+    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
+        isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'
+    }`}>
+        {isSelected && (
+            <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-white">
+                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        )}
+    </span>
+    {/* ← ganti opt.option_text dengan ini */}
+    <OptionContent opt={opt} />
+</button>
                             );
                         })}
                         {/* Counter pilihan terpilih */}

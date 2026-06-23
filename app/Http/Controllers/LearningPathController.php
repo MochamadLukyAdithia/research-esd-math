@@ -558,12 +558,16 @@ class LearningPathController extends Controller
                 $q    = $mq->question;
                 $type = $q->questionType->question_type;
 
-                // ✅ FIX: kirim options untuk pilihan_ganda DAN pilihan_ganda_kompleks
+                // FIX: kirim options untuk pilihan_ganda DAN pilihan_ganda_kompleks
                 $options = null;
                 if (in_array($type, ['pilihan_ganda', 'pilihan_ganda_kompleks'])) {
+                   
                     $options = $q->questionOptions->map(fn($opt) => [
                         'id_question_option' => $opt->id_question_option,
                         'option_text'        => $opt->option_text,
+                        'option_image'       => $opt->option_image
+                            ? Storage::url($opt->option_image)
+                            : null,
                     ])->shuffle()->values();
                 }
 
@@ -789,9 +793,13 @@ class LearningPathController extends Controller
                 ->where('id_question_option', (int) $submitted)
                 ->first();
 
-            if ($option) {
-                return [(bool) $option->is_correct, $option->option_text];
-            }
+           if ($option) {
+    // Jika opsi bergambar, option_text bisa null — fallback ke label gambar
+    $answerText = $option->option_text
+        ?? ($option->option_image ? '__img__' . Storage::url($option->option_image) : 'Opsi ' . $option->id_question_option);
+
+    return [(bool) $option->is_correct, $answerText];
+}
             return [false, (string) $submitted];
         }
 
@@ -816,12 +824,16 @@ class LearningPathController extends Controller
             $isCorrect = $submittedIds === $correctIds;
 
             // Teks jawaban: gabung option_text yang dipilih user
-            $selectedTexts = $question->questionOptions
-                ->whereIn('id_question_option', $submittedIds)
-                ->pluck('option_text')
-                ->join(', ');
+            
+        $selectedTexts = $question->questionOptions
+            ->whereIn('id_question_option', $submittedIds)
+            ->map(fn($o) => $o->option_text
+                ?? ($o->option_image ? '__img__' . Storage::url($o->option_image) : 'Opsi ' . $o->id_question_option)
+            )
+            ->join('|||'); // separator khusus agar bisa split di frontend
 
-            return [$isCorrect, $selectedTexts ?: json_encode($submittedIds)];
+        return [$isCorrect, $selectedTexts ?: json_encode($submittedIds)];
+
         }
 
         // ── Isian (teks / angka / regex) ──────────────────────────────────────

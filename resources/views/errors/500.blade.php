@@ -28,10 +28,10 @@
 @endsection
 
 @section('content')
-<div class="error-badge">
+<!-- <div class="error-badge">
     <span class="dot"></span>
     ERROR 500
-</div>
+</div> -->
 
 <div class="error-code" data-code="500">500</div>
 
@@ -50,14 +50,14 @@
 </p>
 
 <div class="status-steps">
-    <span class="step-pill step-ok">
+    <!-- <span class="step-pill step-ok">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         Laporan Terkirim
     </span>
     <span class="step-pill step-err">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         Server Error
-    </span>
+    </span> -->
     <span class="step-pill step-pend">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         Sedang Ditangani…
