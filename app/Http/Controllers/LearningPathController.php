@@ -69,7 +69,7 @@ class LearningPathController extends Controller
             return [
                 'grade'             => $grade,
                 'label'             => $this->gradeLabel($grade),
-                'level'             => $grade <= 9 ? 'SMP' : 'SMA',
+                'level' => $grade <= 9 ? 'SMP' : ($grade <= 12 ? 'SMA' : 'Mahasiswa'),
                 'total_modules'     => $totalModules,
                 'completed_modules' => $completedModules,
                 'in_progress'       => $inProgressModules,
@@ -152,7 +152,7 @@ class LearningPathController extends Controller
         return Inertia::render('LearningPath/Grade', [
             'grade'   => $grade,
             'label'   => $this->gradeLabel($grade),
-            'level'   => $grade <= 9 ? 'SMP' : 'SMA',
+            'level'   => $grade <= 9 ? 'SMP' : ($grade <= 12 ? 'SMA' : 'Mahasiswa'),
             'modules' => $modules,
         ]);
     }
@@ -513,9 +513,12 @@ class LearningPathController extends Controller
     // ═══════════════════════════════════════════════════════════════════════
 
     private function gradeLabel(int $grade): string
-    {
-        return "Kelas {$grade}";
-    }
+{
+    return match(true) {
+        $grade <= 12 => "Kelas {$grade}",
+        default      => 'Kelas Mahasiswa',   // grade 13 → "Mahasiswa"
+    };
+}
 
     private function formatModuleItem(LearningPathModule $module): array
     {

@@ -8,7 +8,7 @@ import { User as Profile } from '@/types';
 interface GradeData {
     grade: number;
     label: string;
-    level: 'SMP' | 'SMA';
+    level: 'SMP' | 'SMA' | 'Mahasiswa';
     total_modules: number;
     completed_modules: number;
     in_progress: number;
@@ -26,6 +26,7 @@ interface PageProps {
 const LEVEL_COLOR = {
     SMP: { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', bar: 'bg-blue-500', icon: 'text-blue-400' },
     SMA: { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', bar: 'bg-purple-500', icon: 'text-purple-400' },
+    Mahasiswa: { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', bar: 'bg-green-500', icon: 'text-green-400' },    
 };
 
 // ─── Grade Card ───────────────────────────────────────────────────────────────
@@ -141,7 +142,7 @@ export default function Index({ gradeData }: PageProps) {
 
     const smpGrades = gradeData.filter(g => g.level === 'SMP');
     const smaGrades = gradeData.filter(g => g.level === 'SMA');
-
+    const mahasiswaGrades = gradeData.filter(g => g.level === 'Mahasiswa');
     const totalCompleted = gradeData.reduce((sum, g) => sum + g.completed_modules, 0);
     const totalModules   = gradeData.reduce((sum, g) => sum + g.total_modules, 0);
 
@@ -207,6 +208,21 @@ export default function Index({ gradeData }: PageProps) {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {smaGrades.map(g => (
+                                    <GradeCard key={g.grade} data={g} isLoggedIn={!!auth.user} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mahasiswa */}
+                    {mahasiswaGrades.length > 0 && (
+                        <div>
+                            <div className="flex items-center gap-3 mb-5">
+                                <h2 className="text-lg font-bold text-gray-800">Mahasiswa</h2>
+                                <span className="text-xs bg-green-100 text-green-700 px-2.5 py-1 rounded-full font-medium">Mahasiswa</span>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {mahasiswaGrades.map(g => (
                                     <GradeCard key={g.grade} data={g} isLoggedIn={!!auth.user} />
                                 ))}
                             </div>
