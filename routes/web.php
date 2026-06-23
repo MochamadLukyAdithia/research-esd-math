@@ -90,7 +90,7 @@ Route::prefix('learningpath')->name('learningpath.')->group(function () {
         ->where('grade', '[0-9]+');
  
     // Detail modul (show stepper)
-    Route::get('/{id}', [LearningPathController::class, 'show'])->name('show');
+    Route::get('/{id}', [LearningPathController::class, 'show'])->name('show')->whereNumber('id');;
  
     // Protected: butuh login
     Route::middleware('auth')->group(function () {
