@@ -102,7 +102,6 @@ class ModulesRelationManager extends RelationManager
                         'reflection' => 'Refleksi',
                         default      => $state,
                     })
-                    
                     ->color(fn($state) => match ($state) {
                         'pre_test'   => 'warning',
                         'material'   => 'info',
@@ -197,7 +196,6 @@ class ModulesRelationManager extends RelationManager
                         $grade       = $this->getOwnerRecord()->grade;
                         $existingIds = $record->moduleQuestions()->pluck('id_question')->toArray();
 
-                        // Soal umum + soal LP eksklusif milik learning path ini saja
                         $lpQuestionIds = ModuleQuestion::whereIn(
                             'id_module',
                             $this->getOwnerRecord()->modules()->pluck('id_module')
@@ -216,7 +214,6 @@ class ModulesRelationManager extends RelationManager
 
                         return [
 
-                            // ── Section 1: Pilih soal yang sudah ada ──────────
                             Section::make('Pilih Soal yang Sudah Ada')
                                 ->description('Soal berlabel 🔒 adalah soal eksklusif learning path ini.')
                                 ->schema([
@@ -226,101 +223,78 @@ class ModulesRelationManager extends RelationManager
                                         ->options($questionOptions)
                                         ->default($existingIds)
                                         ->searchable()
-                                        ->live()  // ← reactive: pilih soal → preview muncul di bawah
+                                        ->live()
                                         ->helperText("Soal difilter kelas {$grade}. Buka bagian di bawah untuk membuat soal baru."),
 
-                                    // ── Preview detail soal terpilih ──────────────
-               Placeholder::make('question_preview')
-    ->label('Detail Soal Terpilih')
-    ->live()
-    ->content(function ($get): HtmlString {
-        $ids = $get('question_ids') ?? [];
+                                    Placeholder::make('question_preview')
+                                        ->label('Detail Soal Terpilih')
+                                        ->live()
+                                        ->content(function ($get): HtmlString {
+                                            $ids = $get('question_ids') ?? [];
 
-        if (empty($ids)) {
-            return new HtmlString(
-                '<p class="text-sm text-gray-400 italic">Pilih soal di atas untuk melihat detailnya.</p>'
-            );
-        }
+                                            if (empty($ids)) {
+                                                return new HtmlString(
+                                                    '<p class="text-sm text-gray-400 italic">Pilih soal di atas untuk melihat detailnya.</p>'
+                                                );
+                                            }
 
-        $questions = Question::with(['questionOptions', 'questionImages'])
-            ->whereIn('id_question', $ids)
-            ->orderByRaw('FIELD(id_question, ' . implode(',', $ids) . ')')
-            ->get();
+                                            $questions = Question::with(['questionOptions', 'questionImages'])
+                                                ->whereIn('id_question', $ids)
+                                                ->orderByRaw('FIELD(id_question, ' . implode(',', $ids) . ')')
+                                                ->get();
 
-        $html = '<div class="mt-1">';
+                                            $html = '<div class="mt-1">';
 
-        foreach ($questions as $i => $q) {
-            $badge = $q->is_learning_path_only
-                ? '<span class="ml-2 text-xs bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">Learning Path</span>'
-                : '';
+                                            foreach ($questions as $i => $q) {
+                                                $badge = $q->is_learning_path_only
+                                                    ? '<span class="ml-2 text-xs bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">Learning Path</span>'
+                                                    : '';
 
-            $html .= '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm mb-4">';
-            
-            // Nomor + judul
-            $html .= '<div class="flex items-start gap-2">';
-            $html .= '<span class="shrink-0 font-bold text-gray-500">' . ($i + 1) . '.</span>';
-            $html .= '<div class="flex-1">';
-            $html .= '<span class="font-semibold text-gray-800">' . e($q->title) . '</span>' . $badge;
+                                                $html .= '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm mb-4">';
+                                                $html .= '<div class="flex items-start gap-2">';
+                                                $html .= '<span class="shrink-0 font-bold text-gray-500">' . ($i + 1) . '.</span>';
+                                                $html .= '<div class="flex-1">';
+                                                $html .= '<span class="font-semibold text-gray-800">' . e($q->title) . '</span>' . $badge;
+                                                $html .= '<p class="mt-1 text-gray-600">' . e($q->question) . '</p>';
 
-            // Teks soal
-            $html .= '<p class="mt-1 text-gray-600">' . e($q->question) . '</p>';
+                                                if ($q->questionImages->isNotEmpty()) {
+                                                    $html .= '<div class="flex flex-wrap gap-2 mt-2">';
+                                                    foreach ($q->questionImages as $img) {
+                                                        $html .= '<img src="' . e(Storage::url($img->image_path)) . '" alt="" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />';
+                                                    }
+                                                    $html .= '</div>';
+                                                }
 
-            // Gambar soal (jika ada, bisa lebih dari satu)
-            if ($q->questionImages->isNotEmpty()) {
-                $html .= '<div class="flex flex-wrap gap-2 mt-2">';
-                foreach ($q->questionImages as $img) {
-                    $html .= '<img src="' . e(Storage::url($img->image_path)) . '" alt="" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />';
-                }
-                $html .= '</div>';
-            }
+                                                if ($q->questionOptions->isNotEmpty()) {
+                                                    $html .= '<ul class="mt-2 space-y-1">';
+                                                    foreach ($q->questionOptions as $opt) {
+                                                        $icon  = $opt->is_correct ? '✅' : '<span class="text-gray-400">○</span>';
+                                                        $style = $opt->is_correct ? 'text-green-700 font-medium' : 'text-gray-600';
+                                                        $html .= "<li class='flex items-center gap-1.5 {$style}'>{$icon}";
+                                                        if (!empty($opt->option_image)) {
+                                                            $html .= '<img src="' . e(Storage::url($opt->option_image)) . '" alt="" class="h-16 w-16 object-cover rounded border border-gray-200 ml-1" />';
+                                                        } else {
+                                                            $html .= e($opt->option_text);
+                                                        }
+                                                        $html .= '</li>';
+                                                    }
+                                                    $html .= '</ul>';
+                                                }
 
-            // Opsi jawaban (pilihan ganda)
-            if ($q->questionOptions->isNotEmpty()) {
-                $html .= '<ul class="mt-2 space-y-1">';
-    // Ganti bagian render opsi dalam foreach $q->questionOptions
-foreach ($q->questionOptions as $opt) {
-    $icon  = $opt->is_correct
-        ? '✅'
-        : '<span class="text-gray-400">○</span>';
+                                                if ($q->correct_answer && $q->questionOptions->isEmpty()) {
+                                                    $html .= '<p class="mt-2 text-green-700 text-xs">Jawaban: ' . e($q->correct_answer) . '</p>';
+                                                }
 
-    $style = $opt->is_correct
-        ? 'text-green-700 font-medium'
-        : 'text-gray-600';
+                                                $html .= '<p class="mt-2 text-xs text-gray-400">' . $q->points . ' poin</p>';
+                                                $html .= '</div></div></div>';
+                                            }
 
-    $html .= "<li class='flex items-center gap-1.5 {$style}'>{$icon}";
+                                            $html .= '</div>';
+                                            return new HtmlString($html);
+                                        })
+                                        ->columnSpanFull(),
+                                ]),
 
-    if (!empty($opt->option_image)) {
-        // Opsi bergambar
-        $html .= '<img src="' . e(Storage::url($opt->option_image)) 
-               . '" alt="" class="h-16 w-16 object-cover rounded border border-gray-200 ml-1" />';
-    } else {
-        // Opsi teks biasa
-        $html .= e($opt->option_text);
-    }
-
-    $html .= '</li>';
-}
-                $html .= '</ul>';
-            }
-
-            // Kunci jawaban (essay / isian)
-            if ($q->correct_answer && $q->questionOptions->isEmpty()) {
-                $html .= '<p class="mt-2 text-green-700 text-xs">Jawaban: ' . e($q->correct_answer) . '</p>';
-            }
-
-            // Poin
-            $html .= '<p class="mt-2 text-xs text-gray-400">' . $q->points . ' poin</p>';
-
-            $html .= '</div></div></div>';
-        }
-
-        $html .= '</div>';
-
-        return new HtmlString($html);
-    })
-    ->columnSpanFull(), ]),
-
-                            // ── Section 2: Buat soal baru (collapsed default) ──
                             Section::make('Buat Soal Baru')
                                 ->description('Soal baru otomatis eksklusif LP dan langsung masuk ke modul ini.')
                                 ->collapsible()
@@ -357,11 +331,8 @@ foreach ($q->questionOptions as $opt) {
                                             ->label('Tipe Soal')
                                             ->native(false)
                                             ->required()
-                                            ->options(
-                                                QuestionType::all()->pluck('question_type', 'id_question_type')
-                                            )
-                                            ->live() // ← pilih tipe → field jawaban menyesuaikan otomatis
-                                           ,
+                                            ->options(QuestionType::all()->pluck('question_type', 'id_question_type'))
+                                            ->live(),
 
                                         TextInput::make('new_points')
                                             ->label('Poin')
@@ -372,63 +343,55 @@ foreach ($q->questionOptions as $opt) {
                                             ->default(10),
                                     ]),
 
-                                    // ── Pilihan Ganda: tampil jika nama tipe mengandung kata kunci MC ──
-                                   Repeater::make('new_options')
-    ->label('Pilihan Jawaban')
-    ->schema([
-        // ── Toggle tipe konten opsi ──────────────────────────
-        Select::make('option_type')
-            ->label('Tipe Opsi')
-            ->native(false)
-            ->options([
-                'text'  => 'Teks',
-                'image' => 'Gambar',
-            ])
-            ->default('text')
-            ->live()
-            ->required(),
+                                    Repeater::make('new_options')
+                                        ->label('Pilihan Jawaban')
+                                        ->schema([
+                                            Select::make('option_type')
+                                                ->label('Tipe Opsi')
+                                                ->native(false)
+                                                ->options(['text' => 'Teks', 'image' => 'Gambar'])
+                                                ->default('text')
+                                                ->live()
+                                                ->required(),
 
-        // ── Input teks (tampil jika tipe = text) ─────────────
-        TextInput::make('option_text')
-            ->label('Teks Opsi')
-            ->placeholder('Tulis pilihan jawaban...')
-            ->visible(fn($get) => ($get('option_type') ?? 'text') === 'text')
-            ->requiredIf('option_type', 'text'),
+                                            TextInput::make('option_text')
+                                                ->label('Teks Opsi')
+                                                ->placeholder('Tulis pilihan jawaban...')
+                                                ->visible(fn($get) => ($get('option_type') ?? 'text') === 'text')
+                                                ->requiredIf('option_type', 'text'),
 
-        // ── Upload gambar (tampil jika tipe = image) ──────────
-        FileUpload::make('option_image')
-            ->label('Gambar Opsi')
-            ->image()
-            ->disk('public')
-            ->directory('question-options')
-            ->visibility('public')
-            ->maxSize(2048)
-            ->imagePreviewHeight('120')
-            ->helperText('Format JPG, PNG, atau WEBP. Maks 2MB.')
-            ->visible(fn($get) => ($get('option_type') ?? 'text') === 'image')
-            ->requiredIf('option_type', 'image'),
+                                            FileUpload::make('option_image')
+                                                ->label('Gambar Opsi')
+                                                ->image()
+                                                ->disk('public')
+                                                ->directory('question-options')
+                                                ->visibility('public')
+                                                ->maxSize(2048)
+                                                ->imagePreviewHeight('120')
+                                                ->helperText('Format JPG, PNG, atau WEBP. Maks 2MB.')
+                                                ->visible(fn($get) => ($get('option_type') ?? 'text') === 'image')
+                                                ->requiredIf('option_type', 'image'),
 
-        // ── Kunci jawaban ─────────────────────────────────────
-        Toggle::make('is_correct')
-            ->label('Kunci Jawaban')
-            ->default(false),
-    ])
-    ->columns(2)
-    ->minItems(2)
-    ->maxItems(6)
-    ->defaultItems(4)
-    ->addActionLabel('+ Tambah Opsi')
-    ->reorderable(false)
-    ->visible(function ($get) {
-        $id = $get('new_question_type_id');
-        if (!$id) return false;
-        $name = strtolower(QuestionType::find($id)?->question_type ?? '');
-        return str_contains($name, 'pilihan')
-            || str_contains($name, 'ganda')
-            || str_contains($name, 'multiple')
-            || str_contains($name, 'pg');
-    }),
-                                    // ── Isian / Essay: tampil jika nama tipe mengandung kata kunci essay ──
+                                            Toggle::make('is_correct')
+                                                ->label('Kunci Jawaban')
+                                                ->default(false),
+                                        ])
+                                        ->columns(2)
+                                        ->minItems(2)
+                                        ->maxItems(6)
+                                        ->defaultItems(4)
+                                        ->addActionLabel('+ Tambah Opsi')
+                                        ->reorderable(false)
+                                        ->visible(function ($get) {
+                                            $id = $get('new_question_type_id');
+                                            if (!$id) return false;
+                                            $name = strtolower(QuestionType::find($id)?->question_type ?? '');
+                                            return str_contains($name, 'pilihan')
+                                                || str_contains($name, 'ganda')
+                                                || str_contains($name, 'multiple')
+                                                || str_contains($name, 'pg');
+                                        }),
+
                                     Textarea::make('new_correct_answer')
                                         ->label('Kunci Jawaban')
                                         ->rows(3)
@@ -447,7 +410,6 @@ foreach ($q->questionOptions as $opt) {
                         ];
                     })
                     ->action(function ($record, array $data) {
-                        // ── 1. Buat soal baru jika new_title & new_question terisi ──
                         $newQuestionId = null;
 
                         if (!empty($data['new_title']) && !empty($data['new_question'])) {
@@ -465,7 +427,6 @@ foreach ($q->questionOptions as $opt) {
                                 'latitude'              => null,
                             ]);
 
-                            // Simpan gambar soal (jika ada) ke tabel question_images
                             if (!empty($data['new_question_images'])) {
                                 foreach ($data['new_question_images'] as $imagePath) {
                                     QuestionImage::create([
@@ -475,7 +436,6 @@ foreach ($q->questionOptions as $opt) {
                                 }
                             }
 
-                            // Simpan opsi jika tipe soal adalah pilihan ganda
                             $typeName = strtolower(
                                 QuestionType::find($data['new_question_type_id'] ?? null)?->question_type ?? ''
                             );
@@ -485,29 +445,27 @@ foreach ($q->questionOptions as $opt) {
                                 || str_contains($typeName, 'pg');
 
                             if ($isMultipleChoice && !empty($data['new_options'])) {
-    foreach ($data['new_options'] as $opt) {
-        $optionType  = $opt['option_type'] ?? 'text';
-        $optionText  = $optionType === 'text'  ? ($opt['option_text']  ?? null) : null;
-        $optionImage = $optionType === 'image' ? ($opt['option_image'] ?? null) : null;
+                                foreach ($data['new_options'] as $opt) {
+                                    $optionType  = $opt['option_type'] ?? 'text';
+                                    $optionText  = $optionType === 'text'  ? ($opt['option_text']  ?? null) : null;
+                                    $optionImage = $optionType === 'image' ? ($opt['option_image'] ?? null) : null;
 
-        QuestionOption::create([
-            'id_question'  => $question->id_question,
-            'option_text'  => $optionText,
-            'option_image' => $optionImage, // kolom baru di tabel question_options
-            'is_correct'   => $opt['is_correct'] ?? false,
-        ]);
-    }
-}
+                                    QuestionOption::create([
+                                        'id_question'  => $question->id_question,
+                                        'option_text'  => $optionText,
+                                        'option_image' => $optionImage,
+                                        'is_correct'   => $opt['is_correct'] ?? false,
+                                    ]);
+                                }
+                            }
 
                             $newQuestionId = $question->id_question;
                         }
 
-                        // ── 2. Simpan ulang pilihan soal dari Select ───────────
                         ModuleQuestion::where('id_module', $record->id_module)->delete();
 
                         $selectedIds = $data['question_ids'] ?? [];
 
-                        // Soal baru otomatis masuk ke daftar terpilih
                         if ($newQuestionId && !in_array($newQuestionId, $selectedIds)) {
                             $selectedIds[] = $newQuestionId;
                         }
@@ -526,298 +484,773 @@ foreach ($q->questionOptions as $opt) {
 
                         Notification::make()->title($msg)->success()->send();
                     }),
-// ── Kelola Materi (untuk modul tipe material) ─────────────────────
-Action::make('manage_materials')
-    ->label('Kelola Materi')
-    ->icon('heroicon-o-book-open')
-    ->color('info')
-    ->visible(fn($record) => $record->type === 'material')
-    ->slideOver()
-    ->form(function ($record) {
-        $materials = $record->materials()->orderBy('order_number')->get();
 
-        $contentTypeLabel = fn($type) => match($type) {
-            'slide'   => 'Slide / PPT',
-            'video'   => 'Video',
-            'example' => 'Contoh Soal',
-            'text'    => 'Teks / Penjelasan',
-            default   => $type,
-        };
+                // ──────────────────────────────────────────────────────────────
+                // ── Edit Soal ─────────────────────────────────────────────────
+                // ──────────────────────────────────────────────────────────────
+                Action::make('edit_question')
+                    ->label('Edit Soal')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->slideOver()
+                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                    ->form(function ($record) {
+                        $moduleQuestions = $record->moduleQuestions()
+                            ->with('question')
+                            ->orderBy('order_number')
+                            ->get();
 
-        return [
-            Section::make('Tambah Materi Baru')
-                ->description('Isi form di bawah untuk menambahkan item materi ke modul ini.')
-                ->schema([
-                    TextInput::make('new_title')
-                        ->label('Judul Materi')
-                        ->placeholder('Contoh: Slide Pengantar Aljabar')
-                        ->maxLength(255),
+                        if ($moduleQuestions->isEmpty()) {
+                            return [
+                                Placeholder::make('no_questions')
+                                    ->label('')
+                                    ->content('Belum ada soal di modul ini. Tambahkan soal terlebih dahulu.'),
+                            ];
+                        }
 
-                    Select::make('new_content_type')
-                        ->label('Tipe Konten')
-                        ->native(false)
-                        ->options([
+                        return [
+                            // ── Pilih soal yang akan diedit ──────────────────
+                            Select::make('question_id')
+                                ->label('Pilih Soal yang Diedit')
+                                ->native(false)
+                                ->required()
+                                ->live()
+                                ->options(
+                                    $moduleQuestions->mapWithKeys(fn($mq) => [
+                                        $mq->question->id_question =>
+                                            "#{$mq->order_number} · " .
+                                            ($mq->question->is_learning_path_only ? '🔒 ' : '') .
+                                            "[ID:{$mq->question->id_question}] {$mq->question->title}"
+                                    ])
+                                )
+                                ->afterStateUpdated(function ($state, $set) {
+                                    if (!$state) return;
+
+                                    $q = Question::with(['questionOptions', 'questionImages'])
+                                        ->find($state);
+
+                                    if (!$q) return;
+
+                                    $set('edit_title',            $q->title);
+                                    $set('edit_question',         $q->question);
+                                    $set('edit_points',           $q->points);
+                                    $set('edit_question_type_id', $q->id_question_type);
+                                    $set('edit_correct_answer',   $q->correct_answer);
+
+                                    // Opsi pilihan ganda
+                                    // PENTING: 'option_image' WAJIB selalu mulai kosong ([]) agar
+                                    // komponen FileUpload tidak bentrok antara "file lama (string path)"
+                                    // dan "file baru yang sedang di-upload via Livewire".
+                                    // Gambar lama HANYA ditampilkan lewat Placeholder
+                                    // '_existing_image_preview' (read-only), berdasarkan '_existing_image'.
+                                    $set('edit_options', $q->questionOptions->map(fn($opt) => [
+                                        'option_type'       => !empty($opt->option_image) ? 'image' : 'text',
+                                        'option_text'       => $opt->option_text,
+                                        // Selalu array kosong → FileUpload murni untuk upload baru
+                                        'option_image'      => [],
+                                        // Path string asli, dipakai untuk preview & fallback saat simpan
+                                        '_existing_image'   => $opt->option_image,
+                                        'is_correct'        => (bool) $opt->is_correct,
+                                    ])->toArray());
+                                }),
+
+                            // ── Judul & pertanyaan ────────────────────────────
+                            TextInput::make('edit_title')
+                                ->label('Judul / Ringkasan Soal')
+                                ->required()
+                                ->maxLength(255)
+                                ->visible(fn($get) => (bool) $get('question_id')),
+
+                            Textarea::make('edit_question')
+                                ->label('Teks Soal')
+                                ->rows(4)
+                                ->required()
+                                ->visible(fn($get) => (bool) $get('question_id')),
+
+                            // ── Tipe soal & poin ──────────────────────────────
+                            Grid::make(2)->schema([
+                                Select::make('edit_question_type_id')
+                                    ->label('Tipe Soal')
+                                    ->native(false)
+                                    ->required()
+                                    ->live()
+                                    ->options(QuestionType::all()->pluck('question_type', 'id_question_type'))
+                                    ->visible(fn($get) => (bool) $get('question_id')),
+
+                                TextInput::make('edit_points')
+                                    ->label('Poin')
+                                    ->numeric()
+                                    ->required()
+                                    ->minValue(0)
+                                    ->visible(fn($get) => (bool) $get('question_id')),
+                            ]),
+
+                            // ── Gambar soal (preview read-only + ganti) ───────
+                            Placeholder::make('current_images_preview')
+                                ->label('Gambar Soal Saat Ini')
+                                ->live()
+                                ->content(function ($get): HtmlString {
+                                    $id = $get('question_id');
+                                    if (!$id) return new HtmlString('');
+
+                                    $images = QuestionImage::where('question_id', $id)->get();
+                                    if ($images->isEmpty()) {
+                                        return new HtmlString('<p class="text-sm text-gray-400 italic">Tidak ada gambar.</p>');
+                                    }
+
+                                    $html = '<div class="flex flex-wrap gap-2 mt-1">';
+                                    foreach ($images as $img) {
+                                        $html .= '<img src="' . e(Storage::url($img->image_path))
+                                               . '" alt="" class="h-24 w-24 object-cover rounded-lg border border-gray-200" />';
+                                    }
+                                    $html .= '</div>';
+                                    return new HtmlString($html);
+                                })
+                                ->visible(fn($get) => (bool) $get('question_id'))
+                                ->columnSpanFull(),
+
+                            FileUpload::make('edit_new_images')
+                                ->label('Ganti / Tambah Gambar Soal')
+                                ->image()
+                                ->multiple()
+                                ->reorderable()
+                                ->disk('public')
+                                ->directory('questions')
+                                ->visibility('public')
+                                ->maxFiles(5)
+                                ->maxSize(5120)
+                                ->imagePreviewHeight('120')
+                                ->helperText('Upload gambar baru untuk mengganti semua gambar lama. Kosongkan jika tidak ingin mengubah gambar.')
+                                ->visible(fn($get) => (bool) $get('question_id'))
+                                ->columnSpanFull(),
+
+                            // ── Pilihan jawaban (PG) ──────────────────────────
+                            Repeater::make('edit_options')
+                                ->label('Pilihan Jawaban')
+                                ->schema([
+                                    Select::make('option_type')
+                                        ->label('Tipe Opsi')
+                                        ->native(false)
+                                        ->options(['text' => 'Teks', 'image' => 'Gambar'])
+                                        ->default('text')
+                                        ->live()
+                                        ->required(),
+
+                                    TextInput::make('option_text')
+                                        ->label('Teks Opsi')
+                                        ->placeholder('Tulis pilihan jawaban...')
+                                        ->visible(fn($get) => ($get('option_type') ?? 'text') === 'text')
+                                        ->requiredIf('option_type', 'text'),
+
+                                    // ── Preview gambar lama (read-only, tidak crash) ──
+                                    Placeholder::make('_existing_image_preview')
+                                        ->label('Gambar Saat Ini')
+                                        ->live()
+                                        ->content(function ($get): HtmlString {
+                                            $path = $get('_existing_image');
+                                            if (empty($path)) {
+                                                return new HtmlString('<p class="text-xs text-gray-400 italic">Belum ada gambar.</p>');
+                                            }
+                                            return new HtmlString(
+                                                '<img src="' . e(Storage::url($path)) . '" '
+                                                . 'alt="" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />'
+                                            );
+                                        })
+                                        ->visible(fn($get) => ($get('option_type') ?? 'text') === 'image')
+                                        ->columnSpanFull(),
+
+                                    // ── Upload gambar baru (ganti gambar lama) ────────
+                                    FileUpload::make('option_image')
+                                        ->label('Ganti Gambar Opsi')
+                                        ->helperText('Upload untuk mengganti gambar di atas. Kosongkan agar gambar lama tetap dipakai.')
+                                        ->image()
+                                        ->disk('public')
+                                        ->directory('question-options')
+                                        ->visibility('public')
+                                        ->maxSize(2048)
+                                        ->imagePreviewHeight('100')
+                                        // PENTING: jangan set default/state awal berupa path lama di sini.
+                                        // Field ini murni untuk file BARU. State awal selalu array kosong,
+                                        // diisi lewat $set() di atas saat memilih soal.
+                                        ->visible(fn($get) => ($get('option_type') ?? 'text') === 'image'),
+
+                                    // ── Hidden: simpan path gambar lama ──────────────
+                                    // dehydrated(true) wajib di-set eksplisit supaya Livewire
+                                    // tetap mengirim balik value field ini saat submit, walau
+                                    // field-nya hidden dan user tidak pernah menyentuhnya.
+                                    TextInput::make('_existing_image')
+                                        ->hidden()
+                                        ->dehydrated(true),
+
+                                    Toggle::make('is_correct')
+                                        ->label('Kunci Jawaban')
+                                        ->default(false),
+                                ])
+                                ->columns(2)
+                                ->minItems(2)
+                                ->maxItems(6)
+                                ->addActionLabel('+ Tambah Opsi')
+                                ->reorderable(false)
+                                ->visible(function ($get) {
+                                    if (!$get('question_id')) return false;
+                                    $id = $get('edit_question_type_id');
+                                    if (!$id) return false;
+                                    $name = strtolower(QuestionType::find($id)?->question_type ?? '');
+                                    return str_contains($name, 'pilihan')
+                                        || str_contains($name, 'ganda')
+                                        || str_contains($name, 'multiple')
+                                        || str_contains($name, 'pg');
+                                }),
+
+                            // ── Kunci jawaban (essay) ─────────────────────────
+                            Textarea::make('edit_correct_answer')
+                                ->label('Kunci Jawaban')
+                                ->rows(3)
+                                ->placeholder('Tulis jawaban yang benar...')
+                                ->helperText('Dipakai untuk pengecekan otomatis atau panduan koreksi.')
+                                ->visible(function ($get) {
+                                    if (!$get('question_id')) return false;
+                                    $id = $get('edit_question_type_id');
+                                    if (!$id) return false;
+                                    $name = strtolower(QuestionType::find($id)?->question_type ?? '');
+                                    return str_contains($name, 'isian')
+                                        || str_contains($name, 'essay')
+                                        || str_contains($name, 'uraian')
+                                        || str_contains($name, 'singkat');
+                                }),
+                        ];
+                    })
+                    ->action(function ($record, array $data) {
+                        $question = Question::find($data['question_id'] ?? null);
+
+                        if (!$question) {
+                            Notification::make()->title('Soal tidak ditemukan')->danger()->send();
+                            return;
+                        }
+
+                        // ── Update field dasar soal ──────────────────────────
+                        $question->update([
+                            'title'            => $data['edit_title'],
+                            'question'         => $data['edit_question'],
+                            'points'           => $data['edit_points'],
+                            'id_question_type' => $data['edit_question_type_id'],
+                            'correct_answer'   => $data['edit_correct_answer'] ?? null,
+                        ]);
+
+                        // ── Ganti gambar soal jika ada upload baru ───────────
+                        if (!empty($data['edit_new_images'])) {
+                            // Hapus gambar lama dari DB (file di storage dibiarkan atau bisa dihapus)
+                            QuestionImage::where('question_id', $question->id_question)->delete();
+
+                            foreach ($data['edit_new_images'] as $imagePath) {
+                                QuestionImage::create([
+                                    'question_id' => $question->id_question,
+                                    'image_path'  => $imagePath,
+                                ]);
+                            }
+                        }
+
+                        // ── Sync opsi pilihan ganda ──────────────────────────
+                        $typeName = strtolower(
+                            QuestionType::find($data['edit_question_type_id'] ?? null)?->question_type ?? ''
+                        );
+                        $isMultipleChoice = str_contains($typeName, 'pilihan')
+                            || str_contains($typeName, 'ganda')
+                            || str_contains($typeName, 'multiple')
+                            || str_contains($typeName, 'pg');
+
+                        if ($isMultipleChoice && isset($data['edit_options'])) {
+                            // PENGAMAN: ambil snapshot gambar opsi lama SEBELUM dihapus,
+                            // diurutkan sama seperti urutan tampil di repeater (by id_question_option asc).
+                            // Ini jadi fallback terakhir kalau '_existing_image' di payload
+                            // ternyata kosong/tidak terkirim (misal akibat field hidden yang
+                            // tidak ter-dehydrate), supaya gambar lama TIDAK PERNAH hilang
+                            // hanya karena user tidak mengubah apa-apa.
+                            $oldImagesByIndex = QuestionOption::where('id_question', $question->id_question)
+                                ->orderBy('id_question_option')
+                                ->pluck('option_image')
+                                ->values()
+                                ->all();
+
+                            // Hapus semua opsi lama lalu buat ulang
+                            QuestionOption::where('id_question', $question->id_question)->delete();
+
+                            foreach ($data['edit_options'] as $index => $opt) {
+                                $optionType = $opt['option_type'] ?? 'text';
+                                $optionText = $optionType === 'text' ? ($opt['option_text'] ?? null) : null;
+
+                                // option_image dari FileUpload selalu berupa array (jika ada upload baru).
+                                // _existing_image adalah string path lama (dari hidden TextInput).
+                                $optionImage = null;
+                                if ($optionType === 'image') {
+                                    $rawUpload = $opt['option_image'] ?? null;
+                                    if (!empty($rawUpload)) {
+                                        // FileUpload mengembalikan array path baru
+                                        $optionImage = is_array($rawUpload)
+                                            ? (collect($rawUpload)->first() ?? null)
+                                            : $rawUpload;
+                                    }
+                                    // Jika tidak ada upload baru, pakai gambar lama dari payload
+                                    if (empty($optionImage)) {
+                                        $optionImage = $opt['_existing_image'] ?? null;
+                                    }
+                                    // Pengaman terakhir: kalau payload tetap kosong, pakai snapshot DB
+                                    // berdasarkan posisi urutan opsi (asumsi urutan tidak diubah user).
+                                    if (empty($optionImage)) {
+                                        $optionImage = $oldImagesByIndex[$index] ?? null;
+                                    }
+                                }
+
+                                QuestionOption::create([
+                                    'id_question'  => $question->id_question,
+                                    'option_text'  => $optionText,
+                                    'option_image' => $optionImage,
+                                    'is_correct'   => $opt['is_correct'] ?? false,
+                                ]);
+                            }
+                        }
+
+                        Notification::make()->title('Soal berhasil diperbarui')->success()->send();
+                    }),
+
+                // ──────────────────────────────────────────────────────────────
+                // ── Hapus Soal ────────────────────────────────────────────────
+                // ──────────────────────────────────────────────────────────────
+                Action::make('delete_question')
+                    ->label('Hapus Soal')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->slideOver()
+                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                    ->form(function ($record) {
+                        $moduleQuestions = $record->moduleQuestions()
+                            ->with('question')
+                            ->orderBy('order_number')
+                            ->get();
+
+                        if ($moduleQuestions->isEmpty()) {
+                            return [
+                                Placeholder::make('no_questions')
+                                    ->label('')
+                                    ->content('Tidak ada soal untuk dihapus.'),
+                            ];
+                        }
+
+                        return [
+                            Select::make('question_id')
+                                ->label('Pilih Soal yang Dihapus')
+                                ->native(false)
+                                ->required()
+                                ->live()
+                                ->options(
+                                    $moduleQuestions->mapWithKeys(fn($mq) => [
+                                        $mq->question->id_question =>
+                                            "#{$mq->order_number} · " .
+                                            ($mq->question->is_learning_path_only ? '🔒 ' : '') .
+                                            "[ID:{$mq->question->id_question}] {$mq->question->title}"
+                                    ])
+                                )
+                                ->helperText('Soal berlabel 🔒 adalah soal eksklusif LP ini dan akan ikut dihapus dari bank soal.'),
+
+                            // ── Preview soal yang dipilih ─────────────────────
+                            Placeholder::make('delete_preview')
+                                ->label('Detail Soal')
+                                ->live()
+                                ->content(function ($get): HtmlString {
+                                    $id = $get('question_id');
+                                    if (!$id) {
+                                        return new HtmlString(
+                                            '<p class="text-sm text-gray-400 italic">Pilih soal di atas untuk melihat detailnya.</p>'
+                                        );
+                                    }
+
+                                    $q = Question::with(['questionOptions', 'questionImages'])->find($id);
+                                    if (!$q) return new HtmlString('');
+
+                                    $badge = $q->is_learning_path_only
+                                        ? '<span class="ml-2 text-xs bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">Learning Path · akan dihapus dari bank soal</span>'
+                                        : '<span class="ml-2 text-xs bg-blue-100 text-blue-700 rounded px-1.5 py-0.5">Soal Umum · hanya dihapus dari modul ini</span>';
+
+                                    $html  = '<div class="rounded-lg border border-red-100 bg-red-50 p-3 text-sm">';
+                                    $html .= '<span class="font-semibold text-gray-800">' . e($q->title) . '</span>' . $badge;
+                                    $html .= '<p class="mt-1 text-gray-600">' . e($q->question) . '</p>';
+
+                                    if ($q->questionImages->isNotEmpty()) {
+                                        $html .= '<div class="flex flex-wrap gap-2 mt-2">';
+                                        foreach ($q->questionImages as $img) {
+                                            $html .= '<img src="' . e(Storage::url($img->image_path)) . '" alt="" class="h-16 w-16 object-cover rounded border border-gray-200" />';
+                                        }
+                                        $html .= '</div>';
+                                    }
+
+                                    if ($q->questionOptions->isNotEmpty()) {
+                                        $html .= '<ul class="mt-2 space-y-1">';
+                                        foreach ($q->questionOptions as $opt) {
+                                            $icon  = $opt->is_correct ? '✅' : '<span class="text-gray-400">○</span>';
+                                            $style = $opt->is_correct ? 'text-green-700 font-medium' : 'text-gray-600';
+                                            $html .= "<li class='flex items-center gap-1.5 {$style}'>{$icon} ";
+                                            $html .= !empty($opt->option_image)
+                                                ? '<img src="' . e(Storage::url($opt->option_image)) . '" alt="" class="h-12 w-12 object-cover rounded border ml-1" />'
+                                                : e($opt->option_text);
+                                            $html .= '</li>';
+                                        }
+                                        $html .= '</ul>';
+                                    }
+
+                                    $html .= '<p class="mt-2 text-xs text-gray-400">' . $q->points . ' poin</p>';
+                                    $html .= '</div>';
+
+                                    // Peringatan konfirmasi visual
+                                    $warnText = $q->is_learning_path_only
+                                        ? 'Soal ini eksklusif LP dan akan <strong>dihapus permanen</strong> dari bank soal beserta semua opsinya.'
+                                        : 'Soal ini hanya akan <strong>dilepas dari modul ini</strong>. Soal tetap tersedia di bank soal.';
+
+                                    $html .= '<p class="mt-3 text-sm text-red-600">' . $warnText . '</p>';
+
+                                    return new HtmlString($html);
+                                })
+                                ->columnSpanFull(),
+                        ];
+                    })
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Soal dari Modul')
+                    ->modalDescription('Pastikan Anda telah memilih soal yang benar sebelum menghapus.')
+                    ->modalSubmitActionLabel('Ya, Hapus Soal')
+                    ->action(function ($record, array $data) {
+                        $questionId = $data['question_id'] ?? null;
+
+                        if (!$questionId) {
+                            Notification::make()->title('Pilih soal terlebih dahulu')->warning()->send();
+                            return;
+                        }
+
+                        $question = Question::find($questionId);
+
+                        if (!$question) {
+                            Notification::make()->title('Soal tidak ditemukan')->danger()->send();
+                            return;
+                        }
+
+                        $title = $question->title;
+
+                        // Hapus dari pivot modul ini
+                        ModuleQuestion::where('id_module', $record->id_module)
+                            ->where('id_question', $questionId)
+                            ->delete();
+
+                        // Re-order sisa soal di modul
+                        $record->moduleQuestions()
+                            ->orderBy('order_number')
+                            ->each(function ($mq, $i) {
+                                $mq->update(['order_number' => $i + 1]);
+                            });
+
+                        // Jika soal eksklusif LP, hapus total dari bank soal
+                        if ($question->is_learning_path_only) {
+                            QuestionOption::where('id_question', $questionId)->delete();
+                            QuestionImage::where('question_id', $questionId)->delete();
+                            $question->delete();
+
+                            Notification::make()
+                                ->title("Soal \"{$title}\" dihapus permanen dari bank soal")
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title("Soal \"{$title}\" dilepas dari modul ini")
+                                ->success()
+                                ->send();
+                        }
+                    }),
+
+                // ──────────────────────────────────────────────────────────────
+                // ── Kelola Materi ─────────────────────────────────────────────
+                // ──────────────────────────────────────────────────────────────
+                Action::make('manage_materials')
+                    ->label('Kelola Materi')
+                    ->icon('heroicon-o-book-open')
+                    ->color('info')
+                    ->visible(fn($record) => $record->type === 'material')
+                    ->slideOver()
+                    ->form(function ($record) {
+                        $materials = $record->materials()->orderBy('order_number')->get();
+
+                        $contentTypeLabel = fn($type) => match($type) {
                             'slide'   => 'Slide / PPT',
                             'video'   => 'Video',
                             'example' => 'Contoh Soal',
                             'text'    => 'Teks / Penjelasan',
-                        ])
-                        ->live(),
+                            default   => $type,
+                        };
 
-                    FileUpload::make('new_file')
-                        ->label('Upload File')
-                        ->disk('public')
-                        ->directory('learning-materials')
-                        ->visibility('public')
-                        ->maxFiles(1)
-                        ->acceptedFileTypes([
-                            'application/pdf',
-                            'application/vnd.ms-powerpoint',
-                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                            'video/mp4',
-                            'video/webm',
-                            'image/png',
-                            'image/jpeg',
-                            'image/webp',
-                        ])
-                        ->maxSize(10485760)
-                        ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Mendukung file besar hingga 10GB.')
-                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
+                        return [
+                            Section::make('Tambah Materi Baru')
+                                ->description('Isi form di bawah untuk menambahkan item materi ke modul ini.')
+                                ->schema([
+                                    TextInput::make('new_title')
+                                        ->label('Judul Materi')
+                                        ->placeholder('Contoh: Slide Pengantar Aljabar')
+                                        ->maxLength(255),
 
-                    TextInput::make('new_url')
-                        ->label('URL Eksternal')
-                        ->url()
-                        ->placeholder('https://...')
-                        ->helperText('Contoh: URL embed YouTube atau Google Slides.')
-                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
+                                    Select::make('new_content_type')
+                                        ->label('Tipe Konten')
+                                        ->native(false)
+                                        ->options([
+                                            'slide'   => 'Slide / PPT',
+                                            'video'   => 'Video',
+                                            'example' => 'Contoh Soal',
+                                            'text'    => 'Teks / Penjelasan',
+                                        ])
+                                        ->live(),
 
-                    Textarea::make('new_content')
-                        ->label('Konten')
-                        ->rows(6)
-                        ->placeholder('Tulis penjelasan materi atau contoh soal di sini...')
-                        ->visible(fn($get) => in_array($get('new_content_type'), ['text', 'example'])),
+                                    FileUpload::make('new_file')
+                                        ->label('Upload File')
+                                        ->disk('public')
+                                        ->directory('learning-materials')
+                                        ->visibility('public')
+                                        ->maxFiles(1)
+                                        ->acceptedFileTypes([
+                                            'application/pdf',
+                                            'application/vnd.ms-powerpoint',
+                                            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                                            'video/mp4',
+                                            'video/webm',
+                                            'image/png',
+                                            'image/jpeg',
+                                            'image/webp',
+                                        ])
+                                        ->maxSize(10485760)
+                                        ->helperText('PDF, PPT, PPTX, MP4, PNG, JPG. Mendukung file besar hingga 10GB.')
+                                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
 
-                    TextInput::make('new_order')
-                        ->label('Urutan')
-                        ->numeric()
-                        ->default($materials->count() + 1),
-                ]),
+                                    TextInput::make('new_url')
+                                        ->label('URL Eksternal')
+                                        ->url()
+                                        ->placeholder('https://...')
+                                        ->helperText('Contoh: URL embed YouTube atau Google Slides.')
+                                        ->visible(fn($get) => in_array($get('new_content_type'), ['slide', 'video'])),
 
-            // ── Daftar materi existing dengan tombol Edit & Hapus ──
-            Section::make('Materi yang Sudah Ada (' . $materials->count() . ' item)')
-                ->description('Klik Edit atau Hapus pada tiap item untuk mengelolanya.')
-                ->schema(
-                    $materials->isEmpty()
-                        ? [
-                            Placeholder::make('empty')
-                                ->label('')
-                                ->content('Belum ada materi. Tambahkan menggunakan form di atas.'),
-                          ]
-                        : $materials->map(fn($m) =>
-                            Placeholder::make('material_' . $m->id_material)
-                                ->label('')
-                                ->content(new HtmlString(
-                                    '<div class="flex items-center justify-between gap-3 py-1">'
-                                    . '<div class="flex-1">'
-                                    . '<span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">'
-                                    . "" . e($contentTypeLabel($m->content_type))
-                                    . '</span>'
-                                    . '<p class="text-sm font-medium text-gray-800 mt-0.5">' . e($m->title) . '</p>'
-                                    . '</div>'
-                               
-                                    . '</div>'
-                                ))
-                          )->toArray()
-                )
-                ->collapsible(),
-        ];
-    })
-    ->action(function ($record, array $data) {
-        if (empty($data['new_title']) || empty($data['new_content_type'])) {
-            Notification::make()->title('Judul dan tipe konten wajib diisi')->warning()->send();
-            return;
-        }
+                                    Textarea::make('new_content')
+                                        ->label('Konten')
+                                        ->rows(6)
+                                        ->placeholder('Tulis penjelasan materi atau contoh soal di sini...')
+                                        ->visible(fn($get) => in_array($get('new_content_type'), ['text', 'example'])),
 
-        $filePath = null;
-        if (!empty($data['new_file'])) {
-            $filePath = is_array($data['new_file'])
-                ? collect($data['new_file'])->first()
-                : $data['new_file'];
-        } elseif (!empty($data['new_url'])) {
-            $filePath = $data['new_url'];
-        }
+                                    TextInput::make('new_order')
+                                        ->label('Urutan')
+                                        ->numeric()
+                                        ->default($materials->count() + 1),
+                                ]),
 
-        LearningMaterial::create([
-            'id_module'    => $record->id_module,
-            'title'        => $data['new_title'],
-            'content_type' => $data['new_content_type'],
-            'content'      => $data['new_content'] ?? null,
-            'file_path'    => $filePath,
-            'order_number' => $data['new_order'] ?? ($record->materials()->count() + 1),
-        ]);
+                            Section::make('Materi yang Sudah Ada (' . $materials->count() . ' item)')
+                                ->description('Klik Edit atau Hapus pada tiap item untuk mengelolanya.')
+                                ->schema(
+                                    $materials->isEmpty()
+                                        ? [
+                                            Placeholder::make('empty')
+                                                ->label('')
+                                                ->content('Belum ada materi. Tambahkan menggunakan form di atas.'),
+                                          ]
+                                        : $materials->map(fn($m) =>
+                                            Placeholder::make('material_' . $m->id_material)
+                                                ->label('')
+                                                ->content(new HtmlString(
+                                                    '<div class="flex items-center justify-between gap-3 py-1">'
+                                                    . '<div class="flex-1">'
+                                                    . '<span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">'
+                                                    . e($contentTypeLabel($m->content_type))
+                                                    . '</span>'
+                                                    . '<p class="text-sm font-medium text-gray-800 mt-0.5">' . e($m->title) . '</p>'
+                                                    . '</div>'
+                                                    . '</div>'
+                                                ))
+                                          )->toArray()
+                                )
+                                ->collapsible(),
+                        ];
+                    })
+                    ->action(function ($record, array $data) {
+                        if (empty($data['new_title']) || empty($data['new_content_type'])) {
+                            Notification::make()->title('Judul dan tipe konten wajib diisi')->warning()->send();
+                            return;
+                        }
 
-        Notification::make()->title('Materi berhasil ditambahkan')->success()->send();
-    }),
+                        $filePath = null;
+                        if (!empty($data['new_file'])) {
+                            $filePath = is_array($data['new_file'])
+                                ? collect($data['new_file'])->first()
+                                : $data['new_file'];
+                        } elseif (!empty($data['new_url'])) {
+                            $filePath = $data['new_url'];
+                        }
 
-// ── Edit Material (action terpisah di baris tabel) ────────────────
-Action::make('edit_material')
-    ->label('Edit Materi')
-    ->icon('heroicon-o-pencil-square')
-    ->color('primary')
-    ->visible(fn($record) => $record->type === 'material')
-    ->slideOver()
-    ->form(function ($record) {
-        // Ambil materi pertama sebagai default, user pilih dari select
-        $materials = $record->materials()->orderBy('order_number')->get();
+                        LearningMaterial::create([
+                            'id_module'    => $record->id_module,
+                            'title'        => $data['new_title'],
+                            'content_type' => $data['new_content_type'],
+                            'content'      => $data['new_content'] ?? null,
+                            'file_path'    => $filePath,
+                            'order_number' => $data['new_order'] ?? ($record->materials()->count() + 1),
+                        ]);
 
-        if ($materials->isEmpty()) {
-            return [
-                Placeholder::make('no_material')
-                    ->label('')
-                    ->content('Belum ada materi untuk diedit.'),
-            ];
-        }
+                        Notification::make()->title('Materi berhasil ditambahkan')->success()->send();
+                    }),
 
-        return [
-           Select::make('material_id')
-    ->label('Pilih Materi yang Diedit')
-    ->native(false)
-    ->required()
-    ->live()
-    ->options(
-        $materials->mapWithKeys(fn($m) => [
-            $m->id_material => "#{$m->order_number} · {$m->title}"
-        ])
-    )
-    ->afterStateUpdated(function ($state, $set) {
-        if (!$state) return;
+                // ── Edit Material ─────────────────────────────────────────────
+                Action::make('edit_material')
+                    ->label('Edit Materi')
+                    ->icon('heroicon-o-pencil-square')
+                    ->color('primary')
+                    ->visible(fn($record) => $record->type === 'material')
+                    ->slideOver()
+                    ->form(function ($record) {
+                        $materials = $record->materials()->orderBy('order_number')->get();
 
-        $m = LearningMaterial::find($state);
-        if (!$m) return;
+                        if ($materials->isEmpty()) {
+                            return [
+                                Placeholder::make('no_material')
+                                    ->label('')
+                                    ->content('Belum ada materi untuk diedit.'),
+                            ];
+                        }
 
-        $set('edit_title', $m->title);
-        $set('edit_content_type', $m->content_type);
-        $set('edit_content', $m->content);
-        $set('edit_order', $m->order_number);
-        $set('edit_url',
-            $m->file_path && !str_starts_with($m->file_path, 'learning-materials/')
-                ? $m->file_path
-                : null
-        );
-    }),
-            TextInput::make('edit_title')
-                ->label('Judul Materi')
-                ->required()
-                ->maxLength(255)
-                ->visible(fn($get) => (bool) $get('material_id')),
+                        return [
+                            Select::make('material_id')
+                                ->label('Pilih Materi yang Diedit')
+                                ->native(false)
+                                ->required()
+                                ->live()
+                                ->options(
+                                    $materials->mapWithKeys(fn($m) => [
+                                        $m->id_material => "#{$m->order_number} · {$m->title}"
+                                    ])
+                                )
+                                ->afterStateUpdated(function ($state, $set) {
+                                    if (!$state) return;
+                                    $m = LearningMaterial::find($state);
+                                    if (!$m) return;
+                                    $set('edit_title', $m->title);
+                                    $set('edit_content_type', $m->content_type);
+                                    $set('edit_content', $m->content);
+                                    $set('edit_order', $m->order_number);
+                                    $set('edit_url',
+                                        $m->file_path && !str_starts_with($m->file_path, 'learning-materials/')
+                                            ? $m->file_path
+                                            : null
+                                    );
+                                }),
 
-            Select::make('edit_content_type')
-                ->label('Tipe Konten')
-                ->native(false)
-                ->required()
-                ->live()
-                ->options([
-                    'slide'   => 'Slide / PPT',
-                    'video'   => 'Video',
-                    'example' => 'Contoh Soal',
-                    'text'    => 'Teks / Penjelasan',
-                ])
-                ->visible(fn($get) => (bool) $get('material_id')),
+                            TextInput::make('edit_title')
+                                ->label('Judul Materi')
+                                ->required()
+                                ->maxLength(255)
+                                ->visible(fn($get) => (bool) $get('material_id')),
 
-            TextInput::make('edit_url')
-                ->label('URL Eksternal')
-                ->url()
-                ->placeholder('https://...')
-                ->helperText('Kosongkan jika tidak berubah.')
-                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['slide', 'video'])),
+                            Select::make('edit_content_type')
+                                ->label('Tipe Konten')
+                                ->native(false)
+                                ->required()
+                                ->live()
+                                ->options([
+                                    'slide'   => 'Slide / PPT',
+                                    'video'   => 'Video',
+                                    'example' => 'Contoh Soal',
+                                    'text'    => 'Teks / Penjelasan',
+                                ])
+                                ->visible(fn($get) => (bool) $get('material_id')),
 
-            Textarea::make('edit_content')
-                ->label('Konten')
-                ->rows(5)
-                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['text', 'example'])),
+                            TextInput::make('edit_url')
+                                ->label('URL Eksternal')
+                                ->url()
+                                ->placeholder('https://...')
+                                ->helperText('Kosongkan jika tidak berubah.')
+                                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['slide', 'video'])),
 
-            TextInput::make('edit_order')
-                ->label('Urutan')
-                ->numeric()
-                ->visible(fn($get) => (bool) $get('material_id')),
-        ];
-    })
-    ->action(function ($record, array $data) {
-        $material = LearningMaterial::find($data['material_id'] ?? null);
+                            Textarea::make('edit_content')
+                                ->label('Konten')
+                                ->rows(5)
+                                ->visible(fn($get) => $get('material_id') && in_array($get('edit_content_type'), ['text', 'example'])),
 
-        if (!$material) {
-            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
-            return;
-        }
+                            TextInput::make('edit_order')
+                                ->label('Urutan')
+                                ->numeric()
+                                ->visible(fn($get) => (bool) $get('material_id')),
+                        ];
+                    })
+                    ->action(function ($record, array $data) {
+                        $material = LearningMaterial::find($data['material_id'] ?? null);
 
-        $updateData = [
-            'title'        => $data['edit_title'],
-            'content_type' => $data['edit_content_type'],
-            'content'      => $data['edit_content'] ?? null,
-            'order_number' => $data['edit_order'] ?? $material->order_number,
-        ];
+                        if (!$material) {
+                            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
+                            return;
+                        }
 
-        if (!empty($data['edit_url'])) {
-            $updateData['file_path'] = $data['edit_url'];
-        }
+                        $updateData = [
+                            'title'        => $data['edit_title'],
+                            'content_type' => $data['edit_content_type'],
+                            'content'      => $data['edit_content'] ?? null,
+                            'order_number' => $data['edit_order'] ?? $material->order_number,
+                        ];
 
-        $material->update($updateData);
+                        if (!empty($data['edit_url'])) {
+                            $updateData['file_path'] = $data['edit_url'];
+                        }
 
-        Notification::make()->title('Materi berhasil diperbarui')->success()->send();
-    }),
+                        $material->update($updateData);
+                        Notification::make()->title('Materi berhasil diperbarui')->success()->send();
+                    }),
 
-// ── Hapus Material (action terpisah di baris tabel) ───────────────
-Action::make('delete_material')
-    ->label('Hapus Materi')
-    ->icon('heroicon-o-trash')
-    ->color('danger')
-    ->visible(fn($record) => $record->type === 'material')
-    ->requiresConfirmation()
-    ->modalHeading('Hapus Materi')
-    ->modalDescription(fn($record) => 'Pilih materi yang ingin dihapus dari modul "' . $record->title . '".')
-    ->form(function ($record) {
-        $materials = $record->materials()->orderBy('order_number')->get();
+                // ── Hapus Material ────────────────────────────────────────────
+                Action::make('delete_material')
+                    ->label('Hapus Materi')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->visible(fn($record) => $record->type === 'material')
+                    ->requiresConfirmation()
+                    ->modalHeading('Hapus Materi')
+                    ->modalDescription(fn($record) => 'Pilih materi yang ingin dihapus dari modul "' . $record->title . '".')
+                    ->form(function ($record) {
+                        $materials = $record->materials()->orderBy('order_number')->get();
 
-        if ($materials->isEmpty()) {
-            return [
-                Placeholder::make('no_material')
-                    ->label('')
-                    ->content('Tidak ada materi untuk dihapus.'),
-            ];
-        }
+                        if ($materials->isEmpty()) {
+                            return [
+                                Placeholder::make('no_material')
+                                    ->label('')
+                                    ->content('Tidak ada materi untuk dihapus.'),
+                            ];
+                        }
 
-        return [
-            Select::make('material_id')
-                ->label('Pilih Materi yang Dihapus')
-                ->native(false)
-                ->required()
-                ->options(
-                    $materials->mapWithKeys(fn($m) => [
-                        $m->id_material => "#{$m->order_number} · {$m->title}"
-                    ])
-                ),
-        ];
-    })
-    ->action(function ($record, array $data) {
-        $material = LearningMaterial::find($data['material_id'] ?? null);
+                        return [
+                            Select::make('material_id')
+                                ->label('Pilih Materi yang Dihapus')
+                                ->native(false)
+                                ->required()
+                                ->options(
+                                    $materials->mapWithKeys(fn($m) => [
+                                        $m->id_material => "#{$m->order_number} · {$m->title}"
+                                    ])
+                                ),
+                        ];
+                    })
+                    ->action(function ($record, array $data) {
+                        $material = LearningMaterial::find($data['material_id'] ?? null);
 
-        if (!$material) {
-            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
-            return;
-        }
+                        if (!$material) {
+                            Notification::make()->title('Materi tidak ditemukan')->danger()->send();
+                            return;
+                        }
 
-        $title = $material->title;
-        $material->delete();
+                        $title = $material->title;
+                        $material->delete();
 
-        // Re-order sisa materi
-        $record->materials()->orderBy('order_number')->each(function ($m, $i) {
-            $m->update(['order_number' => $i + 1]);
-        });
+                        $record->materials()->orderBy('order_number')->each(function ($m, $i) {
+                            $m->update(['order_number' => $i + 1]);
+                        });
 
-        Notification::make()->title("Materi \"{$title}\" berhasil dihapus")->success()->send();
-    }),
+                        Notification::make()->title("Materi \"{$title}\" berhasil dihapus")->success()->send();
+                    }),
 
-                // ── Edit Modul ─────────────────────────────────────────────────
+                // ── Edit Modul ────────────────────────────────────────────────
                 Action::make('edit_module')
                     ->label('Edit')
                     ->icon('heroicon-o-pencil')
@@ -856,7 +1289,7 @@ Action::make('delete_material')
                         Notification::make()->title('Modul diperbarui')->success()->send();
                     }),
 
-                // ── Naik / Turun urutan ────────────────────────────────────────
+                // ── Naik / Turun urutan ───────────────────────────────────────
                 Action::make('move_up')
                     ->label('')
                     ->icon('heroicon-o-arrow-up')
