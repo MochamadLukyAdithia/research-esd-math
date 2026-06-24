@@ -777,6 +777,71 @@ class LearningPathController extends Controller
             ->where('id_module', $prevRequired->id_module)->where('status', 'completed')->exists();
         if (!$done) abort(403, 'Selesaikan langkah sebelumnya terlebih dahulu.');
     }
+    /**
+ * Normalisasi string jawaban matematika supaya variasi penulisan yang
+ * setara dianggap sama saat dicocokkan, contoh:
+ *   - "5\sqrt2", "5\sqrt{2}", "5√2", "5 sqrt 2"  -> dianggap sama
+ *   - "4 x 10^5", "4×10^5", "4*10^5", "4 X 10^5" -> dianggap sama
+ *   - "2^{3}", "2^3"                              -> dianggap sama
+ *   - "1,5" (koma desimal ala Indonesia) -> disamakan dengan "1.5"
+ *   - spasi berlebih / di awal-akhir dihapus, huruf disamakan jadi lowercase
+ *
+ * PENTING: ini normalisasi TEKS, bukan evaluasi ekspresi matematika.
+ * "5√2" dan "2√5" tetap dianggap BEDA (memang nilainya beda),
+ * tapi "5√2" dan "5 × √2" dianggap SAMA (cuma beda cara tulis).
+ */
+private function normalizeMathAnswer(string $raw): string
+{
+    $s = trim($raw);
+    $s = mb_strtolower($s, 'UTF-8');
+
+    // 1. Hilangkan semua whitespace
+    $s = preg_replace('/\s+/u', '', $s);
+
+    // 2. Normalisasi notasi akar -> bentuk seragam sqrt(x)
+    $s = preg_replace('/\\\\?sqrt\{([^}]+)\}/u', 'sqrt($1)', $s);
+    $s = preg_replace('/√\{([^}]+)\}/u', 'sqrt($1)', $s);
+    $s = preg_replace('/(\\\\sqrt|√)(\d+(?:\.\d+)?)/u', 'sqrt($2)', $s);
+    $s = preg_replace('/sqrt(\d+(?:\.\d+)?)/u', 'sqrt($1)', $s);
+
+    // 3. Normalisasi tanda kali -> '*'
+    //    (huruf x/X dianggap tanda kali HANYA jika diapit angka/kurung,
+    //     supaya tidak menimpa "x" sebagai variabel di soal aljabar)
+    $s = str_replace(['\\times', '\\cdot', '×', '·'], '*', $s);
+    $s = preg_replace('/(?<=[0-9\)])x(?=[0-9\(])/u', '*', $s);
+
+    // 4. Normalisasi pangkat -> bentuk seragam
+    $s = preg_replace('/\^\{([^}]+)\}/u', '^($1)', $s);
+    $s = preg_replace('/\^\((\d+(?:\.\d+)?)\)/u', '^$1', $s);
+
+    // 5. Koma desimal ala Indonesia -> titik
+    $s = preg_replace('/(\d),(\d)/u', '$1.$2', $s);
+
+    // 6. Rapikan trailing zero desimal, mis. "10.0" -> "10"
+    $s = preg_replace('/(\.\d*?)0+(?=\D|$)/u', '$1', $s);
+    $s = preg_replace('/\.(?=\D|$)/u', '', $s);
+
+    return $s;
+}
+
+/**
+ * Bandingkan jawaban user dengan satu/beberapa kunci jawaban valid.
+ * Kunci jawaban bisa dipisah '|' di field correct_answer untuk
+ * menampung bentuk yang berbeda secara matematis tapi sama-sama benar,
+ * mis. "1/2|0.5".
+ */
+private function matchesAnyCorrectAnswer(string $userAnswer, string $correctAnswerField): bool
+{
+    $userNormalized = $this->normalizeMathAnswer($userAnswer);
+
+    foreach (explode('|', $correctAnswerField) as $alt) {
+        if ($this->normalizeMathAnswer($alt) === $userNormalized) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
     /**
      * Resolve jawaban dan teks tampilan untuk semua tipe soal.
@@ -836,18 +901,10 @@ class LearningPathController extends Controller
 
         }
 
-        // ── Isian (teks / angka / regex) ──────────────────────────────────────
-        $correctAnswer = trim(strtolower($question->correct_answer ?? ''));
-        $userAnswer    = trim(strtolower((string) $submitted));
+                // ── Isian (teks / angka / notasi matematika) ───────────────────────────
+        $userAnswer = (string) $submitted;
+        $isCorrect  = $this->matchesAnyCorrectAnswer($userAnswer, $question->correct_answer ?? '');
 
-        if (is_numeric($correctAnswer)) {
-            $pattern = '/\b' . preg_quote($correctAnswer, '/') . '(?:[.,]0+)?(?:\s*\w*)?\b/i';
-        } else {
-            $pattern = '/\b' . preg_quote($correctAnswer, '/') . '\b/i';
-        }
-
-        $isCorrect = preg_match($pattern, $userAnswer) === 1;
-
-        return [$isCorrect, (string) $submitted];
+        return [$isCorrect, $userAnswer];
     }
 }
