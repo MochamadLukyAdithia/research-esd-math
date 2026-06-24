@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { router } from '@inertiajs/react';
 import {
     CheckCircle, XCircle, ChevronLeft, ChevronRight, Send,
@@ -28,6 +28,102 @@ interface Props {
         previous_answers?: AnswerResult[];
     };
     nextModule: AdjacentModule | null;
+}
+
+// ─── Math notation renderer ─────────────────────────────────────────────────
+//
+// Parser ringan tanpa library eksternal untuk merender notasi matematika
+// yang ditulis dengan sintaks "LaTeX-ish" jadi tampilan asli:
+//   \sqrt{50}, \sqrt50, √50   -> akar (radical) asli
+//   2^3, 2^{10}               -> pangkat (superscript) asli
+//   \times, \cdot             -> ×
+//
+// Cukup untuk notasi soal sekolah; bukan parser LaTeX penuh.
+
+type MathToken =
+    | { type: 'text'; value: string }
+    | { type: 'sqrt'; value: string }
+    | { type: 'pow'; base: string; exp: string };
+
+function tokenizeMath(raw: string): MathToken[] {
+    if (!raw) return [];
+
+    const s = raw
+        .replace(/\\times/g, '×')
+        .replace(/\\cdot/g, '×')
+        .replace(/\\pm/g, '±');
+
+    const tokens: MathToken[] = [];
+
+    // Urutan alternation penting: sqrt dicek dulu supaya "\sqrt{2^3}"
+    // tidak salah dipecah oleh pola pow terlebih dahulu.
+    const pattern =
+        /\\?sqrt\{([^{}]+)\}|\\?sqrt(\d+(?:\.\d+)?)|√\{([^{}]+)\}|√(\d+(?:\.\d+)?)|([a-zA-Z0-9.]+)\^\{([^{}]+)\}|([a-zA-Z0-9.]+)\^(\d+(?:\.\d+)?)/g;
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(s)) !== null) {
+        const [whole, sqBrace, sqPlain, sqSymBrace, sqSymPlain, powBaseA, powExpA, powBaseB, powExpB] = match;
+
+        if (match.index > lastIndex) {
+            tokens.push({ type: 'text', value: s.slice(lastIndex, match.index) });
+        }
+
+        if (sqBrace !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqBrace });
+        } else if (sqPlain !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqPlain });
+        } else if (sqSymBrace !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqSymBrace });
+        } else if (sqSymPlain !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqSymPlain });
+        } else if (powBaseA !== undefined) {
+            tokens.push({ type: 'pow', base: powBaseA, exp: powExpA });
+        } else if (powBaseB !== undefined) {
+            tokens.push({ type: 'pow', base: powBaseB, exp: powExpB });
+        }
+
+        lastIndex = match.index + whole.length;
+    }
+
+    if (lastIndex < s.length) {
+        tokens.push({ type: 'text', value: s.slice(lastIndex) });
+    }
+
+    return tokens;
+}
+
+function renderMathToken(token: MathToken, key: number) {
+    switch (token.type) {
+        case 'sqrt':
+            return (
+                <span key={key} className="inline-flex items-start whitespace-nowrap">
+                    <span className="leading-none">√</span>
+                    <span className="border-t border-current pt-px ml-px">{token.value}</span>
+                </span>
+            );
+        case 'pow':
+            return (
+                <span key={key} className="whitespace-nowrap">
+                    {token.base}
+                    <sup className="text-[0.7em]">{token.exp}</sup>
+                </span>
+            );
+        case 'text':
+        default:
+            return <Fragment key={key}>{token.value}</Fragment>;
+    }
+}
+
+/**
+ * Render satu string yang mungkin berisi notasi matematika.
+ *   <MathText text="5\sqrt2" />        -> 5√2 (dengan radical asli)
+ *   <MathText text="2^3\times2^2" />   -> 2³ × 2²
+ */
+function MathText({ text }: { text: string }) {
+    const tokens = tokenizeMath(text ?? '');
+    return <>{tokens.map((t, i) => renderMathToken(t, i))}</>;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -60,11 +156,12 @@ function OptionContent({ opt }: { opt: QuestionOption }) {
             />
         );
     }
-    return <span>{opt.option_text}</span>;
+    return <MathText text={opt.option_text ?? ''} />;
 }
 
 
-/** Render teks jawaban — jika diawali __img__ tampilkan sebagai gambar */
+/** Render teks jawaban — jika diawali __img__ tampilkan sebagai gambar,
+ *  selain itu render lewat MathText supaya notasi matematika tampil rapi */
 function AnswerContent({ text }: { text: string }) {
     // Bisa berisi beberapa jawaban (PGK) dipisah |||
     const parts = text.split('|||');
@@ -80,7 +177,7 @@ function AnswerContent({ text }: { text: string }) {
                         className="h-16 w-16 object-cover rounded-lg border border-gray-200"
                     />
                 ) : (
-                    <span key={i}>{part}</span>
+                    <span key={i}><MathText text={part} /></span>
                 )
             )}
         </span>
@@ -356,7 +453,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     <p className="text-[10px] text-gray-400 mb-1 font-medium">{currentQuestion.title}</p>
                 )}
                 <p className="text-sm sm:text-base text-gray-800 leading-relaxed mb-4 sm:mb-5">
-                    {currentQuestion.question}
+                    <MathText text={currentQuestion.question} />
                 </p>
 
                 {/* ── Pilihan ganda biasa (1 jawaban) ── */}
