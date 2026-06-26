@@ -5,6 +5,8 @@ import {
     WifiOff, CloudUpload, RotateCcw, Trophy
 } from 'lucide-react';
 import { useOffline } from '@/hooks/useOffline';
+import { useTabFocusGuard } from '@/hooks/useFocusTabGuard';
+import TabFocusWarningModal from '@/Components/ModalTabFocus';
 import type { Question } from '@/Pages/LearningPath/Module';
 
 interface AdjacentModule { id_module: number; type: string; title: string }
@@ -94,20 +96,6 @@ function tokenizeMath(raw: string): MathToken[] {
     return tokens;
 }
 
-/**
- * Radical (akar) yang digambar manual dengan SVG + border, bukan mengandalkan
- * karakter Unicode "√" yang bentuknya beda-beda tergantung font dan susah
- * disambung rapi ke garis atas (overline) lewat CSS biasa.
- *
- * Struktur: [kaki centang akar (SVG)] + [garis atas menyatu dengan isi akar]
- * Hasilnya simbol akar yang proporsional ke ukuran teks & selalu rapat,
- * konsisten di semua ukuran font.
- *
- * `inline` (bukan inline-flex) dipakai supaya elemen ini ikut mengalir
- * normal di antara teks sekitarnya saat baris di-wrap oleh browser —
- * inline-flex/inline-block punya kebiasaan "loncat baris" sebagai satu
- * unit yang membuatnya terlihat terpisah dari kalimat di sekitarnya.
- */
 function Radical({ value }: { value: string }) {
     return (
         <span className="inline whitespace-nowrap">
@@ -138,11 +126,6 @@ function renderMathToken(token: MathToken, key: number) {
         case 'sqrt':
             return <Radical key={key} value={token.value} />;
         case 'pow':
-            // `inline` + `whitespace-nowrap` (bukan span block-ish) supaya
-            // "2" dan "³" tidak pernah terpisah baris, TAPI token ini tetap
-            // menyatu dengan teks sebelum/sesudahnya — tidak loncat ke
-            // "kolom" sendiri seperti versi lama yang memakai inline-flex
-            // pada elemen pembungkus.
             return (
                 <span key={key} className="whitespace-nowrap">
                     {token.base}
@@ -155,16 +138,6 @@ function renderMathToken(token: MathToken, key: number) {
     }
 }
 
-/**
- * Render satu string yang mungkin berisi notasi matematika.
- *   <MathText text="5\sqrt2" />        -> 5√2 (dengan radical asli)
- *   <MathText text="2^3\times2^2" />   -> 2³ × 2²
- *
- * Dibungkus dalam satu <span> (bukan Fragment) supaya seluruh rangkaian
- * token ikut satu konteks inline yang sama dan mengalir sebagai satu
- * kalimat utuh, alih-alih tiap token dianggap node terpisah yang bisa
- * di-wrap browser secara tidak terduga.
- */
 function MathText({ text }: { text: string }) {
     const tokens = tokenizeMath(text ?? '');
     return <span>{tokens.map((t, i) => renderMathToken(t, i))}</span>;
@@ -172,34 +145,23 @@ function MathText({ text }: { text: string }) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Untuk pilihan_ganda_kompleks, jawaban disimpan sebagai string[]
- * (array of id_question_option sebagai string).
- * Untuk pilihan_ganda dan isian, disimpan sebagai string biasa.
- */
 type AnswerValue = string | string[];
 
 function isCompleks(q: Question) {
     return q.question_type === 'pilihan_ganda_kompleks';
 }
-// Tambahkan interface kecil ini di atas OptionContent
+
 interface QuestionOption {
     id_question_option: number;
     option_text:        string | null;
     option_image?:      string | null;
 }
 
-// PreTestView.tsx — OptionContent, src-nya langsung pakai nilai dari backend
-//
-// Dibungkus dalam <span> block-level konteksnya tetap inline-block agar opsi
-// teks panjang yang mengandung notasi pangkat/akar tetap mengalir sebagai
-// satu paragraf yang sama, bukan terpecah jadi "kolom kiri" (teks) dan
-// "kolom kanan" (notasi) seperti sebelumnya.
 function OptionContent({ opt }: { opt: QuestionOption }) {
     if (opt.option_image) {
         return (
             <img
-                src={opt.option_image}  // ← tidak perlu /storage/ prefix lagi
+                src={opt.option_image}
                 alt={opt.option_text ?? 'Opsi'}
                 className="max-h-28 max-w-full object-contain rounded-lg"
             />
@@ -212,12 +174,7 @@ function OptionContent({ opt }: { opt: QuestionOption }) {
     );
 }
 
-
-/** Render teks jawaban — jika diawali __img__ tampilkan sebagai gambar,
- *  selain itu render lewat MathText supaya notasi matematika tampil rapi.
- *  Pemisah "|||" dibuang dari teks dan tidak pernah ditampilkan ke user. */
 function AnswerContent({ text }: { text: string }) {
-    // Bisa berisi beberapa jawaban (PGK) dipisah |||
     const parts = (text ?? '')
         .split('|||')
         .map(p => p.trim())
@@ -240,7 +197,6 @@ function AnswerContent({ text }: { text: string }) {
         </span>
     );
 }
-// ─── Score display ───────────────────────────────────────────────────────────
 
 function ScoreRing({ score }: { score: number }) {
     const color = score >= 70 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-500';
@@ -267,21 +223,21 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [wasQueued,    setWasQueued]    = useState(false);
 
+    // Deteksi keluar/pindah tab selama tes berlangsung. Hanya aktif selama
+    // soal belum disubmit — begitu submitted true, halaman hasil tidak lagi
+    // butuh deteksi ini, jadi dimatikan supaya tidak ada warning palsu.
+    const { violationCount, showWarning, dismissWarning } = useTabFocusGuard({
+        enabled: !submitted,
+    });
+
     const currentQuestion = questions[currentIndex];
     const answeredCount   = Object.keys(answers).length;
     const allAnswered     = answeredCount === questions.length;
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
-
-    /** Pilihan ganda biasa & isian: simpan satu nilai */
     const handleSingleAnswer = (questionId: number, value: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: value }));
     };
 
-    /**
-     * Pilihan ganda kompleks: toggle item dalam array.
-     * Jika optionId sudah ada → hapus, jika belum → tambahkan.
-     */
     const handleMultiAnswer = (questionId: number, optionId: string) => {
         setAnswers(prev => {
             const current = (prev[questionId] as string[] | undefined) ?? [];
@@ -289,7 +245,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 ? current.filter(id => id !== optionId)
                 : [...current, optionId];
 
-            // Hapus entry jika array kosong (agar answeredCount akurat)
             if (updated.length === 0) {
                 const { [questionId]: _, ...rest } = prev;
                 return rest;
@@ -306,7 +261,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 action_type: 'answer_question',
                 url:    route('learningpath.module.submit-answer', { pathId, moduleId: module.id_module }),
                 method: 'POST',
-                payload: { answers },
+                payload: { answers, tab_switch_count: violationCount },
                 onSuccess: (data: any) => {
                     setScore(data.score ?? 0);
                     setResults(data.results ?? []);
@@ -332,7 +287,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     const testLabel = module.type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
 
-    // ── 1. Queued offline ─────────────────────────────────────────────────────
     if (submitted && wasQueued) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8">
@@ -359,7 +313,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 2. Hasil submit (online, score ada) ───────────────────────────────────
     if (submitted && score !== null) {
         const correctCount = results.filter(r => r.is_correct).length;
         const totalCount   = results.length || questions.length;
@@ -367,7 +320,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         return (
             <div className="max-w-lg mx-auto px-4 py-6 sm:py-10">
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    {/* Header skor */}
                     <div className={`px-6 py-8 text-center ${score >= 70 ? 'bg-green-50' : 'bg-orange-50'}`}>
                         <ScoreRing score={score} />
                         <h2 className="text-lg font-bold text-gray-900 mb-1">Hasil {testLabel}</h2>
@@ -385,7 +337,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         )}
                     </div>
 
-                    {/* Review jawaban */}
                     {results.length > 0 && (
                         <div className="px-4 sm:px-6 py-4 space-y-2 border-t border-gray-100">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Review Jawaban</p>
@@ -419,7 +370,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         </div>
                     )}
 
-                    {/* CTA */}
                     {nextModule && (
                         <div className="px-4 sm:px-6 py-4 border-t border-gray-100">
                             <button onClick={goToNext}
@@ -433,7 +383,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 3. Sudah pernah submit, tapi score null ───────────────────────────────
     if (submitted && score === null) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8 text-center">
@@ -456,10 +405,12 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     if (!currentQuestion) return null;
 
-    // ── 4. Form soal ──────────────────────────────────────────────────────────
     return (
         <div className="max-w-lg mx-auto px-3 sm:px-4 py-4 sm:py-8">
-            {/* Banner offline */}
+            {showWarning && (
+                <TabFocusWarningModal violationCount={violationCount} onClose={dismissWarning} />
+            )}
+
             {!isOnline && (
                 <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 mb-4 text-xs text-orange-700">
                     <WifiOff size={12} className="shrink-0" />
@@ -467,7 +418,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 </div>
             )}
 
-            {/* Progress dots + counter */}
             <div className="mb-4 sm:mb-6">
                 <div className="flex justify-between text-xs text-gray-400 mb-2">
                     <span className="font-medium">Soal {currentIndex + 1} / {questions.length}</span>
@@ -475,7 +425,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         {answeredCount} dijawab
                     </span>
                 </div>
-                {/* Scrollable dot bar */}
                 <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                     {questions.map((q, i) => (
                         <button
@@ -494,9 +443,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 </div>
             </div>
 
-            {/* Kartu soal */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 mb-4 shadow-sm">
-                {/* Gambar soal */}
                 {currentQuestion.question_images?.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                         {currentQuestion.question_images.map((img, i) => (
@@ -513,7 +460,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     <MathText text={currentQuestion.question} />
                 </p>
 
-                {/* ── Pilihan ganda biasa (1 jawaban) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda' && currentQuestion.options && (
     <div className="space-y-2">
         {currentQuestion.options.map(opt => {
@@ -528,7 +474,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                             : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
                     }`}
                 >
-                    {/* ← ganti opt.option_text dengan ini */}
                     <OptionContent opt={opt} />
                 </button>
             );
@@ -536,10 +481,8 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
     </div>
 )}
 
-                {/* ── Pilihan ganda kompleks (bisa pilih lebih dari 1) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda_kompleks' && currentQuestion.options && (
                     <div className="space-y-2">
-                        {/* Label petunjuk */}
                         <p className="text-[11px] text-primary bg-primary/8 rounded-lg px-3 py-1.5 mb-3 font-medium">
                             Pilih semua jawaban yang benar (bisa lebih dari satu)
                         </p>
@@ -556,7 +499,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
             : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
     }`}
 >
-    {/* Checkbox visual */}
     <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors mt-0.5 ${
         isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'
     }`}>
@@ -566,14 +508,12 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
             </svg>
         )}
     </span>
-    {/* ← ganti opt.option_text dengan ini */}
     <span className="flex-1 min-w-0">
         <OptionContent opt={opt} />
     </span>
 </button>
                             );
                         })}
-                        {/* Counter pilihan terpilih */}
                         {(() => {
                             const count = ((answers[currentQuestion.id_question] as string[] | undefined) ?? []).length;
                             return count > 0 ? (
@@ -585,7 +525,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     </div>
                 )}
 
-                {/* ── Isian ── */}
                 {currentQuestion.question_type === 'isian' && (
                     <input
                         type="text"
@@ -599,7 +538,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 <p className="text-[10px] text-gray-400 mt-3 text-right">{currentQuestion.points} poin</p>
             </div>
 
-            {/* Navigasi */}
             <div className="flex items-center justify-between gap-2">
                 <button
                     onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
@@ -635,7 +573,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 )}
             </div>
 
-            {/* Hint semua sudah dijawab */}
             {allAnswered && currentIndex < questions.length - 1 && (
                 <p className="text-center text-xs text-green-600 mt-3 font-medium">
                     Semua soal sudah dijawab! Geser ke soal terakhir untuk submit.

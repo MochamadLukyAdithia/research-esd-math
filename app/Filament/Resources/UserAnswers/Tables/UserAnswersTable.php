@@ -67,7 +67,13 @@ class UserAnswersTable
                     ->trueColor('success')
                     ->falseColor('danger')
                     ->sortable(),
+                
 
+
+                TextColumn::make('tab_switch_count')
+                    ->label('Jumlah Tab Switch')
+                    ->numeric()
+                    ->sortable(),
 
                 TextColumn::make('answered_at')
                     ->label('Dijawab')

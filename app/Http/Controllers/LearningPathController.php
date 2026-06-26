@@ -325,7 +325,8 @@ class LearningPathController extends Controller
 
     public function submitAnswer(Request $request, int $pathId, int $moduleId)
     {
-        $request->validate(['answers' => 'required|array']);
+        $request->validate(['answers' => 'required|array', 
+          'tab_switch_count' => 'nullable|integer|min:0',]);
 
         $module = LearningPathModule::where('id_learning_path', $pathId)->findOrFail($moduleId);
         $userId = Auth::id();
@@ -353,6 +354,7 @@ class LearningPathController extends Controller
                     'answer'      => $answerText,
                     'is_correct'  => $isCorrect,
                     'answered_at' => now(),
+                    'tab_switch_count' => (int) $request->input('tab_switch_count', 0),
                 ]);
 
                 if ($isCorrect) {
