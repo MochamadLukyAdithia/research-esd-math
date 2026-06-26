@@ -94,20 +94,59 @@ function tokenizeMath(raw: string): MathToken[] {
     return tokens;
 }
 
+/**
+ * Radical (akar) yang digambar manual dengan SVG + border, bukan mengandalkan
+ * karakter Unicode "√" yang bentuknya beda-beda tergantung font dan susah
+ * disambung rapi ke garis atas (overline) lewat CSS biasa.
+ *
+ * Struktur: [kaki centang akar (SVG)] + [garis atas menyatu dengan isi akar]
+ * Hasilnya simbol akar yang proporsional ke ukuran teks & selalu rapat,
+ * konsisten di semua ukuran font.
+ *
+ * `inline` (bukan inline-flex) dipakai supaya elemen ini ikut mengalir
+ * normal di antara teks sekitarnya saat baris di-wrap oleh browser —
+ * inline-flex/inline-block punya kebiasaan "loncat baris" sebagai satu
+ * unit yang membuatnya terlihat terpisah dari kalimat di sekitarnya.
+ */
+function Radical({ value }: { value: string }) {
+    return (
+        <span className="inline whitespace-nowrap">
+            <svg
+                viewBox="0 0 12 14"
+                className="inline-block w-[0.55em] h-[1.05em] -mr-px -mb-[0.05em] shrink-0 align-baseline"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+            >
+                <path
+                    d="M0 8.5 L2.3 11 L5 1 L12 1"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.1"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+            <span className="border-t-[1.1px] border-current pt-0 leading-[1.05]">
+                {value}
+            </span>
+        </span>
+    );
+}
+
 function renderMathToken(token: MathToken, key: number) {
     switch (token.type) {
         case 'sqrt':
-            return (
-                <span key={key} className="inline-flex items-start whitespace-nowrap">
-                    <span className="leading-none">√</span>
-                    <span className="border-t border-current pt-px ml-px">{token.value}</span>
-                </span>
-            );
+            return <Radical key={key} value={token.value} />;
         case 'pow':
+            // `inline` + `whitespace-nowrap` (bukan span block-ish) supaya
+            // "2" dan "³" tidak pernah terpisah baris, TAPI token ini tetap
+            // menyatu dengan teks sebelum/sesudahnya — tidak loncat ke
+            // "kolom" sendiri seperti versi lama yang memakai inline-flex
+            // pada elemen pembungkus.
             return (
                 <span key={key} className="whitespace-nowrap">
                     {token.base}
-                    <sup className="text-[0.7em]">{token.exp}</sup>
+                    <sup className="text-[0.7em] leading-none">{token.exp}</sup>
                 </span>
             );
         case 'text':
@@ -120,10 +159,15 @@ function renderMathToken(token: MathToken, key: number) {
  * Render satu string yang mungkin berisi notasi matematika.
  *   <MathText text="5\sqrt2" />        -> 5√2 (dengan radical asli)
  *   <MathText text="2^3\times2^2" />   -> 2³ × 2²
+ *
+ * Dibungkus dalam satu <span> (bukan Fragment) supaya seluruh rangkaian
+ * token ikut satu konteks inline yang sama dan mengalir sebagai satu
+ * kalimat utuh, alih-alih tiap token dianggap node terpisah yang bisa
+ * di-wrap browser secara tidak terduga.
  */
 function MathText({ text }: { text: string }) {
     const tokens = tokenizeMath(text ?? '');
-    return <>{tokens.map((t, i) => renderMathToken(t, i))}</>;
+    return <span>{tokens.map((t, i) => renderMathToken(t, i))}</span>;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -146,6 +190,11 @@ interface QuestionOption {
 }
 
 // PreTestView.tsx — OptionContent, src-nya langsung pakai nilai dari backend
+//
+// Dibungkus dalam <span> block-level konteksnya tetap inline-block agar opsi
+// teks panjang yang mengandung notasi pangkat/akar tetap mengalir sebagai
+// satu paragraf yang sama, bukan terpecah jadi "kolom kiri" (teks) dan
+// "kolom kanan" (notasi) seperti sebelumnya.
 function OptionContent({ opt }: { opt: QuestionOption }) {
     if (opt.option_image) {
         return (
@@ -156,15 +205,23 @@ function OptionContent({ opt }: { opt: QuestionOption }) {
             />
         );
     }
-    return <MathText text={opt.option_text ?? ''} />;
+    return (
+        <span className="inline">
+            <MathText text={opt.option_text ?? ''} />
+        </span>
+    );
 }
 
 
 /** Render teks jawaban — jika diawali __img__ tampilkan sebagai gambar,
- *  selain itu render lewat MathText supaya notasi matematika tampil rapi */
+ *  selain itu render lewat MathText supaya notasi matematika tampil rapi.
+ *  Pemisah "|||" dibuang dari teks dan tidak pernah ditampilkan ke user. */
 function AnswerContent({ text }: { text: string }) {
     // Bisa berisi beberapa jawaban (PGK) dipisah |||
-    const parts = text.split('|||');
+    const parts = (text ?? '')
+        .split('|||')
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
 
     return (
         <span className="flex flex-wrap gap-2 items-center">
@@ -493,14 +550,14 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                                 <button
     key={opt.id_question_option}
     onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
-    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-center gap-3 ${
+    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-start gap-3 ${
         isSelected
             ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
             : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
     }`}
 >
     {/* Checkbox visual */}
-    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
+    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors mt-0.5 ${
         isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'
     }`}>
         {isSelected && (
@@ -510,7 +567,9 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         )}
     </span>
     {/* ← ganti opt.option_text dengan ini */}
-    <OptionContent opt={opt} />
+    <span className="flex-1 min-w-0">
+        <OptionContent opt={opt} />
+    </span>
 </button>
                             );
                         })}
