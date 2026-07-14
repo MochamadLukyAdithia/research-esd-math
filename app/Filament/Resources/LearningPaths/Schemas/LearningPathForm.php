@@ -48,6 +48,7 @@ class LearningPathForm
                                     11 => 'Kelas 11 (SMA)',
                                     12 => 'Kelas 12 (SMA)',
                                     13 => 'Mahasiswa',
+                                    14 => 'Guru / Umum',
                                     
                                 ])
                                 ->native(false),
