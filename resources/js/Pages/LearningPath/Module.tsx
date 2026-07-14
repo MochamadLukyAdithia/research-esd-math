@@ -18,7 +18,11 @@ export interface Question {
     question_type: 'pilihan_ganda' | 'pilihan_ganda_kompleks' | 'isian';
     points: number;
     question_images: string[];
-    options?: { id_question_option: number; option_text: string }[] | null;
+   options?: {
+    id_question_option: number;
+    option_text:        string | null;   // ← nullable
+    option_image?:      string | null;   // ← tambah ini
+}[] | null;
 }
 
 export interface Material {

@@ -15,6 +15,7 @@ class UserAnswer extends Model
         'answer',
         'is_correct',
         'answered_at',
+        'tab_switch_count',
     ];
 
     protected $casts = [

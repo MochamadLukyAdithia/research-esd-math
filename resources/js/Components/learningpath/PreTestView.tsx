@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { router } from '@inertiajs/react';
 import {
     CheckCircle, XCircle, ChevronLeft, ChevronRight, Send,
     WifiOff, CloudUpload, RotateCcw, Trophy
 } from 'lucide-react';
 import { useOffline } from '@/hooks/useOffline';
+import { useTabFocusGuard } from '@/hooks/useFocusTabGuard';
+import TabFocusWarningModal from '@/Components/ModalTabFocus';
 import type { Question } from '@/Pages/LearningPath/Module';
 
 interface AdjacentModule { id_module: number; type: string; title: string }
@@ -30,20 +32,171 @@ interface Props {
     nextModule: AdjacentModule | null;
 }
 
+// ─── Math notation renderer ─────────────────────────────────────────────────
+//
+// Parser ringan tanpa library eksternal untuk merender notasi matematika
+// yang ditulis dengan sintaks "LaTeX-ish" jadi tampilan asli:
+//   \sqrt{50}, \sqrt50, √50   -> akar (radical) asli
+//   2^3, 2^{10}               -> pangkat (superscript) asli
+//   \times, \cdot             -> ×
+//
+// Cukup untuk notasi soal sekolah; bukan parser LaTeX penuh.
+
+type MathToken =
+    | { type: 'text'; value: string }
+    | { type: 'sqrt'; value: string }
+    | { type: 'pow'; base: string; exp: string };
+
+function tokenizeMath(raw: string): MathToken[] {
+    if (!raw) return [];
+
+    const s = raw
+        .replace(/\\times/g, '×')
+        .replace(/\\cdot/g, '×')
+        .replace(/\\pm/g, '±');
+
+    const tokens: MathToken[] = [];
+
+    // Urutan alternation penting: sqrt dicek dulu supaya "\sqrt{2^3}"
+    // tidak salah dipecah oleh pola pow terlebih dahulu.
+    const pattern =
+        /\\?sqrt\{([^{}]+)\}|\\?sqrt(\d+(?:\.\d+)?)|√\{([^{}]+)\}|√(\d+(?:\.\d+)?)|([a-zA-Z0-9.]+)\^\{([^{}]+)\}|([a-zA-Z0-9.]+)\^(\d+(?:\.\d+)?)/g;
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.exec(s)) !== null) {
+        const [whole, sqBrace, sqPlain, sqSymBrace, sqSymPlain, powBaseA, powExpA, powBaseB, powExpB] = match;
+
+        if (match.index > lastIndex) {
+            tokens.push({ type: 'text', value: s.slice(lastIndex, match.index) });
+        }
+
+        if (sqBrace !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqBrace });
+        } else if (sqPlain !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqPlain });
+        } else if (sqSymBrace !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqSymBrace });
+        } else if (sqSymPlain !== undefined) {
+            tokens.push({ type: 'sqrt', value: sqSymPlain });
+        } else if (powBaseA !== undefined) {
+            tokens.push({ type: 'pow', base: powBaseA, exp: powExpA });
+        } else if (powBaseB !== undefined) {
+            tokens.push({ type: 'pow', base: powBaseB, exp: powExpB });
+        }
+
+        lastIndex = match.index + whole.length;
+    }
+
+    if (lastIndex < s.length) {
+        tokens.push({ type: 'text', value: s.slice(lastIndex) });
+    }
+
+    return tokens;
+}
+
+function Radical({ value }: { value: string }) {
+    return (
+        <span className="inline whitespace-nowrap">
+            <svg
+                viewBox="0 0 12 14"
+                className="inline-block w-[0.55em] h-[1.05em] -mr-px -mb-[0.05em] shrink-0 align-baseline"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+            >
+                <path
+                    d="M0 8.5 L2.3 11 L5 1 L12 1"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.1"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+            <span className="border-t-[1.1px] border-current pt-0 leading-[1.05]">
+                {value}
+            </span>
+        </span>
+    );
+}
+
+function renderMathToken(token: MathToken, key: number) {
+    switch (token.type) {
+        case 'sqrt':
+            return <Radical key={key} value={token.value} />;
+        case 'pow':
+            return (
+                <span key={key} className="whitespace-nowrap">
+                    {token.base}
+                    <sup className="text-[0.7em] leading-none">{token.exp}</sup>
+                </span>
+            );
+        case 'text':
+        default:
+            return <Fragment key={key}>{token.value}</Fragment>;
+    }
+}
+
+function MathText({ text }: { text: string }) {
+    const tokens = tokenizeMath(text ?? '');
+    return <span>{tokens.map((t, i) => renderMathToken(t, i))}</span>;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-/**
- * Untuk pilihan_ganda_kompleks, jawaban disimpan sebagai string[]
- * (array of id_question_option sebagai string).
- * Untuk pilihan_ganda dan isian, disimpan sebagai string biasa.
- */
 type AnswerValue = string | string[];
 
 function isCompleks(q: Question) {
     return q.question_type === 'pilihan_ganda_kompleks';
 }
 
-// ─── Score display ───────────────────────────────────────────────────────────
+interface QuestionOption {
+    id_question_option: number;
+    option_text:        string | null;
+    option_image?:      string | null;
+}
+
+function OptionContent({ opt }: { opt: QuestionOption }) {
+    if (opt.option_image) {
+        return (
+            <img
+                src={opt.option_image}
+                alt={opt.option_text ?? 'Opsi'}
+                className="max-h-28 max-w-full object-contain rounded-lg"
+            />
+        );
+    }
+    return (
+        <span className="inline">
+            <MathText text={opt.option_text ?? ''} />
+        </span>
+    );
+}
+
+function AnswerContent({ text }: { text: string }) {
+    const parts = (text ?? '')
+        .split('|||')
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+    return (
+        <span className="flex flex-wrap gap-2 items-center">
+            {parts.map((part, i) =>
+                part.startsWith('__img__') ? (
+                    <img
+                        key={i}
+                        src={part.replace('__img__', '')}
+                        alt="Jawaban"
+                        className="h-16 w-16 object-cover rounded-lg border border-gray-200"
+                    />
+                ) : (
+                    <span key={i}><MathText text={part} /></span>
+                )
+            )}
+        </span>
+    );
+}
 
 function ScoreRing({ score }: { score: number }) {
     const color = score >= 70 ? 'text-green-600' : score >= 50 ? 'text-yellow-600' : 'text-red-500';
@@ -70,21 +223,21 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [wasQueued,    setWasQueued]    = useState(false);
 
+    // Deteksi keluar/pindah tab selama tes berlangsung. Hanya aktif selama
+    // soal belum disubmit — begitu submitted true, halaman hasil tidak lagi
+    // butuh deteksi ini, jadi dimatikan supaya tidak ada warning palsu.
+    const { violationCount, showWarning, dismissWarning } = useTabFocusGuard({
+        enabled: !submitted,
+    });
+
     const currentQuestion = questions[currentIndex];
     const answeredCount   = Object.keys(answers).length;
     const allAnswered     = answeredCount === questions.length;
 
-    // ── Handlers ─────────────────────────────────────────────────────────────
-
-    /** Pilihan ganda biasa & isian: simpan satu nilai */
     const handleSingleAnswer = (questionId: number, value: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: value }));
     };
 
-    /**
-     * Pilihan ganda kompleks: toggle item dalam array.
-     * Jika optionId sudah ada → hapus, jika belum → tambahkan.
-     */
     const handleMultiAnswer = (questionId: number, optionId: string) => {
         setAnswers(prev => {
             const current = (prev[questionId] as string[] | undefined) ?? [];
@@ -92,7 +245,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 ? current.filter(id => id !== optionId)
                 : [...current, optionId];
 
-            // Hapus entry jika array kosong (agar answeredCount akurat)
             if (updated.length === 0) {
                 const { [questionId]: _, ...rest } = prev;
                 return rest;
@@ -109,7 +261,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 action_type: 'answer_question',
                 url:    route('learningpath.module.submit-answer', { pathId, moduleId: module.id_module }),
                 method: 'POST',
-                payload: { answers },
+                payload: { answers, tab_switch_count: violationCount },
                 onSuccess: (data: any) => {
                     setScore(data.score ?? 0);
                     setResults(data.results ?? []);
@@ -135,7 +287,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     const testLabel = module.type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
 
-    // ── 1. Queued offline ─────────────────────────────────────────────────────
     if (submitted && wasQueued) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8">
@@ -162,7 +313,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 2. Hasil submit (online, score ada) ───────────────────────────────────
     if (submitted && score !== null) {
         const correctCount = results.filter(r => r.is_correct).length;
         const totalCount   = results.length || questions.length;
@@ -170,7 +320,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         return (
             <div className="max-w-lg mx-auto px-4 py-6 sm:py-10">
                 <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    {/* Header skor */}
                     <div className={`px-6 py-8 text-center ${score >= 70 ? 'bg-green-50' : 'bg-orange-50'}`}>
                         <ScoreRing score={score} />
                         <h2 className="text-lg font-bold text-gray-900 mb-1">Hasil {testLabel}</h2>
@@ -188,7 +337,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         )}
                     </div>
 
-                    {/* Review jawaban */}
                     {results.length > 0 && (
                         <div className="px-4 sm:px-6 py-4 space-y-2 border-t border-gray-100">
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Review Jawaban</p>
@@ -203,13 +351,15 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                                         {i + 1}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-gray-700 text-xs leading-relaxed">{r.answer}</p>
-                                        {!r.is_correct && r.correct_answer && (
-                                            <p className="text-green-700 text-xs mt-1 flex items-center gap-1">
-                                                <CheckCircle size={10} />
-                                                {r.correct_answer}
-                                            </p>
-                                        )}
+                                        <div className="text-gray-700 text-xs leading-relaxed">
+                                                <AnswerContent text={r.answer} />
+                                            </div>
+                                            {!r.is_correct && r.correct_answer && (
+                                                   <div className="text-green-700 text-xs mt-1 flex items-center gap-2">
+                                                    <CheckCircle size={10} className="shrink-0" />
+                                                    <AnswerContent text={r.correct_answer} />
+                                                </div>
+                                            )}
                                     </div>
                                     {r.is_correct
                                         ? <CheckCircle size={15} className="text-green-500 shrink-0 mt-0.5" />
@@ -220,7 +370,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         </div>
                     )}
 
-                    {/* CTA */}
                     {nextModule && (
                         <div className="px-4 sm:px-6 py-4 border-t border-gray-100">
                             <button onClick={goToNext}
@@ -234,7 +383,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
         );
     }
 
-    // ── 3. Sudah pernah submit, tapi score null ───────────────────────────────
     if (submitted && score === null) {
         return (
             <div className="max-w-lg mx-auto px-4 py-8 text-center">
@@ -257,10 +405,12 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
 
     if (!currentQuestion) return null;
 
-    // ── 4. Form soal ──────────────────────────────────────────────────────────
     return (
         <div className="max-w-lg mx-auto px-3 sm:px-4 py-4 sm:py-8">
-            {/* Banner offline */}
+            {showWarning && (
+                <TabFocusWarningModal violationCount={violationCount} onClose={dismissWarning} />
+            )}
+
             {!isOnline && (
                 <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 mb-4 text-xs text-orange-700">
                     <WifiOff size={12} className="shrink-0" />
@@ -268,7 +418,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 </div>
             )}
 
-            {/* Progress dots + counter */}
             <div className="mb-4 sm:mb-6">
                 <div className="flex justify-between text-xs text-gray-400 mb-2">
                     <span className="font-medium">Soal {currentIndex + 1} / {questions.length}</span>
@@ -276,7 +425,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                         {answeredCount} dijawab
                     </span>
                 </div>
-                {/* Scrollable dot bar */}
                 <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
                     {questions.map((q, i) => (
                         <button
@@ -295,9 +443,7 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 </div>
             </div>
 
-            {/* Kartu soal */}
             <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 mb-4 shadow-sm">
-                {/* Gambar soal */}
                 {currentQuestion.question_images?.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                         {currentQuestion.question_images.map((img, i) => (
@@ -311,35 +457,32 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     <p className="text-[10px] text-gray-400 mb-1 font-medium">{currentQuestion.title}</p>
                 )}
                 <p className="text-sm sm:text-base text-gray-800 leading-relaxed mb-4 sm:mb-5">
-                    {currentQuestion.question}
+                    <MathText text={currentQuestion.question} />
                 </p>
 
-                {/* ── Pilihan ganda biasa (1 jawaban) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda' && currentQuestion.options && (
-                    <div className="space-y-2">
-                        {currentQuestion.options.map(opt => {
-                            const isSelected = answers[currentQuestion.id_question] === String(opt.id_question_option);
-                            return (
-                                <button
-                                    key={opt.id_question_option}
-                                    onClick={() => handleSingleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
-                                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] ${
-                                        isSelected
-                                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
-                                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
-                                    }`}
-                                >
-                                    {opt.option_text}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
+    <div className="space-y-2">
+        {currentQuestion.options.map(opt => {
+            const isSelected = answers[currentQuestion.id_question] === String(opt.id_question_option);
+            return (
+                <button
+                    key={opt.id_question_option}
+                    onClick={() => handleSingleAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] ${
+                        isSelected
+                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
+                    }`}
+                >
+                    <OptionContent opt={opt} />
+                </button>
+            );
+        })}
+    </div>
+)}
 
-                {/* ── Pilihan ganda kompleks (bisa pilih lebih dari 1) ── */}
                 {currentQuestion.question_type === 'pilihan_ganda_kompleks' && currentQuestion.options && (
                     <div className="space-y-2">
-                        {/* Label petunjuk */}
                         <p className="text-[11px] text-primary bg-primary/8 rounded-lg px-3 py-1.5 mb-3 font-medium">
                             Pilih semua jawaban yang benar (bisa lebih dari satu)
                         </p>
@@ -348,31 +491,29 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                             const isSelected  = selectedArr.includes(String(opt.id_question_option));
                             return (
                                 <button
-                                    key={opt.id_question_option}
-                                    onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
-                                    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-center gap-3 ${
-                                        isSelected
-                                            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
-                                            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
-                                    }`}
-                                >
-                                    {/* Checkbox visual */}
-                                    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors ${
-                                        isSelected
-                                            ? 'bg-primary border-primary'
-                                            : 'border-gray-300 bg-white'
-                                    }`}>
-                                        {isSelected && (
-                                            <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-white">
-                                                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                                            </svg>
-                                        )}
-                                    </span>
-                                    {opt.option_text}
-                                </button>
+    key={opt.id_question_option}
+    onClick={() => handleMultiAnswer(currentQuestion.id_question, String(opt.id_question_option))}
+    className={`w-full text-left px-4 py-3 rounded-xl border text-sm transition-all active:scale-[.99] flex items-start gap-3 ${
+        isSelected
+            ? 'border-primary bg-primary/10 text-primary font-semibold shadow-sm'
+            : 'border-gray-200 hover:border-gray-300 text-gray-700 active:bg-gray-50'
+    }`}
+>
+    <span className={`w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors mt-0.5 ${
+        isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'
+    }`}>
+        {isSelected && (
+            <svg viewBox="0 0 10 8" className="w-2.5 h-2 fill-white">
+                <path d="M1 4l2.5 2.5L9 1" stroke="white" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+        )}
+    </span>
+    <span className="flex-1 min-w-0">
+        <OptionContent opt={opt} />
+    </span>
+</button>
                             );
                         })}
-                        {/* Counter pilihan terpilih */}
                         {(() => {
                             const count = ((answers[currentQuestion.id_question] as string[] | undefined) ?? []).length;
                             return count > 0 ? (
@@ -384,7 +525,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                     </div>
                 )}
 
-                {/* ── Isian ── */}
                 {currentQuestion.question_type === 'isian' && (
                     <input
                         type="text"
@@ -398,7 +538,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 <p className="text-[10px] text-gray-400 mt-3 text-right">{currentQuestion.points} poin</p>
             </div>
 
-            {/* Navigasi */}
             <div className="flex items-center justify-between gap-2">
                 <button
                     onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
@@ -434,7 +573,6 @@ export default function PreTestView({ pathId, module, nextModule }: Props) {
                 )}
             </div>
 
-            {/* Hint semua sudah dijawab */}
             {allAnswered && currentIndex < questions.length - 1 && (
                 <p className="text-center text-xs text-green-600 mt-3 font-medium">
                     Semua soal sudah dijawab! Geser ke soal terakhir untuk submit.

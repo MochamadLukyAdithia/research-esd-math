@@ -8,8 +8,8 @@ import { router } from '@inertiajs/react';
 import {
     ChevronLeft, ChevronRight, FileText, Video,
     Code, BookOpen, CheckCircle, Maximize2, Minimize2,
-    ArrowRight, Clock, Eye, Layers, ExternalLink, Check,
-    AlertCircle,
+    Clock, Eye, Layers, ExternalLink, Check,
+    AlertCircle, ChevronUp, ChevronDown,
 } from 'lucide-react';
 import axios from 'axios';
 import type { Material } from '@/Pages/LearningPath/Module';
@@ -102,68 +102,43 @@ export function detectPlatform(url: string): EmbedPlatform {
     return 'generic';
 }
 
-// ─── Ekstrak Google Drive File ID dari semua format URL ───────────────────────
-//
-//  Format yang didukung:
-//  • https://drive.google.com/file/d/{ID}/view
-//  • https://drive.google.com/file/d/{ID}/edit
-//  • https://drive.google.com/file/d/{ID}/preview
-//  • https://drive.google.com/file/u/0/d/{ID}/view   ← format /u/N/
-//  • https://drive.google.com/file/u/0/d/{ID}/edit   ← format /u/N/ + edit
-//  • https://drive.google.com/open?id={ID}
-//  • https://drive.google.com/uc?id={ID}&export=view
-//  • https://drive.google.com/uc?export=view&id={ID}
-
 function extractGDriveFileId(url: string): string | null {
-    // Format /file/d/{ID}/ — dengan atau tanpa /u/N/ di antaranya
     const fileMatch = url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/);
     if (fileMatch) return fileMatch[1];
-
-    // Format ?id={ID} (open?id= atau uc?id=)
     const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (idMatch) return idMatch[1];
-
     return null;
 }
 
 export function normalizeEmbedUrl(url: string, type?: string): string {
     if (!url) return url;
-
     const platform = detectPlatform(url);
 
-    // ── File lokal → /storage/... ─────────────────────────────────────────────
     if (platform === 'local_pdf' || platform === 'local_video' || platform === 'local_file') {
         return toStorageUrl(url);
     }
 
-    // ── YouTube ───────────────────────────────────────────────────────────────
     if (platform === 'youtube') {
         let videoId = '';
-
         const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
         if (shortMatch) videoId = shortMatch[1];
-
         if (!videoId) {
             const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
             if (longMatch) videoId = longMatch[1];
         }
-
         if (!videoId) {
             const embedMatch = url.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
             if (embedMatch) videoId = embedMatch[1];
         }
-
         if (!videoId) {
             const shortsMatch = url.match(/\/shorts\/([a-zA-Z0-9_-]{11})/);
             if (shortsMatch) videoId = shortsMatch[1];
         }
-
         if (videoId) {
             return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`;
         }
     }
 
-    // ── Vimeo ─────────────────────────────────────────────────────────────────
     if (platform === 'vimeo') {
         const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
         if (vimeoMatch) {
@@ -171,7 +146,6 @@ export function normalizeEmbedUrl(url: string, type?: string): string {
         }
     }
 
-    // ── Canva ─────────────────────────────────────────────────────────────────
     if (platform === 'canva') {
         let normalized = url;
         if (!normalized.includes('/view')) {
@@ -183,24 +157,16 @@ export function normalizeEmbedUrl(url: string, type?: string): string {
         return normalized;
     }
 
-    // ── Google Drive ──────────────────────────────────────────────────────────
-    //  Selalu ekstrak File ID dan buat ulang URL preview yang bersih.
-    //  Ini menghilangkan /u/0/, /edit, /view, query params aneh, dsb.
-    //  URL preview publik: https://drive.google.com/file/d/{ID}/preview
-    //  tidak memerlukan login jika file sudah di-share "Anyone with the link".
     if (platform === 'gdrive') {
         const fileId = extractGDriveFileId(url);
         if (fileId) {
-            // Format preview — bersih, tanpa /u/N/, tanpa /edit
             return `https://drive.google.com/file/d/${fileId}/preview`;
         }
-        // Fallback: jika gagal ekstrak ID, coba patch manual
         return url
-            .replace(/\/u\/\d+\//, '/')          // hapus /u/0/
-            .replace(/\/(edit|view)(\/.*)?$/, '/preview'); // ganti /edit atau /view → /preview
+            .replace(/\/u\/\d+\//, '/')
+            .replace(/\/(edit|view)(\/.*)?$/, '/preview');
     }
 
-    // ── Google Slides ─────────────────────────────────────────────────────────
     if (platform === 'gslides') {
         return url
             .replace(/\/u\/\d+\//, '/')
@@ -208,20 +174,17 @@ export function normalizeEmbedUrl(url: string, type?: string): string {
             .replace(/\/embed(\?.*)?$/, '/embed?start=false&loop=false&delayms=3000');
     }
 
-    // ── Google Docs ───────────────────────────────────────────────────────────
     if (platform === 'gdocs') {
         return url
             .replace(/\/u\/\d+\//, '/')
             .replace(/\/(edit|pub)(\/.*)?(\?.*)?$/, '/preview');
     }
 
-    // ── PDF publik eksternal → Google Docs Viewer ─────────────────────────────
     if (platform === 'pdf') {
         if (url.includes('docs.google.com/viewer')) return url;
         return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
     }
 
-    // ── Fallback ──────────────────────────────────────────────────────────────
     return url;
 }
 
@@ -419,7 +382,6 @@ const PLATFORM_LABEL: Record<EmbedPlatform, string> = {
     generic:     'Konten',
 };
 
-// ── Loading Overlay ──────────────────────────────────────────────────────────
 function LoadingOverlay({ label, accent, icon }: { label: string; accent: string; icon: React.ReactNode }) {
     return (
         <div
@@ -439,19 +401,14 @@ function LoadingOverlay({ label, accent, icon }: { label: string; accent: string
     );
 }
 
-// ── Deteksi apakah URL Google Drive berasal dari mobile app (usp=drivesdk)
-// atau belum di-share publik — keduanya menghasilkan 403 Forbidden
 function isGDrivePrivateLink(url: string): boolean {
     return url.includes('usp=drivesdk') || url.includes('usp=sharing');
 }
 
-// ── Error Overlay ────────────────────────────────────────────────────────────
 function ErrorOverlay({ url, accent, label }: { url: string; accent: string; label: string }) {
     const platform  = detectPlatform(url);
     const isGDrive  = platform === 'gdrive';
     const isMobile  = isGDrivePrivateLink(url);
-
-    // Ekstrak file ID agar bisa buat link langsung ke sharing settings
     const fileId    = isGDrive
         ? url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/)?.[1] ?? null
         : null;
@@ -472,7 +429,6 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
             </div>
 
             {isGDrive ? (
-                /* ── Panduan khusus Google Drive ── */
                 <div className="w-full max-w-sm">
                     <p className="text-sm font-semibold text-white mb-1">
                         File Google Drive tidak bisa diakses
@@ -482,8 +438,6 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
                             ? 'Link ini dibuat dari Google Drive mobile app dan bersifat private.'
                             : 'File belum di-share publik (403 Forbidden).'}
                     </p>
-
-                    {/* Step-by-step fix */}
                     <div
                         className="rounded-xl p-3 mb-4 text-left"
                         style={{ background: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.2)' }}
@@ -509,7 +463,6 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
                             </div>
                         ))}
                     </div>
-
                     <div className="flex gap-2">
                         <a
                             href={shareSettingsUrl}
@@ -534,7 +487,6 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
                     </div>
                 </div>
             ) : (
-                /* ── Error generik untuk platform lain ── */
                 <>
                     <div>
                         <p className="text-sm font-semibold text-white mb-1">
@@ -560,11 +512,9 @@ function ErrorOverlay({ url, accent, label }: { url: string; accent: string; lab
     );
 }
 
-// ── Warning banner untuk URL Google Drive yang terdeteksi private sebelum load ──
 function GDrivePrivateWarning({ url, accent }: { url: string; accent: string }) {
     const fileId = url.match(/\/file(?:\/u\/\d+)?\/d\/([a-zA-Z0-9_-]+)/)?.[1] ?? null;
     const openUrl = fileId ? `https://drive.google.com/file/d/${fileId}/view` : url;
-
     return (
         <div
             className="absolute top-3 left-3 right-3 z-20 flex items-start gap-2 rounded-xl px-3 py-2.5"
@@ -605,8 +555,6 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
     const platformLabel = PLATFORM_LABEL[platform];
     const isLocal       = platform === 'local_pdf' || platform === 'local_video' || platform === 'local_file';
     const isLocalVideo  = platform === 'local_video';
-
-    // Deteksi URL Google Drive private (usp=drivesdk) SEBELUM iframe gagal load
     const showGDriveWarning = platform === 'gdrive' && isGDrivePrivateLink(url) && !loaded && !errored;
 
     useEffect(() => {
@@ -618,23 +566,13 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
 
     return (
         <div className="relative h-full flex items-center justify-center" style={{ background: '#000' }}>
-
-            {/* Warning banner — muncul segera jika URL Google Drive terdeteksi private */}
-            {showGDriveWarning && (
-                <GDrivePrivateWarning url={url} accent={accent} />
-            )}
-
-            {/* Loading */}
+            {showGDriveWarning && <GDrivePrivateWarning url={url} accent={accent} />}
             {!loaded && !errored && (
                 <LoadingOverlay label={platformLabel} accent={accent} icon={loadingIcon} />
             )}
-
-            {/* Error */}
             {errored && (
                 <ErrorOverlay url={url} accent={accent} label={platformLabel} />
             )}
-
-            {/* ── Video lokal: pakai <video> tag ── */}
             {isLocalVideo && (
                 <video
                     key={embedSrc}
@@ -650,8 +588,6 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
                     Browser kamu tidak mendukung pemutaran video.
                 </video>
             )}
-
-            {/* ── PDF lokal & semua embed eksternal: pakai <iframe> ── */}
             {!isLocalVideo && (
                 <iframe
                     key={embedSrc}
@@ -673,7 +609,7 @@ function EmbedViewer({ url, type, accent }: { url: string; type: string; accent:
     );
 }
 
-// ─── Nav Button (kiri / kanan) ────────────────────────────────────────────────
+// ─── Nav Arrow (kiri / kanan di area konten) ──────────────────────────────────
 
 function NavArrow({ dir, onClick }: { dir: 'left' | 'right'; onClick: () => void }) {
     return (
@@ -702,6 +638,95 @@ function NavArrow({ dir, onClick }: { dir: 'left' | 'right'; onClick: () => void
     );
 }
 
+// ─── Thumbnail Strip (collapsible) ────────────────────────────────────────────
+//
+//  Desktop  : auto-hide on mouse-leave, reveal on mouse-enter (hover).
+//  Mobile   : toggle manual via tombol ChevronUp / ChevronDown.
+//  Strip selalu render di DOM (tidak unmount) agar thumbnail tidak re-render
+//  saat state berubah — hanya tinggi yang dianimasikan via CSS max-height.
+
+interface ThumbnailStripProps {
+    materials: Material[];
+    current: number;
+    open: boolean;
+    accent: string;
+    onSelect: (i: number) => void;
+    onToggle: () => void;
+    onMouseEnter: () => void;
+    onMouseLeave: () => void;
+}
+
+function ThumbnailStrip({
+    materials, current, open, accent,
+    onSelect, onToggle, onMouseEnter, onMouseLeave,
+}: ThumbnailStripProps) {
+    return (
+        <div
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            style={{
+                background: '#16213e',
+                borderTop: '1px solid rgba(255,255,255,0.07)',
+                transition: 'all 0.25s ease',
+            }}
+        >
+            {/* Toggle handle — selalu terlihat */}
+            <button
+                onClick={onToggle}
+                className="w-full flex items-center justify-between px-3 py-1.5 transition-colors"
+                style={{ color: 'rgba(255,255,255,0.35)' }}
+                aria-label={open ? 'Sembunyikan daftar materi' : 'Tampilkan daftar materi'}
+                aria-expanded={open}
+            >
+                {/* Progress dots — penanda posisi saat strip tertutup */}
+                <div className="flex items-center gap-1.5">
+                    {materials.map((_, i) => (
+                        <span
+                            key={i}
+                            className="rounded-full transition-all duration-200"
+                            style={{
+                                width:  i === current ? 14 : 5,
+                                height: 5,
+                                background: i === current ? accent : 'rgba(255,255,255,0.2)',
+                                display: 'block',
+                            }}
+                        />
+                    ))}
+                </div>
+
+                <span className="flex items-center gap-1 text-[10px]">
+                    {open ? 'Sembunyikan' : 'Daftar materi'}
+                    {open ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+                </span>
+            </button>
+
+            {/* Thumbnail list — animasi collapse */}
+            <div
+                style={{
+                    maxHeight: open ? 120 : 0,
+                    overflow: 'hidden',
+                    transition: 'max-height 0.25s ease',
+                }}
+            >
+                <div
+                    className="flex gap-2 overflow-x-auto px-3 pb-3 pt-1"
+                    style={{ scrollbarWidth: 'none' }}
+                >
+                    {materials.map((m, i) => (
+                        <MaterialThumbnail
+                            key={m.id_material}
+                            mat={m}
+                            index={i}
+                            isCurrent={i === current}
+                            onClick={() => onSelect(i)}
+                        />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Komponen Utama ───────────────────────────────────────────────────────────
 
 export default function MaterialView({ pathId, module, nextModule }: Props) {
@@ -713,36 +738,80 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
     const [fullscreen,    setFullscreen]    = useState(false);
     const [transitioning, setTransitioning] = useState(false);
 
+    // ── Thumbnail strip state ─────────────────────────────────────────────────
+    // `stripOpen`  : dikontrol manual (toggle) — terutama untuk mobile
+    // `stripHover` : dikontrol mouse-enter/leave — untuk desktop hover reveal
+    const [stripOpen,  setStripOpen]  = useState(false);
+    const [stripHover, setStripHover] = useState(false);
+    const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Strip terlihat jika salah satu dari dua kondisi terpenuhi
+    const stripVisible = stripOpen || stripHover;
+
+    const handleStripMouseEnter = useCallback(() => {
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+        setStripHover(true);
+    }, []);
+
+    // Delay sedikit saat mouse keluar agar tidak langsung tutup saat kursor
+    // bergerak dari tombol ke thumbnail di bawahnya.
+    const handleStripMouseLeave = useCallback(() => {
+        hoverTimerRef.current = setTimeout(() => setStripHover(false), 200);
+    }, []);
+
+    // Cleanup timer saat unmount
+    useEffect(() => () => {
+        if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    }, []);
+
     const mat = materials[current];
     const cfg = mat ? (TYPE_CONFIG[mat.content_type] ?? TYPE_CONFIG.text) : TYPE_CONFIG.text;
     const isEmbed = mat?.content_type === 'video' || mat?.content_type === 'slide';
     const isLast  = current === materials.length - 1;
 
-    // ── Keyboard navigation ───────────────────────────────────────────────────
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
-            if (e.key === 'Escape')                               setFullscreen(false);
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goTo(current + 1);
-            if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
-            if (e.key === 'f' || e.key === 'F')                  setFullscreen(f => !f);
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [current, materials.length]);
-
+    // ── goTo stabil — tidak perlu `current` di deps karena kita hanya
+    //    membandingkan idx dengan panjang array, bukan dengan current ──────────
     const goTo = useCallback((idx: number) => {
-        if (idx < 0 || idx >= materials.length || transitioning) return;
+        if (idx < 0 || idx >= materials.length) return;
         setTransitioning(true);
         setTimeout(() => {
             setCurrent(idx);
             setTransitioning(false);
         }, 160);
-    }, [materials.length, transitioning]);
+    }, [materials.length]);
+
+    // ── Keyboard navigation ───────────────────────────────────────────────────
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+            if (e.key === 'Escape')      { setFullscreen(false); return; }
+            if (e.key === 'f' || e.key === 'F') { setFullscreen(f => !f); return; }
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                setCurrent(c => {
+                    const next = c + 1;
+                    if (next >= materials.length) return c;
+                    goTo(next);
+                    return c; // goTo handles the actual update
+                });
+            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                setCurrent(c => {
+                    const prev = c - 1;
+                    if (prev < 0) return c;
+                    goTo(prev);
+                    return c;
+                });
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [goTo, materials.length]);
 
     // ── Tandai selesai ────────────────────────────────────────────────────────
-    const handleComplete = async () => {
-        if (marking || done) return;
+    // Mengembalikan boolean sukses agar handleNext bisa langsung lanjut navigasi
+    // tanpa bergantung pada `done` state yang asinkron.
+    const handleComplete = useCallback(async (): Promise<boolean> => {
+        if (marking || done) return done;
         setMarking(true);
         try {
             await axios.post(route('learningpath.module.complete-material', {
@@ -751,17 +820,20 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
             setDone(true);
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3500);
+            return true;
+        } catch {
+            return false;
         } finally {
             setMarking(false);
         }
-    };
+    }, [marking, done, pathId, module.id_module]);
 
-    const handleNext = async () => {
-        if (!done) await handleComplete();
-        if (nextModule) {
+    const handleNext = useCallback(async () => {
+        const success = await handleComplete();
+        if (success && nextModule) {
             router.visit(route('learningpath.module', { pathId, moduleId: nextModule.id_module }));
         }
-    };
+    }, [handleComplete, nextModule, pathId]);
 
     if (!mat) return (
         <div className="h-full flex items-center justify-center text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
@@ -885,7 +957,21 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                     )}
                 </div>
 
-                {/* ── Bottom panel ── */}
+                {/* ── Thumbnail strip (collapsible) ── */}
+                {materials.length > 1 && (
+                    <ThumbnailStrip
+                        materials={materials}
+                        current={current}
+                        open={stripVisible}
+                        accent={cfg.accent}
+                        onSelect={(i) => goTo(i)}
+                        onToggle={() => setStripOpen(o => !o)}
+                        onMouseEnter={handleStripMouseEnter}
+                        onMouseLeave={handleStripMouseLeave}
+                    />
+                )}
+
+                {/* ── Bottom action bar ── */}
                 <div
                     className="shrink-0 px-3 pt-2.5 pb-3"
                     style={{
@@ -893,24 +979,8 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                         borderTop: '2px solid rgba(245,197,24,0.2)',
                     }}
                 >
-                    {/* Thumbnail strip */}
-                    <div
-                        className="flex gap-2 overflow-x-auto pb-2.5"
-                        style={{ scrollbarWidth: 'none' }}
-                    >
-                        {materials.map((m, i) => (
-                            <MaterialThumbnail
-                                key={m.id_material}
-                                mat={m}
-                                index={i}
-                                isCurrent={i === current}
-                                onClick={() => goTo(i)}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Tombol aksi */}
                     <div className="flex items-center gap-2">
+                        {/* Prev */}
                         <button
                             onClick={() => goTo(current - 1)}
                             disabled={current === 0}
@@ -951,10 +1021,7 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                                 onClick={handleNext}
                                 disabled={marking}
                                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-60"
-                                style={{
-                                    background: '#F5C518',
-                                    color: '#1a1a2e',
-                                }}
+                                style={{ background: '#F5C518', color: '#1a1a2e' }}
                             >
                                 {marking ? (
                                     <>
@@ -970,6 +1037,7 @@ export default function MaterialView({ pathId, module, nextModule }: Props) {
                             </button>
                         )}
 
+                        {/* Next */}
                         <button
                             onClick={() => goTo(current + 1)}
                             disabled={isLast}
