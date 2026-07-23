@@ -20,6 +20,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use App\Helpers\NavigationHelper;
 
 class ManageLearningPathModules extends Page implements HasTable
 {
@@ -160,7 +161,7 @@ class ManageLearningPathModules extends Page implements HasTable
                     ->label('Soal')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->color('info')
-                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && in_array($record->type, ['pre_test', 'post_test', 'activity']))
                     ->form(function ($record) {
                         $existingIds = $record->moduleQuestions()->pluck('id_question')->toArray();
                         return [
@@ -195,6 +196,7 @@ class ManageLearningPathModules extends Page implements HasTable
                     ->label('Edit')
                     ->icon('heroicon-o-pencil')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->form(fn($record) => [
                         Grid::make(2)->schema([
                             TextInput::make('title')
@@ -235,6 +237,7 @@ class ManageLearningPathModules extends Page implements HasTable
                     ->label('')
                     ->icon('heroicon-o-arrow-up')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->action(function ($record) {
                         $prev = LearningPathModule::where('id_learning_path', $this->record->id_learning_path)
                             ->where('order_number', '<', $record->order_number)
@@ -252,6 +255,7 @@ class ManageLearningPathModules extends Page implements HasTable
                     ->label('')
                     ->icon('heroicon-o-arrow-down')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->action(function ($record) {
                         $next = LearningPathModule::where('id_learning_path', $this->record->id_learning_path)
                             ->where('order_number', '>', $record->order_number)

@@ -11,6 +11,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use App\Helpers\NavigationHelper;
 
 class LearningPathForm
 {
@@ -98,33 +99,35 @@ class LearningPathForm
                             ->offColor('gray'),
                     ]),
                 Section::make('Silabus')
-    ->description('Informasi kurikulum yang ditampilkan di halaman program')
-    ->icon('heroicon-o-academic-cap')
-    ->schema([
-    
-        Textarea::make('kompetensi_dasar')
-            ->label('Tujuan Pembelajaran')
-            ->rows(3)
-            ->placeholder('Contoh: 3.6 Menjelaskan persamaan dan pertidaksamaan linear satu variabel...')
-            ->columnSpanFull(),
+                ->description('Informasi kurikulum yang ditampilkan di halaman program')
+                ->icon('heroicon-o-academic-cap')
+                    ->schema([
+                    
+                        Textarea::make('kompetensi_dasar')
+                            ->label('Tujuan Pembelajaran')
+                            ->rows(3)
+                            ->placeholder('Contoh: 3.6 Menjelaskan persamaan dan pertidaksamaan linear satu variabel...')
+                            ->columnSpanFull(),
 
-        TagsInput::make('metode_penilaian')
-            ->label('Metode Penilaian')
-            ->placeholder('Tambah metode, tekan Enter')
-            ->suggestions(['Pre-Test', 'Post-Test', 'Portofolio', 'Observasi', 'Refleksi'])
-            ->columnSpanFull(),
+                        TagsInput::make('metode_penilaian')
+                            ->label('Metode Penilaian')
+                            ->placeholder('Tambah metode, tekan Enter')
+                            ->suggestions(['Pre-Test', 'Post-Test', 'Portofolio', 'Observasi', 'Refleksi'])
+                            ->columnSpanFull(),
 
-        TagsInput::make('sumber_belajar')
-            ->label('Sumber Belajar')
-            ->placeholder('Tambah sumber, tekan Enter')
-            ->suggestions([
-                'Buku Paket Matematika Kelas 7',
-                'Khan Academy',
-                'Modul Ajar Kemendikbud',
-            ])
-            ->columnSpanFull(),
-    ])
-    ->collapsible(),
-            ]);
+                        TagsInput::make('sumber_belajar')
+                            ->label('Sumber Belajar')
+                            ->placeholder('Tambah sumber, tekan Enter')
+                            ->suggestions([
+                                'Buku Paket Matematika Kelas 7',
+                                'Khan Academy',
+                                'Modul Ajar Kemendikbud',
+                            ])
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
+                    ])
+                    
+            ->disabled(fn () => NavigationHelper::isPengajar());
     }
 }

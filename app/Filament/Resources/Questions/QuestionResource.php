@@ -17,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
+
 class QuestionResource extends Resource
 {
     protected static ?string $model = Question::class;
@@ -46,6 +47,7 @@ class QuestionResource extends Resource
             //
         ];
     }
+    
 
     // Batasi akses Edit
     public static function canEdit($record): bool
@@ -56,6 +58,7 @@ class QuestionResource extends Resource
 
         return parent::canEdit($record);
     }
+    
 
     // Batasi akses Delete
     public static function canDelete($record): bool
@@ -87,6 +90,16 @@ class QuestionResource extends Resource
     public static function canCreate(): bool
     {
         return true; 
+    }
+      public static function shouldRegisterNavigation(): bool
+    {
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+            if (NavigationHelper::isPengajar()) {
+        return false;
+    }
+        return true;
     }
 
     public static function getPages(): array

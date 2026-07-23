@@ -19,7 +19,8 @@ class ListLearningPaths extends ListRecords
         return [
             Actions\CreateAction::make()
                 ->label('Buat Learning Path')
-                ->icon('heroicon-o-plus'),
+                ->icon('heroicon-o-plus')
+                ->visible(fn () => !\App\Helpers\NavigationHelper::isPengajar()),
         ];
     }
 

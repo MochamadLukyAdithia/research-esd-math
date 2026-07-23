@@ -15,6 +15,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Support\Str;
+use App\Helpers\NavigationHelper;
 
 class LearningPathResource
 {
@@ -112,18 +113,20 @@ class LearningPathResource
                     ->falseLabel('Draft')
                     ->placeholder('Semua'),
             ])
-            ->actions([
+            ->actions([ 
                 EditAction::make()
-                    ->label('Edit dan Kelola Modul'),
+                    ->label( !NavigationHelper::isPengajar() ? 'Edit dan Kelola Modul' : 'Lihat'),
 
                 Action::make('toggle_publish')
                     ->label(fn($record) => $record->is_published ? 'Sembunyikan' : 'Publikasikan')
                     ->icon(fn($record) => $record->is_published ? 'heroicon-o-eye-slash' : 'heroicon-o-eye')
                     ->color(fn($record) => $record->is_published ? 'warning' : 'success')
                     ->requiresConfirmation()
-                    ->action(fn($record) => $record->update(['is_published' => !$record->is_published])),
+                    ->action(fn($record) => $record->update(['is_published' => !$record->is_published]))
+                    ->visible(fn($record) => !NavigationHelper::isPengajar()),
 
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->visible(fn() => !NavigationHelper::isPengajar()),
             ])
             ->bulkActions([
                 BulkActionGroup::make([
@@ -140,8 +143,10 @@ class LearningPathResource
                         ->action(fn($records) => $records->each->update(['is_published' => false])),
 
                     DeleteBulkAction::make(),
-                ]),
+                ])
+                ->visible(fn () => !NavigationHelper::isPengajar()),
             ])
+            
             ->emptyStateHeading('Belum ada Learning Path')
             ->emptyStateDescription('Buat learning path pertama untuk siswa.')
             ->emptyStateIcon('heroicon-o-academic-cap')

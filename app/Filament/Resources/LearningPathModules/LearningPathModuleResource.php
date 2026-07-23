@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use App\Helpers\NavigationHelper;
 
 class LearningPathModuleResource extends Resource
 {
@@ -42,6 +43,17 @@ class LearningPathModuleResource extends Resource
         return [
             //
         ];
+    }
+     public static function shouldRegisterNavigation(): bool
+    {
+        if (NavigationHelper::isQuestionOnlyAdmin()) {
+            return false;
+        }
+            if (NavigationHelper::isPengajar()) {
+        return false;
+    }
+
+        return true;
     }
 
     public static function getPages(): array

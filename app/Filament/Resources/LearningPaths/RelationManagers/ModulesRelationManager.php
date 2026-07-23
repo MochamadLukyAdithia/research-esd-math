@@ -18,6 +18,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use App\Helpers\NavigationHelper;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -148,6 +149,7 @@ class ModulesRelationManager extends RelationManager
                 Action::make('create_module')
                     ->label('Tambah KB')
                     ->icon('heroicon-o-plus')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->form([
                         TextInput::make('title')
                             ->label('Judul KB')
@@ -184,6 +186,146 @@ class ModulesRelationManager extends RelationManager
                     }),
             ])
             ->actions([
+                // ── Lihat Konten (khusus pengajar, read-only) ───────────────────
+Action::make('view_content')
+    ->label('Lihat Konten')
+    ->icon('heroicon-o-eye')
+    ->color('gray')
+    ->slideOver()
+    ->visible(fn($record) => NavigationHelper::isPengajar()
+        && in_array($record->type, ['pre_test', 'post_test', 'activity', 'material', 'reflection']))
+    ->modalSubmitAction(false)
+    ->modalCancelActionLabel('Tutup')
+    ->form(function ($record) {
+        // ── Tipe soal: pre_test, post_test, activity ─────────────
+        if (in_array($record->type, ['pre_test', 'post_test', 'activity'])) {
+            $questions = $record->moduleQuestions()
+                ->with('question.questionOptions', 'question.questionImages')
+                ->orderBy('order_number')
+                ->get()
+                ->pluck('question');
+
+            if ($questions->isEmpty()) {
+                return [
+                    Placeholder::make('empty')
+                        ->label('')
+                        ->content('Belum ada soal di modul ini.'),
+                ];
+            }
+
+            $html = '<div class="mt-1">';
+            foreach ($questions as $i => $q) {
+                $badge = $q->is_learning_path_only
+                    ? '<span class="ml-2 text-xs bg-amber-100 text-amber-700 rounded px-1.5 py-0.5">Learning Path</span>'
+                    : '';
+
+                $html .= '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm mb-4">';
+                $html .= '<div class="flex items-start gap-2">';
+                $html .= '<span class="shrink-0 font-bold text-gray-500">' . ($i + 1) . '.</span>';
+                $html .= '<div class="flex-1">';
+                $html .= '<span class="font-semibold text-gray-800">' . e($q->title) . '</span>' . $badge;
+                $html .= '<p class="mt-1 text-gray-600">' . e($q->question) . '</p>';
+
+                if ($q->questionImages->isNotEmpty()) {
+                    $html .= '<div class="flex flex-wrap gap-2 mt-2">';
+                    foreach ($q->questionImages as $img) {
+                        $html .= '<img src="' . e(Storage::url($img->image_path)) . '" alt="" class="h-20 w-20 object-cover rounded-lg border border-gray-200" />';
+                    }
+                    $html .= '</div>';
+                }
+
+                if ($q->questionOptions->isNotEmpty()) {
+                    $html .= '<ul class="mt-2 space-y-1">';
+                    foreach ($q->questionOptions as $opt) {
+                        $icon  = $opt->is_correct ? '✅' : '<span class="text-gray-400">○</span>';
+                        $style = $opt->is_correct ? 'text-green-700 font-medium' : 'text-gray-600';
+                        $html .= "<li class='flex items-center gap-1.5 {$style}'>{$icon}";
+                        if (!empty($opt->option_image)) {
+                            $html .= '<img src="' . e(Storage::url($opt->option_image)) . '" alt="" class="h-16 w-16 object-cover rounded border border-gray-200 ml-1" />';
+                        } else {
+                            $html .= e($opt->option_text);
+                        }
+                        $html .= '</li>';
+                    }
+                    $html .= '</ul>';
+                }
+
+                if ($q->correct_answer && $q->questionOptions->isEmpty()) {
+                    $html .= '<p class="mt-2 text-green-700 text-xs">Jawaban: ' . e($q->correct_answer) . '</p>';
+                }
+
+                $html .= '<p class="mt-2 text-xs text-gray-400">' . $q->points . ' poin</p>';
+                $html .= '</div></div></div>';
+            }
+            $html .= '</div>';
+
+            return [
+                Placeholder::make('preview')
+                    ->label('')
+                    ->content(new HtmlString($html))
+                    ->columnSpanFull(),
+            ];
+        }
+
+        // ── Tipe materi ────────────────────────────────────────
+        if ($record->type === 'material') {
+            $materials = $record->materials()->orderBy('order_number')->get();
+
+            $contentTypeLabel = fn($type) => match ($type) {
+                'slide'   => 'Slide / PPT',
+                'video'   => 'Video',
+                'example' => 'Contoh Soal',
+                'text'    => 'Teks / Penjelasan',
+                default   => $type,
+            };
+
+            if ($materials->isEmpty()) {
+                return [
+                    Placeholder::make('empty')
+                        ->label('')
+                        ->content('Belum ada materi di modul ini.'),
+                ];
+            }
+
+            $html = '<div class="space-y-4">';
+            foreach ($materials as $m) {
+                $html .= '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">';
+                $html .= '<span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">' . e($contentTypeLabel($m->content_type)) . '</span>';
+                $html .= '<p class="text-sm font-medium text-gray-800 mt-0.5">' . e($m->title) . '</p>';
+
+                if ($m->content) {
+                    $html .= '<p class="mt-1 text-gray-600 whitespace-pre-line">' . e($m->content) . '</p>';
+                }
+
+                if ($m->file_path) {
+                    $isImage = preg_match('/\.(png|jpe?g|webp)$/i', $m->file_path);
+                    if ($isImage) {
+                        $html .= '<img src="' . e(Storage::url($m->file_path)) . '" alt="" class="mt-2 h-28 w-auto object-cover rounded border border-gray-200" />';
+                    } else {
+                        $url = str_starts_with($m->file_path, 'http') ? $m->file_path : Storage::url($m->file_path);
+                        $html .= '<a href="' . e($url) . '" target="_blank" class="mt-2 inline-block text-blue-600 text-xs underline">Buka file / link</a>';
+                    }
+                }
+
+                $html .= '</div>';
+            }
+            $html .= '</div>';
+
+            return [
+                Placeholder::make('preview')
+                    ->label('')
+                    ->content(new HtmlString($html))
+                    ->columnSpanFull(),
+            ];
+        }
+
+        // ── Refleksi (tidak ada konten soal/materi terpisah) ────
+        return [
+            Placeholder::make('info')
+                ->label('')
+                ->content('Modul refleksi ini tidak memiliki soal atau materi terpisah. Siswa mengisi refleksi langsung saat mengerjakan modul.'),
+        ];
+    }),
 
                 // ── Kelola Soal — pilih soal lama + buat soal baru dalam satu slide-over
                 Action::make('manage_questions')
@@ -191,7 +333,7 @@ class ModulesRelationManager extends RelationManager
                     ->icon('heroicon-o-clipboard-document-list')
                     ->color('warning')
                     ->slideOver()
-                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && in_array($record->type, ['pre_test', 'post_test', 'activity']))
                     ->form(function ($record) {
                         $grade       = $this->getOwnerRecord()->grade;
                         $existingIds = $record->moduleQuestions()->pluck('id_question')->toArray();
@@ -493,7 +635,7 @@ class ModulesRelationManager extends RelationManager
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
                     ->slideOver()
-                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                   ->visible(fn ($record) => !NavigationHelper::isPengajar() && in_array($record->type, ['pre_test', 'post_test', 'activity']))
                     ->form(function ($record) {
                         $moduleQuestions = $record->moduleQuestions()
                             ->with('question')
@@ -821,7 +963,7 @@ class ModulesRelationManager extends RelationManager
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->slideOver()
-                    ->visible(fn($record) => in_array($record->type, ['pre_test', 'post_test', 'activity']))
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && in_array($record->type, ['pre_test', 'post_test', 'activity']))
                     ->form(function ($record) {
                         $moduleQuestions = $record->moduleQuestions()
                             ->with('question')
@@ -970,7 +1112,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('Kelola Materi')
                     ->icon('heroicon-o-book-open')
                     ->color('info')
-                    ->visible(fn($record) => $record->type === 'material')
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && $record->type === 'material')
                     ->slideOver()
                     ->form(function ($record) {
                         $materials = $record->materials()->orderBy('order_number')->get();
@@ -1101,7 +1243,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('Edit Materi')
                     ->icon('heroicon-o-pencil-square')
                     ->color('primary')
-                    ->visible(fn($record) => $record->type === 'material')
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && $record->type === 'material')
                     ->slideOver()
                     ->form(function ($record) {
                         $materials = $record->materials()->orderBy('order_number')->get();
@@ -1205,7 +1347,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('Hapus Materi')
                     ->icon('heroicon-o-trash')
                     ->color('danger')
-                    ->visible(fn($record) => $record->type === 'material')
+                    ->visible(fn ($record) => !NavigationHelper::isPengajar() && $record->type === 'material')
                     ->requiresConfirmation()
                     ->modalHeading('Hapus Materi')
                     ->modalDescription(fn($record) => 'Pilih materi yang ingin dihapus dari modul "' . $record->title . '".')
@@ -1255,6 +1397,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('Edit')
                     ->icon('heroicon-o-pencil')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->form(fn($record) => [
                         TextInput::make('title')
                             ->label('Judul KB')
@@ -1294,6 +1437,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('')
                     ->icon('heroicon-o-arrow-up')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->action(function ($record) {
                         $prev = $this->getOwnerRecord()->modules()
                             ->where('order_number', '<', $record->order_number)
@@ -1311,6 +1455,7 @@ class ModulesRelationManager extends RelationManager
                     ->label('')
                     ->icon('heroicon-o-arrow-down')
                     ->color('gray')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->action(function ($record) {
                         $next = $this->getOwnerRecord()->modules()
                             ->where('order_number', '>', $record->order_number)
@@ -1326,6 +1471,7 @@ class ModulesRelationManager extends RelationManager
 
                 DeleteAction::make()
                     ->label('')
+                    ->visible(fn () => !NavigationHelper::isPengajar())
                     ->requiresConfirmation(),
             ])
             ->emptyStateHeading('Belum ada modul')

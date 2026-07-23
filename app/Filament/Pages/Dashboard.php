@@ -10,7 +10,10 @@ class Dashboard extends BaseDashboard
     public static function shouldRegisterNavigation(): bool
     {
         // Sembunyikan HANYA untuk question_only admin
-        return !NavigationHelper::isQuestionOnlyAdmin();
+        if (NavigationHelper::isPengajar()) {
+            return false;
+            }
+            return !NavigationHelper::isQuestionOnlyAdmin();
     }
 
     public function mount(): void

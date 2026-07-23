@@ -41,6 +41,21 @@ class LearningPathResource extends Resource
 
         return true;
     }
+    public static function canCreate(): bool
+{
+    return !NavigationHelper::isPengajar();
+}
+
+public static function canEdit($record): bool
+{
+    // tetap izinkan buka halaman "edit" (dipakai sebagai halaman lihat, lihat poin 5)
+    return true;
+}
+
+public static function canDelete($record): bool
+{
+    return !NavigationHelper::isPengajar();
+}
 
     public static function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {

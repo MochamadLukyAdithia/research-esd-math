@@ -6,12 +6,14 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use App\Helpers\NavigationHelper;
 
 class LearningPathModuleForm
 {
     public static function configure(Schema $schema): Schema
     {
-        return $schema
+        return $schema->disabled(fn () => NavigationHelper::isPengajar())
+        
             ->components([
                 TextInput::make('id_learning_path')
                     ->required()
@@ -33,6 +35,7 @@ class LearningPathModuleForm
                     ->default(0),
                 Toggle::make('is_required')
                     ->required(),
-            ]);
+            ])
+            ;
     }
 }

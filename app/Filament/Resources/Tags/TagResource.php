@@ -31,6 +31,9 @@ class TagResource extends Resource
         if (NavigationHelper::isQuestionOnlyAdmin()) {
             return false;
         }
+            if (NavigationHelper::isPengajar()) {
+        return false;
+    }
         
         return true;
     }
